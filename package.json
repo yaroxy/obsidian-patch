@@ -17,6 +17,7 @@
   "author": "yaroxy",
   "license": "MIT",
   "dependencies": {
+    "@mermaid-js/layout-elk": "^0.2.2",
     "mermaid": "11.16.0"
   },
   "devDependencies": {

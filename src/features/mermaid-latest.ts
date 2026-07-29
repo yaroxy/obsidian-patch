@@ -1,3 +1,4 @@
+import elkLayouts from "@mermaid-js/layout-elk";
 import mermaid from "mermaid";
 import type { Plugin } from "obsidian";
 
@@ -6,6 +7,7 @@ const CODE_BLOCK_LANGUAGE = "mermaid-latest";
 export function registerMermaidLatest(plugin: Plugin): void {
   let renderSequence = 0;
 
+  mermaid.registerLayoutLoaders(elkLayouts);
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: "strict",
