@@ -1,0 +1,26 @@
+.obsidian-patch-mermaid {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-block: 0.5rem;
+}
+
+.obsidian-patch-mermaid > svg {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  max-width: 100%;
+}
+
+.obsidian-patch-mermaid--error {
+  border: 1px solid var(--background-modifier-error);
+  border-radius: var(--radius-s);
+  color: var(--text-error);
+  padding: 0.75rem;
+}
+
+.obsidian-patch-mermaid--error pre {
+  margin-block: 0.5rem 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}

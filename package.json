@@ -1,0 +1,28 @@
+{
+  "name": "obsidian-patch",
+  "version": "0.1.0",
+  "description": "Focused fixes and enhancements for Obsidian.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "patch",
+    "mermaid",
+    "diagram"
+  ],
+  "author": "yaroxy",
+  "license": "MIT",
+  "dependencies": {
+    "mermaid": "11.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "esbuild": "0.25.5",
+    "obsidian": "1.13.1",
+    "typescript": "^5.8.3"
+  }
+}

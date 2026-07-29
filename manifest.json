@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-patch",
+  "name": "Obsidian Patch",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Focused fixes and enhancements for Obsidian, including a bundled current Mermaid renderer.",
+  "author": "yaroxy",
+  "authorUrl": "https://github.com/yaroxy",
+  "isDesktopOnly": false
+}
