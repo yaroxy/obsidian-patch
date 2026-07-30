@@ -5,11 +5,20 @@
   padding-block: 0.5rem;
 }
 
-.obsidian-patch-mermaid > svg {
+.obsidian-patch-mermaid > svg,
+.obsidian-patch-mermaid > iframe {
   display: block;
-  height: auto;
   margin-inline: auto;
   max-width: 100%;
+}
+
+.obsidian-patch-mermaid > svg {
+  height: auto;
+}
+
+.obsidian-patch-mermaid > iframe {
+  border: 0;
+  width: 100%;
 }
 
 .obsidian-patch-mermaid--error {
@@ -23,4 +32,8 @@
   margin-block: 0.5rem 0;
   overflow-x: auto;
   white-space: pre-wrap;
+}
+
+.obsidian-patch-warning {
+  color: var(--text-warning);
 }

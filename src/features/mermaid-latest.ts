@@ -4,15 +4,23 @@ import type { Plugin } from "obsidian";
 
 const CODE_BLOCK_LANGUAGE = "mermaid-latest";
 
-export function registerMermaidLatest(plugin: Plugin): void {
+export type MermaidSecurityLevel = "strict" | "sandbox" | "loose";
+
+export function registerMermaidLatest(
+  plugin: Plugin,
+  securityLevel: MermaidSecurityLevel,
+): (securityLevel: MermaidSecurityLevel) => void {
   let renderSequence = 0;
 
   mermaid.registerLayoutLoaders(elkLayouts);
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    suppressErrorRendering: true,
-  });
+  mermaid.registerIconPacks([
+    {
+      name: "material-icon-theme",
+      loader: () =>
+        import("@iconify-json/material-icon-theme").then((module) => module.icons),
+    },
+  ]);
+  configureMermaid(securityLevel);
 
   plugin.registerMarkdownCodeBlockProcessor(
     CODE_BLOCK_LANGUAGE,
@@ -33,6 +41,16 @@ export function registerMermaidLatest(plugin: Plugin): void {
       }
     },
   );
+
+  return configureMermaid;
+}
+
+function configureMermaid(securityLevel: MermaidSecurityLevel): void {
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel,
+    suppressErrorRendering: true,
+  });
 }
 
 function renderError(container: HTMLElement, error: unknown): void {

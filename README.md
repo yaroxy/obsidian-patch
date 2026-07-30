@@ -5,7 +5,7 @@ and enhancements in one place. Each patch is implemented as an independent
 feature so the plugin can grow without coupling unrelated behavior.
 
 The first feature renders `mermaid-latest` code blocks with a bundled Mermaid
-release. It works offline, avoids remote code execution, and does not replace
+release. It works offline, loads no code from remote CDNs, and does not replace
 Obsidian's built-in `mermaid` processor.
 
 ## Features
@@ -14,7 +14,8 @@ Obsidian's built-in `mermaid` processor.
 
 - Renders the dedicated `mermaid-latest` fenced code block.
 - Bundles Mermaid `11.16.0` with the plugin for reliable offline use.
-- Uses Mermaid's strict security mode.
+- Bundles the Material Icon Theme pack for Mermaid diagrams that support icons.
+- Offers Strict, Sandbox, and Loose Mermaid security modes.
 - Keeps Obsidian's built-in `mermaid` code block unchanged.
 - Displays rendering errors directly below invalid diagrams.
 
@@ -54,6 +55,66 @@ flowchart LR
 
 The separate language name intentionally avoids competing with Obsidian's
 built-in Markdown code-block processor.
+
+### Security Mode
+
+Choose a Mermaid security level under **Settings > Obsidian Patch**. New
+installations default to Strict.
+
+| Mode | Behavior |
+| --- | --- |
+| Strict | Sanitizes SVG before inserting it into Obsidian. Mermaid 11.16 currently removes the SVG references used by treeView icons. |
+| Sandbox | Renders inside an isolated iframe. TreeView icons work, but links and other interactive behavior may be limited. |
+| Loose | Inserts unsanitized Mermaid output directly into Obsidian. Icons and interactions work, but this mode must only be used with fully trusted diagram content. |
+
+Sandbox is the recommended mode when a diagram needs icons. Loose mode can
+expose Obsidian to malicious HTML or SVG from copied, imported, synchronized,
+or automatically generated notes. Reading View refreshes when the setting
+changes; reopen Live Preview notes or switch view modes to refresh their
+existing diagrams.
+
+### TreeView Icons
+
+Set the security mode to Sandbox or Loose before using treeView icons. Strict
+mode removes the icon references from Mermaid's rendered SVG.
+
+The bundled `material-icon-theme` pack can be referenced explicitly with
+`icon(material-icon-theme:<name>)`:
+
+````markdown
+```mermaid-latest
+treeView-beta
+    project/
+        src/ icon(material-icon-theme:folder-src)
+            index.ts icon(material-icon-theme:typescript)
+        package.json icon(material-icon-theme:nodejs)
+```
+````
+
+You can also configure a default pack and file-type mappings in Mermaid
+frontmatter. The plugin does not apply mappings globally, so each diagram
+controls its own icon behavior:
+
+````markdown
+```mermaid-latest
+---
+config:
+  treeView:
+    showIcons: true
+    defaultIconPack: material-icon-theme
+    filenameIcons:
+      package.json: nodejs
+    extensionIcons:
+      .ts: typescript
+---
+treeView-beta
+    project/
+        src/
+            index.ts
+        package.json
+        README.md
+```
+````
 
 ## Development
 
