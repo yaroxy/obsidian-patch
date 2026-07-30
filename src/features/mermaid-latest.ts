@@ -19,6 +19,10 @@ export function registerMermaidLatest(
       loader: () =>
         import("@iconify-json/material-icon-theme").then((module) => module.icons),
     },
+    {
+      name: "logos",
+      loader: () => import("@iconify-json/logos").then((module) => module.icons),
+    },
   ]);
   configureMermaid(securityLevel);
 

@@ -14,7 +14,7 @@ Obsidian's built-in `mermaid` processor.
 
 - Renders the dedicated `mermaid-latest` fenced code block.
 - Bundles Mermaid `11.16.0` with the plugin for reliable offline use.
-- Bundles the Material Icon Theme pack for Mermaid diagrams that support icons.
+- Bundles the Material Icon Theme and SVG Logos packs for Mermaid diagrams that support icons.
 - Offers Strict, Sandbox, and Loose Mermaid security modes.
 - Keeps Obsidian's built-in `mermaid` code block unchanged.
 - Displays rendering errors directly below invalid diagrams.
@@ -88,6 +88,20 @@ treeView-beta
         src/ icon(material-icon-theme:folder-src)
             index.ts icon(material-icon-theme:typescript)
         package.json icon(material-icon-theme:nodejs)
+```
+````
+
+The bundled [SVG Logos](https://icon-sets.iconify.design/logos/) pack uses the
+`logos` prefix and is available under the CC0 license. Explicit prefixes let
+both packs be used in the same diagram:
+
+````markdown
+```mermaid-latest
+treeView-beta
+    AI platforms/
+        OpenAI icon(logos:openai-icon)
+        Anthropic icon(logos:anthropic-icon)
+        DeepSeek icon(logos:deepseek-icon)
 ```
 ````
 
