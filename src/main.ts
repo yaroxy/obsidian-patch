@@ -3,18 +3,26 @@ import {
   registerMermaidLatest,
   type MermaidSecurityLevel,
 } from "./features/mermaid-latest";
+import {
+  parseInlineStyleSettings,
+  registerInlineStyles,
+  type InlineStyleSettings,
+} from "./features/inline-styles";
+import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 
 interface ObsidianPatchSettings {
   mermaidSecurityLevel: MermaidSecurityLevel;
+  inlineStyles: InlineStyleSettings;
+  activeLine: boolean;
 }
 
-const DEFAULT_SETTINGS: ObsidianPatchSettings = {
-  mermaidSecurityLevel: "strict",
-};
+const DEFAULT_MERMAID_SECURITY_LEVEL: MermaidSecurityLevel = "strict";
 
 export default class ObsidianPatchPlugin extends Plugin {
-  settings = DEFAULT_SETTINGS;
+  settings: ObsidianPatchSettings = parseSettings(null);
   private configureMermaidLatest?: (securityLevel: MermaidSecurityLevel) => void;
+  private applyInlineStyles?: (settings: InlineStyleSettings) => void;
+  private applyActiveLine?: (enabled: boolean) => void;
 
   override async onload(): Promise<void> {
     this.settings = parseSettings(await this.loadData());
@@ -22,6 +30,8 @@ export default class ObsidianPatchPlugin extends Plugin {
       this,
       this.settings.mermaidSecurityLevel,
     );
+    this.applyInlineStyles = registerInlineStyles(this, this.settings.inlineStyles);
+    this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.addSettingTab(new ObsidianPatchSettingTab(this));
   }
 
@@ -44,6 +54,18 @@ export default class ObsidianPatchPlugin extends Plugin {
       );
     }
   }
+
+  async setInlineStyles(inlineStyles: InlineStyleSettings): Promise<void> {
+    this.settings.inlineStyles = inlineStyles;
+    await this.saveData(this.settings);
+    this.applyInlineStyles?.(inlineStyles);
+  }
+
+  async setActiveLine(activeLine: boolean): Promise<void> {
+    this.settings.activeLine = activeLine;
+    await this.saveData(this.settings);
+    this.applyActiveLine?.(activeLine);
+  }
 }
 
 class ObsidianPatchSettingTab extends PluginSettingTab {
@@ -53,6 +75,13 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
 
   override display(): void {
     this.containerEl.empty();
+    this.displayMermaidSection();
+    this.displayInlineStyleSection();
+    this.displayEditorSection();
+  }
+
+  private displayMermaidSection(): void {
+    new Setting(this.containerEl).setName("Mermaid").setHeading();
 
     const warning = this.containerEl.createEl("p", {
       cls: "obsidian-patch-warning",
@@ -81,19 +110,77 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
           }),
       );
   }
+
+  private displayInlineStyleSection(): void {
+    new Setting(this.containerEl).setName("Inline styles").setHeading();
+
+    this.containerEl.createEl("p", {
+      cls: "obsidian-patch-setting-note",
+      text: "Applies to note content only, in both Reading View and Live Preview. Colors are muted presets with a light and a dark variant; a CSS snippet can override the --obsidian-patch-* custom properties.",
+    });
+
+    // Read the settings when a toggle changes, not when the tab opens, so one
+    // toggle does not undo another that was changed since.
+    const styles = (): InlineStyleSettings => this.plugin.settings.inlineStyles;
+
+    this.addToggle("Bold", "Bold text is colorized red.", styles().bold, (bold) =>
+      this.plugin.setInlineStyles({ ...styles(), bold }),
+    );
+
+    this.addToggle("Italic", "Italic text is colorized green.", styles().italic, (italic) =>
+      this.plugin.setInlineStyles({ ...styles(), italic }),
+    );
+
+    this.addToggle(
+      "Inline code",
+      "Inline code gets blue text on a gray background. Fenced code blocks keep the theme's own colors.",
+      styles().inlineCode,
+      (inlineCode) => this.plugin.setInlineStyles({ ...styles(), inlineCode }),
+    );
+  }
+
+  private displayEditorSection(): void {
+    new Setting(this.containerEl).setName("Editor").setHeading();
+
+    this.addToggle(
+      "Active line",
+      "Tints the line the cursor is on and highlights its line number. Applies to Live Preview and Source mode.",
+      this.plugin.settings.activeLine,
+      (enabled) => this.plugin.setActiveLine(enabled),
+    );
+  }
+
+  private addToggle(
+    name: string,
+    description: string,
+    value: boolean,
+    onChange: (enabled: boolean) => Promise<void>,
+  ): void {
+    new Setting(this.containerEl)
+      .setName(name)
+      .setDesc(description)
+      .addToggle((toggle) =>
+        toggle.setValue(value).onChange(async (enabled) => {
+          await onChange(enabled);
+        }),
+      );
+  }
 }
 
 function parseSettings(data: unknown): ObsidianPatchSettings {
-  if (
-    typeof data === "object" &&
-    data !== null &&
-    "mermaidSecurityLevel" in data &&
-    isMermaidSecurityLevel(data.mermaidSecurityLevel)
-  ) {
-    return { mermaidSecurityLevel: data.mermaidSecurityLevel };
-  }
+  const record: Record<string, unknown> =
+    typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
 
-  return { ...DEFAULT_SETTINGS };
+  return {
+    mermaidSecurityLevel: isMermaidSecurityLevel(record.mermaidSecurityLevel)
+      ? record.mermaidSecurityLevel
+      : DEFAULT_MERMAID_SECURITY_LEVEL,
+    inlineStyles: parseInlineStyleSettings(record.inlineStyles),
+    activeLine:
+      typeof record.activeLine === "boolean"
+        ? record.activeLine
+        : DEFAULT_ACTIVE_LINE_ENABLED,
+  };
 }
 
 function isMermaidSecurityLevel(value: unknown): value is MermaidSecurityLevel {
