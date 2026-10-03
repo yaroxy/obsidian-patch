@@ -1,85 +1,119 @@
 # Obsidian Patch
 
-Obsidian Patch is an Obsidian plugin that collects focused compatibility fixes
-and enhancements in one place. Each patch is implemented as an independent
-feature so the plugin can grow without coupling unrelated behavior.
+Obsidian Patch is an Obsidian plugin that collects focused compatibility fixes and enhancements in one place. Each patch is an independent feature, so the plugin can grow without coupling unrelated behavior.
 
-The first feature renders `mermaid-latest` code blocks with a bundled Mermaid
-release. It works offline, loads no code from remote CDNs, and does not replace
-Obsidian's built-in `mermaid` processor.
+- **Mermaid Latest** renders `mermaid-latest` code blocks with the newest Mermaid release, loaded from jsDelivr, and falls back to a bundled copy offline. Diagrams follow Obsidian's text font and light or dark theme.
+- **Inline Styles** colorizes bold, italic, and inline code with muted presets.
+- **Active Line** tints the line the cursor is on.
 
-## Features
+|                      | Version                                     |
+| -------------------- | ------------------------------------------- |
+| Plugin               | 0.1.0                                       |
+| Tested with Obsidian | 1.13.7 (desktop)                            |
+| Obsidian API typings | 1.13.1                                      |
+| Bundled Mermaid      | 12.1.0, with `@mermaid-js/layout-elk` 1.0.1 |
 
-### Bundled Mermaid
+## Screenshots
 
-- Renders the dedicated `mermaid-latest` fenced code block.
-- Bundles Mermaid `11.16.0` with the plugin for reliable offline use.
-- Bundles the Material Icon Theme and SVG Logos packs for Mermaid diagrams that support icons.
-- Offers Strict, Sandbox, and Loose Mermaid security modes.
-- Keeps Obsidian's built-in `mermaid` code block unchanged.
-- Displays rendering errors directly below invalid diagrams.
+Mermaid diagrams re-render with Obsidian's theme and font:
 
-## Installation
+![Mermaid diagrams switching between light and dark themes](docs/images/mermaid-theme.gif)
 
-Copy the release files into the following directory in your vault:
+Inline styles in light and dark themes:
+
+![Bold, italic, and inline code colorized in light and dark themes](docs/images/inline-styles.png)
+
+The active line in Live Preview:
+
+![The cursor's line tinted, with its line number highlighted](docs/images/active-line.png)
+
+## Quick Start
+
+1. Build the plugin. This requires Node.js 22 or later and npm:
+
+```bash
+npm install
+npm run build
+```
+
+The build type-checks the source and writes `main.js`. During development, `npm run dev` rebuilds on every change.
+
+2. Copy `main.js`, `manifest.json`, and `styles.css` into the plugin directory of your vault:
 
 ```text
 <vault>/.obsidian/plugins/obsidian-patch/
 ```
 
-Required files:
+3. Reload Obsidian, open **Settings > Community plugins**, and enable **Obsidian Patch**.
 
-- `main.js`
-- `manifest.json`
-- `styles.css`
-
-Reload Obsidian, open **Settings > Community plugins**, and enable
-**Obsidian Patch**.
-
-> [!NOTE]
-> The previous plugin ID was `mermaid-patch`. Obsidian treats
-> `obsidian-patch` as a different plugin, so an existing installation must be
-> moved to the new directory and enabled again.
-
-## Usage
-
-Use `mermaid-latest` instead of `mermaid` when you want the renderer bundled
-with this plugin:
+4. Write a `mermaid-latest` code block. The built-in `mermaid` block is left unchanged, so both renderers can be used side by side:
 
 ````markdown
 ```mermaid-latest
 flowchart LR
-    A[Obsidian] --> B[Bundled Mermaid]
+    A[Obsidian] --> B[Mermaid Latest]
 ```
 ````
 
-The separate language name intentionally avoids competing with Obsidian's
-built-in Markdown code-block processor.
+> [!NOTE]
+> The previous plugin ID was `mermaid-patch`. Obsidian treats `obsidian-patch` as a different plugin, so an existing installation must be moved to the new directory and enabled again.
 
-### Security Mode
+## Project Structure
 
-Choose a Mermaid security level under **Settings > Obsidian Patch**. New
-installations default to Strict.
+```text
+.
+├── .github/
+│   ├── dependabot.yml           Daily npm update pull requests
+│   └── workflows/build.yml      Type-check and build on pushes and pull requests
+├── docs/images/                 Screenshots used by this README
+├── src/
+│   ├── features/                One independent module per patch
+│   │   ├── active-line.ts
+│   │   ├── inline-styles.ts
+│   │   ├── mermaid-latest.ts    Code block processor, theming, re-rendering
+│   │   └── mermaid-runtime.ts   Loads Mermaid from jsDelivr or the bundle
+│   ├── build.d.ts               Types for values the build injects
+│   └── main.ts                  Plugin entry point, settings, and settings tab
+├── CHANGELOG.md
+├── esbuild.config.mjs           Bundles src/ into Obsidian's CommonJS main.js
+├── manifest.json                Plugin ID, version, and minimum app version
+├── styles.css                   All plugin styles and their custom properties
+└── versions.json                Minimum Obsidian version for each release
+```
 
-| Mode | Behavior |
-| --- | --- |
-| Strict | Sanitizes SVG before inserting it into Obsidian. Mermaid 11.16 currently removes the SVG references used by treeView icons. |
-| Sandbox | Renders inside an isolated iframe. TreeView icons work, but links and other interactive behavior may be limited. |
-| Loose | Inserts unsanitized Mermaid output directly into Obsidian. Icons and interactions work, but this mode must only be used with fully trusted diagram content. |
+`main.js` is generated by the build and should never be edited by hand.
 
-Sandbox is the recommended mode when a diagram needs icons. Loose mode can
-expose Obsidian to malicious HTML or SVG from copied, imported, synchronized,
-or automatically generated notes. Reading View refreshes when the setting
-changes; reopen Live Preview notes or switch view modes to refresh their
-existing diagrams.
+To add a feature, place it in a focused module under `src/features/`, export a small registration function, and call it from `src/main.ts`. Selectors and generated IDs use the `obsidian-patch-<feature>` namespace, and user-visible changes go under `Unreleased` in [CHANGELOG.md](CHANGELOG.md).
 
-### TreeView Icons
+## Settings
 
-Set the security mode to Sandbox or Loose before using treeView icons. Strict
-mode removes the icon references from Mermaid's rendered SVG.
+All settings live under **Settings > Obsidian Patch** and apply immediately. Open diagrams re-render in Reading View and Live Preview alike.
 
-The bundled `material-icon-theme` pack can be referenced explicitly with
-`icon(material-icon-theme:<name>)`:
+### Mermaid Version
+
+| Option           | Source                                                              | Network  |
+| ---------------- | ------------------------------------------------------------------- | -------- |
+| Latest (default) | The newest Mermaid release, resolved to an exact version on startup | Required |
+| Bundled          | The copy shipped inside `main.js`                                   | None     |
+| Custom           | An exact release typed in, such as `12.0.0`, from 11.0.0 on         | Required |
+
+Choosing Custom reveals a version field. The version applies when the field loses focus or on Enter, and an invalid entry is outlined instead of applied. The setting shows the version in use and where it came from.
+
+- **Latest** asks jsDelivr which version `latest` points to, then loads that exact version. The plugin remembers the result, so an offline startup can still use the browser's cached copy.
+- **Fallback.** When a remote version cannot be loaded, diagrams render with the bundled copy and the setting shows why.
+- **ELK layouts** load alongside Mermaid, in the `@mermaid-js/layout-elk` release line that matches its major version.
+- **Trust.** Remote versions run with full access to Obsidian, like any plugin code. They come from npm through jsDelivr without an integrity check, because `latest` changes with every release. Choose Bundled to run only the code shipped with the plugin. The bundled copy is pinned to an exact version, verified through `package-lock.json`, and updated through reviewed Dependabot pull requests.
+
+### Mermaid Security Level
+
+| Level            | Behavior                                                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Strict (default) | Sanitizes SVG before inserting it into Obsidian. Mermaid currently removes the SVG references used by treeView icons.                                        |
+| Loose            | Inserts unsanitized Mermaid output directly into Obsidian. Icons and interactions work, but this level must only be used with fully trusted diagram content. |
+
+Loose mode can expose Obsidian to malicious HTML or SVG from copied, imported, synchronized, or automatically generated notes.
+
+TreeView icons require Loose. Two icon packs are bundled: `material-icon-theme` and [SVG Logos](https://icon-sets.iconify.design/logos/) (`logos`, CC0). Both are embedded gzip-compressed and decompressed the first time a diagram needs them:
 
 ````markdown
 ```mermaid-latest
@@ -87,27 +121,11 @@ treeView-beta
     project/
         src/ icon(material-icon-theme:folder-src)
             index.ts icon(material-icon-theme:typescript)
-        package.json icon(material-icon-theme:nodejs)
+        package.json icon(logos:nodejs-icon)
 ```
 ````
 
-The bundled [SVG Logos](https://icon-sets.iconify.design/logos/) pack uses the
-`logos` prefix and is available under the CC0 license. Explicit prefixes let
-both packs be used in the same diagram:
-
-````markdown
-```mermaid-latest
-treeView-beta
-    AI platforms/
-        OpenAI icon(logos:openai-icon)
-        Anthropic icon(logos:anthropic-icon)
-        DeepSeek icon(logos:deepseek-icon)
-```
-````
-
-You can also configure a default pack and file-type mappings in Mermaid
-frontmatter. The plugin does not apply mappings globally, so each diagram
-controls its own icon behavior:
+A default pack and file-type mappings can be set per diagram in frontmatter:
 
 ````markdown
 ```mermaid-latest
@@ -126,119 +144,77 @@ treeView-beta
         src/
             index.ts
         package.json
-        README.md
 ```
 ````
 
-## Development
+### Mermaid Appearance
 
-Requirements:
+There is no font or theme setting. Diagrams use the `--font-mermaid` custom property, the same one as Obsidian's built-in renderer, which defaults to the note's text font. Light themes use Mermaid's `default` theme and dark themes its `dark` theme. A CSS snippet can give diagrams their own font:
 
-- Node.js 22 or later
-- npm
-
-Install dependencies and create a production build:
-
-```bash
-npm install
-npm run build
+```css
+body {
+  --font-mermaid: "Inter", sans-serif;
+}
 ```
 
-Start esbuild in watch mode during development:
+### Inline Styles
 
-```bash
-npm run dev
+One toggle each for **Bold** (red), **Italic** (green), and **Inline code** (blue on gray). All are on by default.
+
+The feature redefines Obsidian's own typography properties (`--bold-color`, `--italic-color`, `--code-normal`, `--code-background`) on note content only, so Reading View and Live Preview stay consistent, themes keep control of spacing and borders, and the app interface is unaffected. Fenced code blocks keep the theme's colors. Bold and italic keep the surrounding color inside links and highlights, and are colorized inside blockquotes.
+
+The presets sit near Nord's Aurora and Frost hues at 24-47% saturation, and every color clears a 4.5:1 contrast ratio against its background:
+
+| Style                  | Light     | Dark      |
+| ---------------------- | --------- | --------- |
+| Bold                   | `#a54d54` | `#c9757c` |
+| Italic                 | `#487a45` | `#a3be8c` |
+| Inline code            | `#4c6f96` | `#81a1c1` |
+| Inline code background | `#f0f1f3` | `#2a2b2e` |
+
+Override any color from a CSS snippet, with a `body.theme-dark` block for a separate dark value:
+
+```css
+body {
+  --obsidian-patch-bold-color: #8f4a3c;
+  --obsidian-patch-inline-code-background: var(--background-modifier-hover);
+}
+
+body.theme-dark {
+  --obsidian-patch-bold-color: #c98b78;
+}
 ```
 
-The production build performs TypeScript type checking and writes the bundled
-plugin to `main.js`.
+### Active Line
 
-## Project Structure
+A single toggle under **Editor**, on by default. It tints the cursor's line in Live Preview and Source mode and highlights its line number, which is visible when **Settings > Editor > Show line numbers** is on. The tint stays on unfocused splits, so it does not flicker with window focus. Adjust it from a snippet:
 
-```text
-.
-|-- .github/
-|   |-- dependabot.yml
-|   `-- workflows/
-|       `-- build.yml
-|-- src/
-|   |-- features/
-|   |   `-- mermaid-latest.ts
-|   `-- main.ts
-|-- .gitignore
-|-- esbuild.config.mjs
-|-- LICENSE
-|-- main.js
-|-- manifest.json
-|-- package-lock.json
-|-- package.json
-|-- README.md
-|-- styles.css
-|-- tsconfig.json
-`-- versions.json
+```css
+body {
+  --obsidian-patch-active-line-background: rgba(var(--mono-rgb-100), 0.08);
+}
 ```
 
-### Directories
+## Changelog
 
-| Path | Purpose |
-| --- | --- |
-| `.github/` | GitHub automation and repository maintenance configuration. |
-| `.github/workflows/` | GitHub Actions workflows used to validate changes. |
-| `src/` | Readable TypeScript source code for the plugin. |
-| `src/features/` | Independent patch and enhancement modules registered by the plugin entry point. |
-| `node_modules/` | Locally installed npm dependencies. This directory is generated and excluded from version control. |
+See [CHANGELOG.md](CHANGELOG.md). The upcoming release adds Mermaid version selection with Latest as the default, Mermaid 12, theme and font following, Inline Styles, and Active Line, and removes the Sandbox security level.
 
-### Files
+## References
 
-| Path | Purpose |
-| --- | --- |
-| `.github/dependabot.yml` | Checks npm dependencies daily and opens update pull requests when new releases are available. |
-| `.github/workflows/build.yml` | Installs locked dependencies and runs the production build for pushes and pull requests. |
-| `src/main.ts` | Obsidian plugin entry point. It manages the plugin lifecycle and registers each feature. |
-| `src/features/mermaid-latest.ts` | Initializes the bundled Mermaid library, registers `mermaid-latest`, renders SVG output, and reports errors. |
-| `.gitignore` | Excludes dependencies, generated bundles, source maps, and local operating-system files. |
-| `esbuild.config.mjs` | Bundles the TypeScript entry point and runtime dependencies into Obsidian's CommonJS `main.js` format. |
-| `LICENSE` | MIT license terms for the project. |
-| `main.js` | Generated plugin bundle loaded by Obsidian. Build this file from source instead of editing it manually. |
-| `manifest.json` | Obsidian plugin metadata, including the plugin ID, display name, version, and minimum supported app version. |
-| `package-lock.json` | Records the exact npm dependency graph for reproducible installs and CI builds. |
-| `package.json` | Defines project metadata, scripts, runtime dependencies, and development dependencies. |
-| `README.md` | Project overview, installation instructions, usage, development notes, and maintenance policy. |
-| `styles.css` | Styles Mermaid output, responsive overflow behavior, and rendering errors. |
-| `tsconfig.json` | Strict TypeScript compiler and type-checking configuration. |
-| `versions.json` | Maps each plugin release to its minimum supported Obsidian version. |
+- [Mermaid documentation](https://mermaid.js.org/)
+- [Mermaid releases](https://github.com/mermaid-js/mermaid/releases)
+- [ELK layout for Mermaid](https://github.com/mermaid-js/mermaid/tree/develop/packages/mermaid-layout-elk)
+- [jsDelivr](https://www.jsdelivr.com/package/npm/mermaid) and its [data API](https://github.com/jsdelivr/data.jsdelivr.com)
+- [Iconify icon sets](https://icon-sets.iconify.design/)
+- [Obsidian developer documentation](https://docs.obsidian.md/)
+- [Nord color palette](https://www.nordtheme.com/docs/colors-and-palettes)
+- [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## Adding a Feature
+## Contributors
 
-Place each new patch in a focused module under `src/features/`, export a small
-registration function, and call that function from `src/main.ts`. Keep shared
-infrastructure minimal until more than one feature has a concrete need for it.
-
-Feature-specific selectors and generated IDs should use the
-`obsidian-patch-<feature>` namespace to avoid collisions with Obsidian and
-other plugins.
-
-## Keeping Mermaid Current
-
-Mermaid is pinned to an exact version and bundled at build time. The plugin
-does not load JavaScript from a CDN because browser caches are not a reliable
-offline guarantee and runtime remote code weakens security and reproducibility.
-
-Dependabot checks npm dependencies daily. When Mermaid publishes a release,
-it opens a pull request that updates the dependency lock. GitHub Actions then
-type-checks and builds the plugin. Mermaid updates should be reviewed and
-tested before merging because even semver-compatible releases can change
-diagram output.
-
-This approach keeps the bundled renderer current through tested plugin
-releases rather than changing installed behavior without notice.
-
-## Author and Acknowledgements
-
-- Author: yaroxy
-- Email: yaroxywithyou@gmail.com
-- AI collaboration: GPT-5.6-Sol
-- Development environment: OpenCode
+- yaroxy (yaroxywithyou@gmail.com)
+- GPT
+- Claude
 
 ## License
 
