@@ -5,20 +5,11 @@
   padding-block: 0.5rem;
 }
 
-.obsidian-patch-mermaid > svg,
-.obsidian-patch-mermaid > iframe {
+.obsidian-patch-mermaid > svg {
   display: block;
+  height: auto;
   margin-inline: auto;
   max-width: 100%;
-}
-
-.obsidian-patch-mermaid > svg {
-  height: auto;
-}
-
-.obsidian-patch-mermaid > iframe {
-  border: 0;
-  width: 100%;
 }
 
 .obsidian-patch-mermaid--error {
@@ -149,3 +140,11 @@ body.theme-dark {
   margin-block: 0 var(--size-4-3);
 }
 
+.obsidian-patch-setting-status {
+  color: var(--text-normal);
+  margin-block-start: var(--size-2-2);
+}
+
+.obsidian-patch-input-invalid {
+  border-color: var(--background-modifier-error);
+}

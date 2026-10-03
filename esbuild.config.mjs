@@ -1,8 +1,36 @@
 import esbuild from "esbuild";
 import { builtinModules } from "node:module";
+import { readFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import process from "node:process";
+import { gzipSync } from "node:zlib";
 
 const production = process.argv[2] === "production";
+const require = createRequire(import.meta.url);
+
+/**
+ * Resolves `gzip:<package path>` imports to the file's gzip-compressed bytes
+ * as a base64 string. Large data such as icon packs stays inside main.js, so
+ * nothing is fetched at runtime, but costs far less to ship and to parse.
+ */
+const gzipModules = {
+  name: "gzip-modules",
+  setup(build) {
+    build.onResolve({ filter: /^gzip:/ }, (args) => ({
+      path: require.resolve(args.path.slice("gzip:".length)),
+      namespace: "gzip",
+    }));
+
+    build.onLoad({ filter: /.*/, namespace: "gzip" }, async (args) => {
+      const compressed = gzipSync(await readFile(args.path), { level: 9 });
+      return {
+        contents: `export default ${JSON.stringify(compressed.toString("base64"))};`,
+        loader: "js",
+        watchFiles: [args.path],
+      };
+    });
+  },
+};
 
 const context = await esbuild.context({
   banner: {
@@ -10,6 +38,9 @@ const context = await esbuild.context({
   },
   entryPoints: ["src/main.ts"],
   bundle: true,
+  define: {
+    __BUNDLED_MERMAID_VERSION__: JSON.stringify(require("mermaid/package.json").version),
+  },
   external: [
     "obsidian",
     "electron",
@@ -30,6 +61,7 @@ const context = await esbuild.context({
   logLevel: "info",
   minify: production,
   outfile: "main.js",
+  plugins: [gzipModules],
   sourcemap: production ? false : "inline",
   target: "es2021",
   treeShaking: true,
