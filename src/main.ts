@@ -1,9 +1,9 @@
-import { Plugin, PluginSettingTab, Setting } from "obsidian";
+import { Plugin, PluginSettingTab, Setting, type SliderComponent } from "obsidian";
 import {
-  registerMermaidLatest,
-  type MermaidLatestController,
+  registerPatchMermaid,
+  type PatchMermaidController,
   type MermaidSecurityLevel,
-} from "./features/mermaid-latest";
+} from "./features/patch-mermaid";
 import {
   BUNDLED_MERMAID_VERSION,
   BUNDLED_VERSION,
@@ -18,6 +18,7 @@ import {
   type InlineStyleSettings,
 } from "./features/inline-styles";
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
+import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 
 interface ObsidianPatchSettings {
   mermaidSecurityLevel: MermaidSecurityLevel;
@@ -26,6 +27,7 @@ interface ObsidianPatchSettings {
   mermaidCachedLatest?: string;
   inlineStyles: InlineStyleSettings;
   activeLine: boolean;
+  banner: BannerSettings;
 }
 
 /** Dropdown value that reveals the custom version field; never stored. */
@@ -35,13 +37,14 @@ const DEFAULT_MERMAID_SECURITY_LEVEL: MermaidSecurityLevel = "strict";
 
 export default class ObsidianPatchPlugin extends Plugin {
   settings: ObsidianPatchSettings = parseSettings(null);
-  mermaid?: MermaidLatestController;
+  mermaid?: PatchMermaidController;
   private applyInlineStyles?: (settings: InlineStyleSettings) => void;
   private applyActiveLine?: (enabled: boolean) => void;
+  private applyBanner?: (settings: BannerSettings) => void;
 
   override async onload(): Promise<void> {
     this.settings = parseSettings(await this.loadData());
-    this.mermaid = registerMermaidLatest(this, {
+    this.mermaid = registerPatchMermaid(this, {
       securityLevel: this.settings.mermaidSecurityLevel,
       version: this.settings.mermaidVersion,
       cachedLatest: this.settings.mermaidCachedLatest,
@@ -54,6 +57,7 @@ export default class ObsidianPatchPlugin extends Plugin {
     });
     this.applyInlineStyles = registerInlineStyles(this, this.settings.inlineStyles);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
+    this.applyBanner = registerBanner(this, this.settings.banner);
     this.addSettingTab(new ObsidianPatchSettingTab(this));
   }
 
@@ -80,6 +84,12 @@ export default class ObsidianPatchPlugin extends Plugin {
     await this.saveData(this.settings);
     this.applyActiveLine?.(activeLine);
   }
+
+  async setBanner(banner: BannerSettings): Promise<void> {
+    this.settings.banner = banner;
+    await this.saveData(this.settings);
+    this.applyBanner?.(banner);
+  }
 }
 
 class ObsidianPatchSettingTab extends PluginSettingTab {
@@ -90,12 +100,13 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   override display(): void {
     this.containerEl.empty();
     this.displayMermaidSection();
+    this.displayBannerSection();
     this.displayInlineStyleSection();
     this.displayEditorSection();
   }
 
   private displayMermaidSection(): void {
-    new Setting(this.containerEl).setName("Mermaid").setHeading();
+    new Setting(this.containerEl).setName("Patch Mermaid").setHeading();
     this.displayMermaidVersion();
 
     const warning = this.containerEl.createEl("p", {
@@ -232,6 +243,30 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     );
   }
 
+  private displayBannerSection(): void {
+    new Setting(this.containerEl).setName("Patch Banner").setHeading();
+    const settings = (): BannerSettings => this.plugin.settings.banner;
+    this.addToggle("Enabled", "Display vault media from the patch-banner note property in Reading View and Live Preview.", settings().enabled,
+      (enabled) => this.plugin.setBanner({ ...settings(), enabled }));
+    let widthSlider: SliderComponent;
+    new Setting(this.containerEl)
+      .setName("Cover width (%)")
+      .setDesc(`10–100% of the note pane, centered. Default: ${DEFAULT_BANNER_WIDTH_PERCENT}%. The title and text keep their normal width.`)
+      .addSlider((slider) => {
+        widthSlider = slider;
+        slider.setLimits(10, 100, 1).setValue(settings().widthPercent).setDynamicTooltip()
+          .onChange((widthPercent) => this.plugin.setBanner({ ...settings(), widthPercent }));
+      })
+      .addExtraButton((button) => button.setIcon("rotate-ccw")
+        .setTooltip(`Reset to ${DEFAULT_BANNER_WIDTH_PERCENT}%`)
+        .onClick(async () => {
+          widthSlider.setValue(DEFAULT_BANNER_WIDTH_PERCENT);
+          await this.plugin.setBanner({ ...settings(), widthPercent: DEFAULT_BANNER_WIDTH_PERCENT });
+        }));
+    this.addToggle("Autoplay videos", "Play visible videos silently. Reduced motion uses click to play.", settings().autoplayVideos,
+      (autoplayVideos) => this.plugin.setBanner({ ...settings(), autoplayVideos }));
+  }
+
   private displayEditorSection(): void {
     new Setting(this.containerEl).setName("Editor").setHeading();
 
@@ -274,6 +309,7 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
     mermaidCachedLatest:
       typeof record.mermaidCachedLatest === "string" ? record.mermaidCachedLatest : undefined,
     inlineStyles: parseInlineStyleSettings(record.inlineStyles),
+    banner: parseBannerSettings(record.banner),
     activeLine:
       typeof record.activeLine === "boolean"
         ? record.activeLine

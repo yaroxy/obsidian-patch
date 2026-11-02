@@ -148,3 +148,104 @@ body.theme-dark {
 .obsidian-patch-input-invalid {
   border-color: var(--background-modifier-error);
 }
+
+/* Page cover, before the native title and Properties. */
+.obsidian-patch-banner-cover {
+  box-sizing: border-box;
+  width: var(--obsidian-patch-cover-width, 100%);
+  max-width: none;
+  margin-inline-start: var(--obsidian-patch-cover-offset, 0px);
+  margin-inline-end: 0;
+}
+
+.obsidian-patch-banner-cover[hidden] { display: none; }
+
+.obsidian-patch-banner-add {
+  margin-block-end: var(--size-4-2);
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+.obsidian-patch-banner-cover:hover .obsidian-patch-banner-add,
+.obsidian-patch-banner-cover:focus-within .obsidian-patch-banner-add {
+  opacity: 1;
+}
+
+.obsidian-patch-banner-add[hidden] { display: none; }
+
+.obsidian-patch-banner {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  padding-block-end: var(--size-4-4);
+}
+
+.obsidian-patch-banner[hidden] { display: none; }
+
+.obsidian-patch-banner-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+}
+
+.obsidian-patch-banner .obsidian-patch-banner-media {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  max-width: none;
+  margin: 0;
+  object-fit: contain;
+}
+
+.obsidian-patch-banner-message {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  padding: var(--size-4-3);
+  padding-block-end: 48px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  white-space: normal;
+  text-align: center;
+}
+
+.obsidian-patch-banner-message[hidden] { display: none; }
+
+.obsidian-patch-banner[data-status="error"] .obsidian-patch-banner-message {
+  position: relative;
+  color: var(--text-error);
+}
+
+.obsidian-patch-banner-toolbar {
+  position: absolute;
+  inset-inline-end: 8px;
+  inset-block-end: calc(var(--size-4-4) + 8px);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: calc(100% - 16px);
+  opacity: 0;
+  transition: opacity 100ms;
+}
+
+.obsidian-patch-banner:hover .obsidian-patch-banner-toolbar,
+.obsidian-patch-banner:focus-within .obsidian-patch-banner-toolbar,
+.obsidian-patch-banner[data-status="error"] .obsidian-patch-banner-toolbar {
+  opacity: 1;
+}
+
+.obsidian-patch-banner-toolbar button {
+  font-size: var(--font-ui-smaller);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+@media (hover: none), (prefers-reduced-motion: reduce) {
+  .obsidian-patch-banner-toolbar { opacity: 1; transition: none; }
+  .obsidian-patch-banner-add { opacity: 1; }
+}

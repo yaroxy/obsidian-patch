@@ -9,7 +9,7 @@ import {
   type MermaidVersionChoice,
 } from "./mermaid-runtime";
 
-const CODE_BLOCK_LANGUAGE = "mermaid-latest";
+const CODE_BLOCK_LANGUAGE = "patch-mermaid";
 
 /**
  * Obsidian's own Mermaid renderer reads its font from this property, which
@@ -19,7 +19,7 @@ const FONT_PROPERTY = "--font-mermaid";
 
 export type MermaidSecurityLevel = "strict" | "loose";
 
-export interface MermaidLatestOptions {
+export interface PatchMermaidOptions {
   securityLevel: MermaidSecurityLevel;
   version: MermaidVersionChoice;
   /** The version that `latest` resolved to the last time it was looked up. */
@@ -27,7 +27,7 @@ export interface MermaidLatestOptions {
   onLatestResolved: (version: string) => void;
 }
 
-export interface MermaidLatestController {
+export interface PatchMermaidController {
   setSecurityLevel(securityLevel: MermaidSecurityLevel): void;
   setVersion(version: MermaidVersionChoice): Promise<MermaidRuntime>;
   /** The runtime in use, or the one being loaded. */
@@ -49,10 +49,10 @@ interface Appearance {
   font: string;
 }
 
-export function registerMermaidLatest(
+export function registerPatchMermaid(
   plugin: Plugin,
-  options: MermaidLatestOptions,
-): MermaidLatestController {
+  options: PatchMermaidOptions,
+): PatchMermaidController {
   const diagrams = new Set<Diagram>();
   let renderSequence = 0;
   let securityLevel = options.securityLevel;

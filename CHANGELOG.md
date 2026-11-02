@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Patch Banner: local image, animated image, and video banners configured with a single `patch-banner` property and displayed in full at their original aspect ratio. Covers use a configurable 10–100% of the note pane (90% by default, with a reset button), centered above the native title and Properties while keeping the text column at its normal width in Reading View and Live Preview, including empty notes, with Add/Change/Remove cover actions, vault media selection, media controls, reduced-motion behavior, and automatic video pausing when hidden.
 - Mermaid version setting with three choices. Latest, the new default, loads the newest Mermaid release from jsDelivr; Bundled works offline; Custom takes an exact release from 11.0.0 on. Remote versions fall back to the bundled copy when they cannot be loaded, and the setting shows the version in use.
 - Inline styles: colorize bold, italic, and inline code with muted light and dark presets, each with its own toggle.
 - Active line: tint the cursor's line and highlight its line number in Live Preview and Source mode.
@@ -17,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Minimum Obsidian version raised to 1.13.7 for the public editor and frontmatter interfaces used by Patch Banner.
+- Renamed the Mermaid feature to Patch Mermaid and its code block language from `mermaid-latest` to `patch-mermaid`. Existing notes must use `patch-mermaid` to render with the plugin.
 - Bundled Mermaid upgraded from 11.16.0 to 12.1.0, and `@mermaid-js/layout-elk` from 0.2.2 to 1.0.1.
 - DOMPurify, which Strict mode relies on, updated to 3.4.16 for a moderate security advisory.
 - Icon packs are embedded gzip-compressed and decoded on first use, which cuts `main.js` from 13.1 MB to 9.8 MB despite the larger Mermaid 12 bundle.
