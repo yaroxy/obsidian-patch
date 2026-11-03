@@ -140,6 +140,24 @@
     await until(() => root()?.querySelectorAll(".obsidian-patch-banner-cover").length === 1 &&
       root().querySelector("img.obsidian-patch-banner-media") === coverImage,
     "reading rerenders preserve exactly one cover and media instance");
+    // Reading View detaches the header while it is far above the viewport.
+    const long = await write("Long", "Patch Banner Tests/media/test-portrait.png",
+      Array.from({ length: 80 }, (_, i) => `Paragraph ${i + 1}`).join("\n\n"));
+    await open(long, "preview");
+    await until(fullImage, "long note: portrait cover loaded");
+    const scroller = root().querySelector(".markdown-preview-view");
+    const longImage = root().querySelector("img.obsidian-patch-banner-media");
+    scroller.scrollTop = scroller.scrollHeight;
+    await until(() => !longImage.isConnected, "long note: Reading View detaches the header at the end");
+    for (let i = 0; i < 200 && scroller.scrollTop > 0; i++) {
+      const previous = scroller.scrollTop;
+      scroller.scrollTop -= 120;
+      await wait(32);
+      assert(scroller.scrollTop < previous, `Scrolling up stalled or jumped from ${Math.round(previous)} to ${Math.round(scroller.scrollTop)}`);
+    }
+    assert(scroller.scrollTop === 0, "Scrolling up did not reach the top");
+    assert(root().querySelector("img.obsidian-patch-banner-media") === longImage, "Detached header lost its cover media");
+    checks.push("Reading View scrolls up from the end of a note with a tall cover");
     await open("Patch Banner Tests/Image.md");
     const value = leaf.view.editor.getValue();
     const start = value.indexOf("banner.png");

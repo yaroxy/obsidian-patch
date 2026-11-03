@@ -73,6 +73,8 @@ CodeMirror 使用宿主提供的 `@codemirror/state` 6.5.0 / `@codemirror/view` 
 
 每个视图使用局部 MutationObserver 关注标题容器的替换；忽略封面自己的 DOM 变化，合并到一次动画帧刷新。宿主重建标题后重新挂载同一个封面节点，不覆盖任何宿主方法，没有全局 DOM observer。
 
+阅读视图按渲染窗口虚拟化：标题容器和正文 section 一样，滚出窗口时被整段卸载，回到窗口时才重新测量高度。封面在卸载期间留在同一个标题节点内，与原生标题和 Properties 一致。若随卸载移除封面，宿主记录的高度会在有无封面之间来回错位，把滚动位置钳回笔记末尾，表现为滚到底部后无法向上滚动。
+
 CodeMirror ViewPlugin 通过公开的 editorInfoField / editorLivePreviewField 读取笔记身份和模式。在 frontmatter 或笔记身份改变时使用当前 editor state 解析属性，普通正文编辑不重新解析 frontmatter。没有访问 editor.cm；没有正文 StateField / widget，也不再需要阅读模式 post processor。
 
 封面按视口宽度乘以设置百分比计算尺寸，左右保留等量空间；只调整自己的宽度和逻辑方向偏移，需要时用负向边距越出正文栏，不修改宿主标题或正文的样式。局部 ResizeObserver 测量当前滚动视口与标题容器，跟随窗格、分栏和正文宽度变化；没有封面时 Add cover 保持与标题对齐。图片高度随解码和宽度变化，媒体模块的 ResizeObserver 通知对应编辑器 requestMeasure。不同窗格的状态相互独立，同一笔记的阅读/Live Preview 切换移动同一节点，保留媒体与手动暂停状态。切到源码模式释放媒体源并隐藏全部封面操作。

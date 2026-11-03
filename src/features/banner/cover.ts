@@ -29,6 +29,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     private readonly win: Window & typeof globalThis;
     private viewport?: HTMLElement;
     private host?: HTMLElement;
+    private header?: HTMLElement;
     private frame = 0;
     private editor?: EditorView;
     private editorState: BannerState = { status: "none" };
@@ -87,7 +88,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
         return;
       }
       const host = reading
-        ? this.view.previewMode.containerEl.querySelector<HTMLElement>(".markdown-preview-view > .markdown-preview-sizer > .mod-header")
+        ? this.readingHeader()
         : this.view.contentEl.querySelector<HTMLElement>(":scope > .markdown-source-view .cm-sizer");
       if (!host) {
         this.element.remove();
@@ -110,6 +111,20 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
       this.add.hidden = state.status !== "none";
       this.resize();
       this.media.update(state, settings());
+    }
+
+    /**
+     * Reading View detaches its header, like any section, while it is outside the
+     * render window, and measures it again when it returns. Stay in that node, as
+     * the native title and Properties do: leaving shrinks the header behind the
+     * renderer's back, and it then clamps the scroll position to the end of the note.
+     */
+    private readingHeader(): HTMLElement | undefined {
+      const attached = this.view.previewMode.containerEl.querySelector<HTMLElement>(
+        ":scope > .markdown-preview-view > .markdown-preview-sizer > .mod-header");
+      if (attached) this.header = attached;
+      else if (this.header?.isConnected) this.header = undefined;
+      return this.header;
     }
 
     /** Break out of the text column without changing the host's layout styles. */
