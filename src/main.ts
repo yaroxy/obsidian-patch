@@ -19,6 +19,7 @@ import {
 } from "./features/inline-styles";
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
+import { registerTables } from "./features/table";
 
 interface ObsidianPatchSettings {
   mermaidSecurityLevel: MermaidSecurityLevel;
@@ -58,6 +59,7 @@ export default class ObsidianPatchPlugin extends Plugin {
     this.applyInlineStyles = registerInlineStyles(this, this.settings.inlineStyles);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyBanner = registerBanner(this, this.settings.banner);
+    registerTables(this);
     this.addSettingTab(new ObsidianPatchSettingTab(this));
   }
 

@@ -249,3 +249,77 @@ body.theme-dark {
   .obsidian-patch-banner-toolbar { opacity: 1; transition: none; }
   .obsidian-patch-banner-add { opacity: 1; }
 }
+
+/*
+ * HTML tables. Live Preview puts the edit button among the widget's own
+ * actions; Reading View has none, so the button sits in the same corner.
+ */
+.obsidian-patch-table-host { position: relative; }
+
+.obsidian-patch-table-host > .obsidian-patch-table-edit {
+  position: absolute;
+  inset-block-start: var(--size-2-2);
+  inset-inline-end: var(--size-2-2);
+  opacity: 0;
+}
+
+.obsidian-patch-table-host:hover > .obsidian-patch-table-edit,
+.obsidian-patch-table-host > .obsidian-patch-table-edit:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .obsidian-patch-table-host > .obsidian-patch-table-edit { opacity: 1; }
+}
+
+.modal.obsidian-patch-table-modal {
+  width: min(1100px, 92vw);
+  max-width: 92vw;
+}
+
+.obsidian-patch-table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-1);
+  margin-block-end: var(--size-4-2);
+}
+
+.obsidian-patch-table-menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-1);
+}
+
+.obsidian-patch-table-separator {
+  align-self: stretch;
+  width: 1px;
+  margin-inline: var(--size-4-1);
+  background-color: var(--background-modifier-border);
+}
+
+.obsidian-patch-table-grid {
+  max-height: 65vh;
+  overflow: auto;
+}
+
+/* Table cells treat height as a minimum, which keeps empty rows clickable. */
+.obsidian-patch-table-grid :is(th, td) { height: 2em; }
+
+.obsidian-patch-table-grid :is(th, td, caption):focus {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+/* Outranks Obsidian's alternate-column background on even cells. */
+.obsidian-patch-table-grid.markdown-rendered :is(th, td).is-selected {
+  background-color: var(--text-selection);
+}
+
+.obsidian-patch-table-grid.is-selecting { user-select: none; }
+
+.obsidian-patch-table-grid caption:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-faint);
+  font-weight: var(--font-normal);
+}
