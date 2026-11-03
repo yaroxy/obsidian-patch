@@ -158,6 +158,25 @@
     assert(scroller.scrollTop === 0, "Scrolling up did not reach the top");
     assert(root().querySelector("img.obsidian-patch-banner-media") === longImage, "Detached header lost its cover media");
     checks.push("Reading View scrolls up from the end of a note with a tall cover");
+    // Live Preview measures the text before a late cover pushes it down, as when the
+    // image decodes after a note opens in the same tab; scrolling down must stay smooth.
+    await plugin().setBanner({ ...plugin().settings.banner, enabled: false });
+    await open("Patch Banner Tests/Plain.md");
+    await leaf.openFile(app.vault.getFileByPath(long));
+    await until(() => leaf.view.file?.path === long && root()?.querySelector(".cm-line"), "long note: opened in the same Live Preview tab");
+    await wait(300);
+    await plugin().setBanner({ ...plugin().settings.banner, enabled: true });
+    await until(fullImage, "long note: cover appears above the measured text");
+    const editorScroller = root().querySelector(".cm-scroller");
+    let reached = editorScroller.scrollTop;
+    for (let i = 0; i < 400 && reached < editorScroller.scrollHeight - editorScroller.clientHeight - 1; i++) {
+      editorScroller.scrollTop += 60;
+      await wait(32);
+      const now = editorScroller.scrollTop;
+      assert(now >= reached && now - reached <= 62, `Live Preview scroll jumped from ${Math.round(reached)} to ${Math.round(now)}`);
+      reached = now;
+    }
+    checks.push("Live Preview scrolls down a long note with a tall cover without jumping");
     await open("Patch Banner Tests/Image.md");
     const value = leaf.view.editor.getValue();
     const start = value.indexOf("banner.png");

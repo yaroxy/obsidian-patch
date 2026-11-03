@@ -3,6 +3,7 @@ import { MarkdownView, editorInfoField, editorLivePreviewField, getFrontMatterIn
 import { resolveBanner, type BannerSettings, type BannerState } from "./config";
 import { BannerMedia } from "./media";
 import { bannerActions } from "./picker";
+import { measureScrollFromText } from "./scroll-offset";
 
 /**
  * The only dependency on Obsidian's note-header DOM. There is no public cover
@@ -33,6 +34,8 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     private frame = 0;
     private editor?: EditorView;
     private editorState: BannerState = { status: "none" };
+    private measured?: EditorView;
+    private restoreScroll?: () => void;
 
     constructor(private readonly view: MarkdownView) {
       const doc = view.contentEl.ownerDocument;
@@ -75,6 +78,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
 
     releaseEditor(editor: EditorView): void {
       if (this.editor === editor) this.editor = undefined;
+      if (this.measured === editor) this.measureFrom(undefined);
     }
 
     refresh(): void {
@@ -84,6 +88,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
       const enabled = !!file && settings().enabled && (reading || livePreview);
       this.element.hidden = !enabled;
       if (!enabled || !file) {
+        this.measureFrom(undefined);
         this.media.update({ status: "none" }, settings());
         return;
       }
@@ -91,6 +96,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
         ? this.readingHeader()
         : this.view.contentEl.querySelector<HTMLElement>(":scope > .markdown-source-view .cm-sizer");
       if (!host) {
+        this.measureFrom(undefined);
         this.element.remove();
         this.media.update({ status: "none" }, settings());
         return;
@@ -109,8 +115,17 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
         ? resolveBanner(plugin.app, file, plugin.app.metadataCache.getFileCache(file)?.frontmatter)
         : this.editorState;
       this.add.hidden = state.status !== "none";
+      this.measureFrom(!reading && state.status !== "none" ? this.editor : undefined);
       this.resize();
       this.media.update(state, settings());
+    }
+
+    /** Only the editor a cover sits above measures its scroll from the text. */
+    private measureFrom(editor: EditorView | undefined): void {
+      if (this.measured === editor) return;
+      this.restoreScroll?.();
+      this.measured = editor;
+      this.restoreScroll = editor ? measureScrollFromText(editor) : undefined;
     }
 
     /**
@@ -158,6 +173,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
       this.win.cancelAnimationFrame(this.frame);
       this.media.destroy();
       this.element.remove();
+      this.measureFrom(undefined);
       this.editor = undefined;
     }
   }

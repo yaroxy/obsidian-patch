@@ -69,11 +69,13 @@ CodeMirror 使用宿主提供的 `@codemirror/state` 6.5.0 / `@codemirror/view` 
 
 每个完整工作区 MarkdownView 拥有一个封面实例，操作始终绑定该视图的笔记，而非全局活跃文件。阅读模式挂载到原生 `.mod-header` 的首部，Live Preview 挂载到 `.cm-sizer` 的首部，位于 inline title / Properties 之前；不向 CodeMirror 的 contentDOM 或阅读正文 section 插入节点。
 
-**集成约束**：当前项目所用的公开接口没有标题前封面插槽，因此上述两个宿主 CSS 容器是必须承认的 DOM 依赖，集中在 cover.ts 中。Obsidian 改动标题结构后需要重新验证；不能宣称这一部分完全不依赖宿主内部结构。挂载点不可用时不注入到别的区域，不保留正文内的兼容实现。
+**集成约束**：当前项目所用的公开接口没有标题前封面插槽，因此上述两个宿主 CSS 容器是必须承认的 DOM 依赖，集中在 cover.ts 中。Obsidian 改动标题结构后需要重新验证；不能宣称这一部分完全不依赖宿主内部结构。挂载点不可用时不注入到别的区域，不保留正文内的兼容实现。Live Preview 另依赖 CodeMirror 的内部方法 `viewState.getScrollOffset`（见下文），集中在 banner/scroll-offset.ts；方法不存在时不做修改。
 
 每个视图使用局部 MutationObserver 关注标题容器的替换；忽略封面自己的 DOM 变化，合并到一次动画帧刷新。宿主重建标题后重新挂载同一个封面节点，不覆盖任何宿主方法，没有全局 DOM observer。
 
 阅读视图按渲染窗口虚拟化：标题容器和正文 section 一样，滚出窗口时被整段卸载，回到窗口时才重新测量高度。封面在卸载期间留在同一个标题节点内，与原生标题和 Properties 一致。若随卸载移除封面，宿主记录的高度会在有无封面之间来回错位，把滚动位置钳回笔记末尾，表现为滚到底部后无法向上滚动。
+
+Live Preview 在重新测量行高时会保持一行不动，这一行按原始滚动偏移选取，前提是正文从滚动容器顶端开始。封面让正文下移一千多像素，选中的高度可能超出整篇正文，落在高度表只做外推的未渲染区域；等这一行真正被测量时，修正会把滚动位置拉回几百像素，表现为向下滚动时封面跳回视野。有封面的编辑器因此改为从正文顶端计算滚动偏移，这正是 CodeMirror 在外层滚动容器中的做法；封面隐藏、切到阅读视图、编辑器释放或插件卸载时还原。没有封面的笔记保持 Obsidian 原有行为。
 
 CodeMirror ViewPlugin 通过公开的 editorInfoField / editorLivePreviewField 读取笔记身份和模式。在 frontmatter 或笔记身份改变时使用当前 editor state 解析属性，普通正文编辑不重新解析 frontmatter。没有访问 editor.cm；没有正文 StateField / widget，也不再需要阅读模式 post processor。
 
