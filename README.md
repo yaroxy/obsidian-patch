@@ -7,6 +7,8 @@ Obsidian Patch collects focused fixes and enhancements for Obsidian. Each featur
 | [Patch Mermaid](#patch-mermaid) | Renders `patch-mermaid` code blocks with the latest, bundled, or a chosen Mermaid version           |
 | [Patch Banner](#patch-banner)   | Shows a vault image, animation, or video as a cover above the note title                            |
 | [HTML Tables](#html-tables)     | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions       |
+| [Patch Icons](#patch-icons)     | Puts Lucide and the newest Simple Icons before file and folder names in the file explorer           |
+| [Line Width](#line-width)       | Sets the readable line width from a status bar slider, or per note with `patch-line-width`          |
 | [Inline Styles](#inline-styles) | Colorizes bold, italic, and inline code                                                             |
 | [Active Line](#active-line)     | Tints the line the cursor is on                                                                     |
 
@@ -163,6 +165,54 @@ The editor writes HTML that looks like a native table in both views. The block h
 
 Cells you do not edit keep their markup and attributes, and an unchanged table is not written back. If the note changed while the editor was open, saving shows a notice instead of overwriting it. Tables inside callouts and blockquotes are not detected.
 
+## Patch Icons
+
+Right-click a file or folder in the file explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon, built into Obsidian, or a [Simple Icons](https://simpleicons.org/) brand logo. **Remove icon** clears it, and both work on several selected files at once. An icon takes the color of the name beside it.
+
+| Setting                | Notes                                                                                                                                                       |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enabled                | On by default.                                                                                                                                              |
+| Simple Icons           | The picker downloads the newest release from jsDelivr, as Iconify's `@iconify-json/simple-icons`, the first time it opens in a session. **Update** loads it again and refreshes the icons in use. |
+| Import from Iconize    | Copies Iconize's file and folder icons, replacing icons already set for the same paths. Emoji and other icon packs are skipped and listed in the notice. Disable Iconize afterwards so icons are not drawn twice. |
+| Icons of missing files | Lists icons whose path no longer exists, and removes them.                                                                                                  |
+
+- **Offline.** The SVG of each Simple Icon in use is saved with the plugin's settings, so icons appear at startup without a download. The picker lists Lucide icons at once and adds Simple Icons when they arrive.
+- **Renames.** Icons follow files and folders renamed or moved inside Obsidian, including a folder's contents. A deleted path keeps its icon in case it comes back. A rename made outside Obsidian, for example by sync or a terminal, looks like a deletion and leaves the icon at the old path.
+- **Rendering.** A generated stylesheet keyed on the explorer's `data-path` attributes draws each icon as a CSS mask. The explorer's DOM is never modified, and downloaded SVGs are only used as images, so they cannot run code.
+
+Only the file explorer shows icons. Tabs, note titles, emoji, custom icon packs, per-icon colors, and rules are out of scope.
+
+```css
+body {
+  --obsidian-patch-icon-size: 16px;
+  --obsidian-patch-icon-gap: 4px;
+  --obsidian-patch-icon-offset: -0.2em; /* vertical alignment with the name */
+  --obsidian-patch-icon-color: var(--text-accent); /* default: the name's color */
+}
+```
+
+## Line Width
+
+Sets Obsidian's readable line width, `--file-line-width`, in Reading View, Live Preview, and Source mode. It needs **Settings > Editor > Readable line length**, which is on by default.
+
+| Setting            | Default | Notes                                                                                                                       |
+| ------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Enabled            | On      |                                                                                                                             |
+| Line width (px)    | 700     | 500–2000 px in 10 px steps, for notes without their own width. 700 px is Obsidian's own width. The reset button restores it. |
+| Show in status bar | On      | Drag the slider to resize open notes as you go; the width is saved when you release it. Click the value to reset it. Desktop only. |
+
+A note sets its own width with a whole number of pixels from 500 to 2000, written as `1200` or `"1200px"`:
+
+```yaml
+---
+patch-line-width: 1200
+---
+```
+
+The property resizes only the pane that shows the note, so splits can differ, and edits to it apply at once. While such a note is active, the status bar shows its width in the accent color and disables the slider. An invalid value is ignored and shows in red; hover over it for the accepted range.
+
+Coming from Editor Width Slider: its slider value N is 700 + 10 × N px here, so 20 is 900 px. Its `editor-width` property used another scale and is not read.
+
 ## Inline Styles
 
 Toggles for **Bold** (red), **Italic** (green), and **Inline code** (blue on gray), all on by default. They color note content in Reading View and Live Preview and leave the app interface alone. Fenced code blocks keep the theme's colors, and bold or italic text inside links and highlights keeps the surrounding color.
@@ -225,7 +275,9 @@ node scripts/test-table.mjs /path/to/dev-vault
 │   ├── features/                  One independent module per feature
 │   │   ├── active-line.ts
 │   │   ├── banner.ts, banner/     Cover properties, media, mounting, and picker
+│   │   ├── icons.ts, icons/       Explorer icons, picker, Simple Icons loading, Iconize import
 │   │   ├── inline-styles.ts
+│   │   ├── line-width.ts, line-width/ Per-pane width, status bar slider, property parsing
 │   │   ├── mermaid-runtime.ts     Loads Mermaid from jsDelivr or the bundle
 │   │   ├── patch-mermaid.ts       Code block processor, theming, re-rendering
 │   │   └── table.ts, table/       Table model, editor, and entry points
@@ -249,10 +301,20 @@ See [CHANGELOG.md](CHANGELOG.md).
 - [Mermaid releases](https://github.com/mermaid-js/mermaid/releases)
 - [ELK layout for Mermaid](https://github.com/mermaid-js/mermaid/tree/develop/packages/mermaid-layout-elk)
 - [jsDelivr](https://www.jsdelivr.com/package/npm/mermaid) and its [data API](https://github.com/jsdelivr/data.jsdelivr.com)
-- [Iconify icon sets](https://icon-sets.iconify.design/)
+- [Iconify icon sets](https://icon-sets.iconify.design/) and the [`@iconify-json/simple-icons`](https://www.npmjs.com/package/@iconify-json/simple-icons) package
+- [Simple Icons](https://simpleicons.org/) and [Lucide](https://lucide.dev/)
 - [Obsidian developer documentation](https://docs.obsidian.md/)
 - [Nord color palette](https://www.nordtheme.com/docs/colors-and-palettes)
 - [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+
+## Acknowledgments
+
+Two features build on the ideas of other community plugins. Their code is written for this plugin; the importer reproduces Iconize's icon naming so it can read Iconize's settings.
+
+- **Line Width** follows [Editor Width Slider](https://github.com/MugishoMp/obsidian-editor-width-slider) by MugishoMp (MIT): a status bar slider for the line width and a per-note width property.
+- **Patch Icons** follows [Iconize](https://github.com/FlorianWoelki/obsidian-iconize) by Florian Woelki (MIT): file and folder icons in the explorer, chosen from Lucide and Simple Icons in a searchable picker.
+
+Icons come from [Lucide](https://lucide.dev/) (ISC), which ships with Obsidian, and [Simple Icons](https://simpleicons.org/) (CC0 1.0), packaged by [Iconify](https://iconify.design/). Brand icons are trademarks of their respective owners.
 
 ## Contributors
 

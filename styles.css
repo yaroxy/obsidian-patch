@@ -323,3 +323,80 @@ body.theme-dark {
   color: var(--text-faint);
   font-weight: var(--font-normal);
 }
+
+/* Patch Icons */
+
+/*
+ * The generated rules draw each icon as a mask before the file or folder name,
+ * filled with --obsidian-patch-icon-color, which follows the name's color by
+ * default. Override any of these from a CSS snippet.
+ */
+
+body {
+  --obsidian-patch-icon-size: 16px;
+  --obsidian-patch-icon-gap: 4px;
+  --obsidian-patch-icon-offset: -0.2em;
+  --obsidian-patch-icon-color: currentColor;
+}
+
+.obsidian-patch-icon-suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.obsidian-patch-icon-preview {
+  flex-shrink: 0;
+  width: var(--icon-m);
+  height: var(--icon-m);
+  background-color: currentColor;
+  -webkit-mask: var(--obsidian-patch-icon) center / contain no-repeat;
+  mask: var(--obsidian-patch-icon) center / contain no-repeat;
+}
+
+.obsidian-patch-icon-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.obsidian-patch-icon-source {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
+.obsidian-patch-icon-picker-status {
+  padding: var(--size-4-2) var(--size-4-3);
+  border-block-start: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+/* Line Width */
+
+.obsidian-patch-line-width {
+  gap: var(--size-4-2);
+}
+
+/* A smaller thumb than settings sliders, to fit the status bar. */
+.obsidian-patch-line-width-slider {
+  --slider-thumb-height: 12px;
+  --slider-thumb-width: 20px;
+  --slider-thumb-y: -4px;
+  width: 96px;
+  margin: 0;
+}
+
+.obsidian-patch-line-width-value {
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  cursor: var(--cursor);
+}
+
+.obsidian-patch-line-width-value.is-note-width {
+  color: var(--text-accent);
+}
+
+.obsidian-patch-line-width-value.is-invalid {
+  color: var(--text-error);
+}

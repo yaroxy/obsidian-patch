@@ -20,6 +20,23 @@ import {
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { registerTables } from "./features/table";
+import {
+  parseIconSettings,
+  registerIcons,
+  type IconSettings,
+  type PatchIconsController,
+  type SimpleIconsStatus,
+} from "./features/icons";
+import {
+  DEFAULT_LINE_WIDTH,
+  LINE_WIDTH_PROPERTY,
+  LINE_WIDTH_STEP,
+  MAX_LINE_WIDTH,
+  MIN_LINE_WIDTH,
+  parseLineWidthSettings,
+  registerLineWidth,
+  type LineWidthSettings,
+} from "./features/line-width";
 
 interface ObsidianPatchSettings {
   mermaidSecurityLevel: MermaidSecurityLevel;
@@ -29,6 +46,8 @@ interface ObsidianPatchSettings {
   inlineStyles: InlineStyleSettings;
   activeLine: boolean;
   banner: BannerSettings;
+  icons: IconSettings;
+  lineWidth: LineWidthSettings;
 }
 
 /** Dropdown value that reveals the custom version field; never stored. */
@@ -39,9 +58,11 @@ const DEFAULT_MERMAID_SECURITY_LEVEL: MermaidSecurityLevel = "strict";
 export default class ObsidianPatchPlugin extends Plugin {
   settings: ObsidianPatchSettings = parseSettings(null);
   mermaid?: PatchMermaidController;
+  icons?: PatchIconsController;
   private applyInlineStyles?: (settings: InlineStyleSettings) => void;
   private applyActiveLine?: (enabled: boolean) => void;
   private applyBanner?: (settings: BannerSettings) => void;
+  private applyLineWidth?: (settings: LineWidthSettings) => void;
 
   override async onload(): Promise<void> {
     this.settings = parseSettings(await this.loadData());
@@ -60,6 +81,11 @@ export default class ObsidianPatchPlugin extends Plugin {
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
+    this.icons = registerIcons(this, this.settings.icons, async (icons) => {
+      this.settings.icons = icons;
+      await this.saveData(this.settings);
+    });
+    this.applyLineWidth = registerLineWidth(this, this.settings.lineWidth, (lineWidth) => this.setLineWidth(lineWidth));
     this.addSettingTab(new ObsidianPatchSettingTab(this));
   }
 
@@ -92,6 +118,12 @@ export default class ObsidianPatchPlugin extends Plugin {
     await this.saveData(this.settings);
     this.applyBanner?.(banner);
   }
+
+  async setLineWidth(lineWidth: LineWidthSettings): Promise<void> {
+    this.settings.lineWidth = lineWidth;
+    await this.saveData(this.settings);
+    this.applyLineWidth?.(lineWidth);
+  }
 }
 
 class ObsidianPatchSettingTab extends PluginSettingTab {
@@ -103,6 +135,8 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     this.containerEl.empty();
     this.displayMermaidSection();
     this.displayBannerSection();
+    this.displayIconSection();
+    this.displayLineWidthSection();
     this.displayInlineStyleSection();
     this.displayEditorSection();
   }
@@ -269,6 +303,103 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
       (autoplayVideos) => this.plugin.setBanner({ ...settings(), autoplayVideos }));
   }
 
+  private displayIconSection(): void {
+    new Setting(this.containerEl).setName("Patch Icons").setHeading();
+    const icons = this.plugin.icons;
+    this.addToggle(
+      "Enabled",
+      "Show icons before file and folder names in the file explorer. Right-click a file or folder to change or remove its icon.",
+      this.plugin.settings.icons.enabled,
+      async (enabled) => { await icons?.setEnabled(enabled); },
+    );
+
+    const simpleIcons = new Setting(this.containerEl).setName("Simple Icons");
+    simpleIcons.descEl.createDiv({
+      text: "The newest release is downloaded from jsDelivr when you choose an icon. Icons in use are saved with these settings, so they display offline.",
+    });
+    const status = simpleIcons.descEl.createDiv({ cls: "obsidian-patch-setting-status" });
+    const showStatus = (state: SimpleIconsStatus): void => {
+      status.setText(
+        state.status === "ready" ? `In use: Simple Icons ${state.version}, from jsDelivr.`
+          : state.status === "loading" ? "Loading…"
+            : state.status === "error" ? `Could not load Simple Icons: ${state.message}`
+              : "Not loaded yet in this session.",
+      );
+    };
+    showStatus(icons?.simpleIconsStatus() ?? { status: "idle" });
+    simpleIcons.addButton((button) => button
+      .setButtonText("Update")
+      .setTooltip("Load the newest Simple Icons and refresh the icons in use")
+      .onClick(async () => {
+        if (!icons) return;
+        button.setDisabled(true);
+        showStatus({ status: "loading" });
+        showStatus(await icons.updateSimpleIcons());
+        button.setDisabled(false);
+      }));
+
+    const iconize = new Setting(this.containerEl)
+      .setName("Import from Iconize")
+      .setDesc("Copies Iconize's file and folder icons, replacing icons already set for the same paths. Lucide and Simple Icons are supported; emoji and other icon packs are skipped. Disable Iconize afterwards so icons are not shown twice.");
+    const iconizeStatus = iconize.descEl.createDiv({ cls: "obsidian-patch-setting-status" });
+    iconize.addButton((button) => {
+      button.setButtonText("Import").setDisabled(true).onClick(async () => {
+        await icons?.importIconize();
+        this.display();
+      });
+      void icons?.countIconizeIcons().then((count) => {
+        button.setDisabled(!count);
+        iconizeStatus.setText(count === undefined ? "No Iconize settings in this vault." : `Iconize has ${count} file and folder icons.`);
+      });
+    });
+
+    const missing = icons?.missingPaths() ?? [];
+    new Setting(this.containerEl)
+      .setName("Icons of missing files")
+      .setDesc(missing.length === 0
+        ? "Every icon belongs to an existing file or folder."
+        : `${missing.length} icons belong to paths that no longer exist, for example after a rename outside Obsidian. They return if the path is created again.`)
+      .addButton((button) => button
+        .setButtonText("Remove")
+        .setDisabled(missing.length === 0)
+        .onClick(async () => {
+          await icons?.removeIcons(missing);
+          this.display();
+        }));
+  }
+
+  private displayLineWidthSection(): void {
+    new Setting(this.containerEl).setName("Line Width").setHeading();
+    const settings = (): LineWidthSettings => this.plugin.settings.lineWidth;
+    this.addToggle(
+      "Enabled",
+      `Sets the width of notes in Reading View, Live Preview and Source mode. Requires Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
+      settings().enabled,
+      (enabled) => this.plugin.setLineWidth({ ...settings(), enabled }),
+    );
+    let widthSlider: SliderComponent;
+    new Setting(this.containerEl)
+      .setName("Line width (px)")
+      .setDesc(`${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Default: ${DEFAULT_LINE_WIDTH} px, Obsidian's own width.`)
+      .addSlider((slider) => {
+        widthSlider = slider;
+        slider.setLimits(MIN_LINE_WIDTH, MAX_LINE_WIDTH, LINE_WIDTH_STEP).setValue(settings().width).setDynamicTooltip()
+          .onChange((width) => this.plugin.setLineWidth({ ...settings(), width }));
+      })
+      .addExtraButton((button) => button.setIcon("rotate-ccw")
+        .setTooltip(`Reset to ${DEFAULT_LINE_WIDTH} px`)
+        .onClick(async () => {
+          widthSlider.setValue(DEFAULT_LINE_WIDTH);
+          await this.plugin.setLineWidth({ ...settings(), width: DEFAULT_LINE_WIDTH });
+        }));
+    this.addToggle(
+      "Show in status bar",
+      "A slider in the status bar changes the line width as you read. Click its value to reset it. Desktop only.",
+      settings().statusBar,
+      (statusBar) => this.plugin.setLineWidth({ ...settings(), statusBar }),
+    );
+  }
+
   private displayEditorSection(): void {
     new Setting(this.containerEl).setName("Editor").setHeading();
 
@@ -312,6 +443,8 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
       typeof record.mermaidCachedLatest === "string" ? record.mermaidCachedLatest : undefined,
     inlineStyles: parseInlineStyleSettings(record.inlineStyles),
     banner: parseBannerSettings(record.banner),
+    icons: parseIconSettings(record.icons),
+    lineWidth: parseLineWidthSettings(record.lineWidth),
     activeLine:
       typeof record.activeLine === "boolean"
         ? record.activeLine
