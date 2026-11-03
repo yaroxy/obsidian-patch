@@ -1,5 +1,5 @@
-/** Obsidian's own default for --file-line-width. */
-export const DEFAULT_LINE_WIDTH = 700;
+/** Wider than Obsidian's own 700px --file-line-width. */
+export const DEFAULT_LINE_WIDTH = 900;
 export const MIN_LINE_WIDTH = 500;
 export const MAX_LINE_WIDTH = 2000;
 export const LINE_WIDTH_STEP = 10;

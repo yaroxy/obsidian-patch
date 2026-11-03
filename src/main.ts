@@ -380,7 +380,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     let widthSlider: SliderComponent;
     new Setting(this.containerEl)
       .setName("Line width (px)")
-      .setDesc(`${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Default: ${DEFAULT_LINE_WIDTH} px, Obsidian's own width.`)
+      .setDesc(`${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Default: ${DEFAULT_LINE_WIDTH} px; Obsidian's own width is 700 px.`)
       .addSlider((slider) => {
         widthSlider = slider;
         slider.setLimits(MIN_LINE_WIDTH, MAX_LINE_WIDTH, LINE_WIDTH_STEP).setValue(settings().width).setDynamicTooltip()

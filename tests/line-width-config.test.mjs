@@ -7,15 +7,15 @@ const { parseLineWidthSettings, parseLineWidthProperty } = await import(
   `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`
 );
 
-test("settings default to Obsidian's 700 px with the status bar slider shown", () => {
-  assert.deepEqual(parseLineWidthSettings(undefined), { enabled: true, width: 700, statusBar: true });
-  assert.deepEqual(parseLineWidthSettings({ enabled: false, width: 900, statusBar: false }), { enabled: false, width: 900, statusBar: false });
+test("settings default to 900 px with the status bar slider shown", () => {
+  assert.deepEqual(parseLineWidthSettings(undefined), { enabled: true, width: 900, statusBar: true });
+  assert.deepEqual(parseLineWidthSettings({ enabled: false, width: 1200, statusBar: false }), { enabled: false, width: 1200, statusBar: false });
 });
 
-test("stored widths outside 500-2000 px or with fractions fall back to 700", () => {
+test("stored widths outside 500-2000 px or with fractions fall back to 900", () => {
   for (const width of [500, 760, 2000]) assert.equal(parseLineWidthSettings({ width }).width, width);
-  for (const width of [499, 2001, 900.5, "900", null, NaN, Infinity]) {
-    assert.equal(parseLineWidthSettings({ width }).width, 700, String(width));
+  for (const width of [499, 2001, 1200.5, "1200", null, NaN, Infinity]) {
+    assert.equal(parseLineWidthSettings({ width }).width, 900, String(width));
   }
 });
 

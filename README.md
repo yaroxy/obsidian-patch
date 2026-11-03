@@ -198,7 +198,7 @@ Sets Obsidian's readable line width, `--file-line-width`, in Reading View, Live 
 | Setting            | Default | Notes                                                                                                                       |
 | ------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Enabled            | On      |                                                                                                                             |
-| Line width (px)    | 700     | 500–2000 px in 10 px steps, for notes without their own width. 700 px is Obsidian's own width. The reset button restores it. |
+| Line width (px)    | 900     | 500–2000 px in 10 px steps, for notes without their own width. Obsidian's own width is 700 px. The reset button restores 900 px. |
 | Show in status bar | On      | Drag the slider to resize open notes as you go; the width is saved when you release it. Click the value to reset it. Desktop only. |
 
 A note sets its own width with a whole number of pixels from 500 to 2000, written as `1200` or `"1200px"`:
@@ -211,7 +211,7 @@ patch-line-width: 1200
 
 The property resizes only the pane that shows the note, so splits can differ, and edits to it apply at once. While such a note is active, the status bar shows its width in the accent color and disables the slider. An invalid value is ignored and shows in red; hover over it for the accepted range.
 
-Coming from Editor Width Slider: its slider value N is 700 + 10 × N px here, so 20 is 900 px. Its `editor-width` property used another scale and is not read.
+Coming from Editor Width Slider: its slider value N is 700 + 10 × N px here, so its default of 20 is the same 900 px. Its `editor-width` property used another scale and is not read.
 
 ## Inline Styles
 
