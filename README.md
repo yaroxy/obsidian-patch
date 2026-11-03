@@ -1,54 +1,40 @@
 # Obsidian Patch
 
-Obsidian Patch is an Obsidian plugin that collects focused compatibility fixes and enhancements in one place. Each patch is an independent feature, so the plugin can grow without coupling unrelated behavior.
+Obsidian Patch collects focused fixes and enhancements for Obsidian. Each feature is an independent module with its own settings under **Settings > Obsidian Patch**, and changes apply immediately.
 
-- **Patch Mermaid** renders `patch-mermaid` code blocks with a selectable Mermaid version: Latest, Bundled, or Custom. Diagrams follow Obsidian's text font and light or dark theme.
-- **Patch Banner** displays vault images, animated images, and videos as covers above native note titles, at their original aspect ratio, with media controls.
-- **Inline Styles** colorizes bold, italic, and inline code with muted presets.
-- **Active Line** tints the line the cursor is on.
+| Feature                         | What it does                                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| [Patch Mermaid](#patch-mermaid) | Renders `patch-mermaid` code blocks with the latest, bundled, or a chosen Mermaid version           |
+| [Patch Banner](#patch-banner)   | Shows a vault image, animation, or video as a cover above the note title                            |
+| [HTML Tables](#html-tables)     | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions       |
+| [Inline Styles](#inline-styles) | Colorizes bold, italic, and inline code                                                             |
+| [Active Line](#active-line)     | Tints the line the cursor is on                                                                     |
 
 |                      | Version                                     |
 | -------------------- | ------------------------------------------- |
 | Plugin               | 0.1.0                                       |
 | Tested with Obsidian | 1.14.5 (macOS desktop)                      |
-| Minimum Obsidian     | 1.13.7                                     |
+| Minimum Obsidian     | 1.13.7                                      |
 | Obsidian API typings | 1.13.1                                      |
 | Bundled Mermaid      | 12.1.0, with `@mermaid-js/layout-elk` 1.0.1 |
 
-## Screenshots
+## Installation
 
-Mermaid diagrams re-render with Obsidian's theme and font:
-
-![Mermaid diagrams switching between light and dark themes](docs/images/mermaid-theme.gif)
-
-Inline styles in light and dark themes:
-
-![Bold, italic, and inline code colorized in light and dark themes](docs/images/inline-styles.png)
-
-The active line in Live Preview:
-
-![The cursor's line tinted, with its line number highlighted](docs/images/active-line.png)
-
-## Quick Start
-
-1. Build the plugin. This requires Node.js 22 or later and npm:
+Build with Node.js 22 or later:
 
 ```bash
 npm install
 npm run build
 ```
 
-The build type-checks the source and writes `main.js`. During development, `npm run dev` rebuilds on every change.
+Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/obsidian-patch/`, reload Obsidian, and enable **Obsidian Patch** under **Settings > Community plugins**.
 
-2. Copy `main.js`, `manifest.json`, and `styles.css` into the plugin directory of your vault:
+> [!NOTE]
+> Upgrading from an earlier build: the plugin ID changed from `mermaid-patch` to `obsidian-patch`, so move the plugin to the new directory and enable it again. Code blocks are now `patch-mermaid` instead of `mermaid-latest`.
 
-```text
-<vault>/.obsidian/plugins/obsidian-patch/
-```
+## Patch Mermaid
 
-3. Reload Obsidian, open **Settings > Community plugins**, and enable **Obsidian Patch**.
-
-4. Write a `patch-mermaid` code block. The built-in `mermaid` block is left unchanged, so both renderers can be used side by side:
+Write a `patch-mermaid` code block. The built-in `mermaid` block is left alone, so both renderers work side by side.
 
 ````markdown
 ```patch-mermaid
@@ -57,101 +43,26 @@ flowchart LR
 ```
 ````
 
-The upcoming release renames the code block language from `mermaid-latest` to `patch-mermaid`. Update existing notes to use the new name.
+![Mermaid diagrams switching between light and dark themes](docs/images/mermaid-theme.gif)
 
-> [!NOTE]
-> The previous plugin ID was `mermaid-patch`. Obsidian treats `obsidian-patch` as a different plugin, so an existing installation must be moved to the new directory and enabled again.
+| Setting         | Options                                                                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mermaid version | **Latest** (default) loads the newest release from jsDelivr. **Bundled** uses the copy inside `main.js` and works offline. **Custom** loads an exact release from 11.0.0 on, such as `12.0.0`. |
+| Security level  | **Strict** (default) sanitizes the SVG, which currently hides treeView icons. **Loose** inserts Mermaid's output unsanitized.                                                          |
 
-## Project Structure
+- **Fallback.** A remote version that cannot be loaded falls back to the bundled copy, and the setting shows the version in use and why. Latest remembers the version it last resolved, so offline startups can use the cached copy.
+- **Trust.** Remote versions run with full access to Obsidian and come from npm through jsDelivr without an integrity check, because `latest` changes with every release. Choose Bundled to run only code shipped with the plugin.
+- **Loose** exposes Obsidian to any HTML or SVG in a diagram. Use it only for diagrams you fully trust, not for copied, imported, synchronized, or generated notes.
 
-```text
-.
-├── .github/
-│   ├── dependabot.yml           Daily npm update pull requests
-│   └── workflows/build.yml      Type-check and build on pushes and pull requests
-├── docs/                        Banner design, verification, and README images
-├── src/
-│   ├── features/                One independent module per patch
-│   │   ├── active-line.ts
-│   │   ├── banner.ts            Banner registration, settings, and file events
-│   │   ├── banner/              Properties, media, cover mounting, and picker
-│   │   ├── inline-styles.ts
-│   │   ├── mermaid-runtime.ts   Loads Mermaid from jsDelivr or the bundle
-│   │   └── patch-mermaid.ts     Code block processor, theming, re-rendering
-│   ├── build.d.ts               Types for values the build injects
-│   └── main.ts                  Plugin entry point, settings, and settings tab
-├── CHANGELOG.md
-├── esbuild.config.mjs           Bundles src/ into Obsidian's CommonJS main.js
-├── manifest.json                Plugin ID, version, and minimum app version
-├── styles.css                   All plugin styles and their custom properties
-└── versions.json                Minimum Obsidian version for each release
+Diagrams follow Obsidian's light or dark theme and use the `--font-mermaid` font, like the built-in renderer, re-rendering when either changes. ELK layouts load in the `@mermaid-js/layout-elk` line that matches Mermaid's major version. To give diagrams their own font:
+
+```css
+body {
+  --font-mermaid: "Inter", sans-serif;
+}
 ```
 
-`main.js` is generated by the build and should never be edited by hand.
-
-To add a feature, place it in a focused module under `src/features/`, export a small registration function, and call it from `src/main.ts`. Selectors and generated IDs use the `obsidian-patch-<feature>` namespace, and user-visible changes go under `Unreleased` in [CHANGELOG.md](CHANGELOG.md).
-
-See [the banner design](docs/banner-design.md) for its scope and module interfaces.
-
-## Settings
-
-All settings live under **Settings > Obsidian Patch** and apply immediately. Open diagrams re-render in Reading View and Live Preview alike.
-
-### Patch Banner
-
-Use **Obsidian Patch: Select cover** from the command palette to choose an image or video from your vault, or add these properties by hand:
-
-```yaml
----
-patch-banner: "[[assets/banner.png]]"
----
-```
-
-The only banner property is `patch-banner`. It must be a quoted wikilink to a vault file; the picker writes the full vault path. Images, animations and videos use a centered percentage of the current note pane at their original aspect ratio, with automatic height and no cropping. The default is 90%, centered; 100% fills the pane. The title, Properties and body keep their normal readable width; the cover resizes independently with the pane. Portrait media may extend beyond the visible screen and can be scrolled normally.
-
-Covers appear above Obsidian's native inline title and Properties in Reading View and Live Preview, and scroll with the note. Notes containing only frontmatter are supported. Without a cover, hover above the title to reveal **Add cover**; existing covers show **Change cover / Remove cover** on hover or keyboard focus. Source mode, embedded notes, hover previews, Canvas and PDF export are outside this feature's scope.
-
-Supported extensions are JPG/JPEG, PNG, WebP, GIF, SVG, BMP, AVIF, APNG, MP4, WebM and MOV. Actual decoding depends on the platform and codec. SVGs load as images. Media stays in the vault and uses Obsidian's resource URLs.
-
-Use the banner toolbar or **Select cover** to replace the media. **Remove cover** deletes the `patch-banner` property and preserves the media file. Property writes use Obsidian's frontmatter serializer, which may reformat YAML and remove comments.
-
-The **Patch Banner** settings provide Enabled, **Cover width (%)**, and Autoplay videos. Cover width ranges from 10–100% in 1% steps, defaults to 90%, and applies to every cover in this vault. The reset icon beside the slider restores 90% and saves it. Smaller widths are centered and apply after releasing the slider, without editing note properties or reloading the plugin. Videos are always muted, loop inline, and pause when hidden or offscreen; manual pause applies separately to each pane. Turning autoplay off still allows click to play. Reduced motion disables automatic video playback and defers loading image formats that may animate (including PNG, WebP and SVG) until you choose Show media. Images can be hidden and shown, rather than paused at an exact animation frame.
-
-### Development checks
-
-Run `npm test` for property and resolution tests, then `npm run build`. For integration checks, open the dedicated `dev-vault`, enable the Obsidian CLI, and run:
-
-```bash
-node scripts/test-banner.mjs /path/to/dev-vault
-```
-
-This installs the current build into that vault's existing `obsidian-patch` plugin directory and creates/overwrites fixtures under `Patch Banner Tests/`. It requires a root-level `banner.png`, `ffmpeg` with H.264/VP8 encoders, and `gif2webp`. The script batches its checks inside one existing Obsidian window, uses two CLI invocations in total, and restores banner settings after testing. It does not open popout windows or change Dock settings. Use a development vault. See [the verification record](docs/banner-testing.md) for the environment and actual coverage.
-
-### Mermaid Version
-
-| Option           | Source                                                              | Network  |
-| ---------------- | ------------------------------------------------------------------- | -------- |
-| Latest (default) | The newest Mermaid release, resolved to an exact version on startup | Required |
-| Bundled          | The copy shipped inside `main.js`                                   | None     |
-| Custom           | An exact release typed in, such as `12.0.0`, from 11.0.0 on         | Required |
-
-Choosing Custom reveals a version field. The version applies when the field loses focus or on Enter, and an invalid entry is outlined instead of applied. The setting shows the version in use and where it came from.
-
-- **Latest** asks jsDelivr which version `latest` points to, then loads that exact version. The plugin remembers the result, so an offline startup can still use the browser's cached copy.
-- **Fallback.** When a remote version cannot be loaded, diagrams render with the bundled copy and the setting shows why.
-- **ELK layouts** load alongside Mermaid, in the `@mermaid-js/layout-elk` release line that matches its major version.
-- **Trust.** Remote versions run with full access to Obsidian, like any plugin code. They come from npm through jsDelivr without an integrity check, because `latest` changes with every release. Choose Bundled to run only the code shipped with the plugin. The bundled copy is pinned to an exact version, verified through `package-lock.json`, and updated through reviewed Dependabot pull requests.
-
-### Mermaid Security Level
-
-| Level            | Behavior                                                                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Strict (default) | Sanitizes SVG before inserting it into Obsidian. Mermaid currently removes the SVG references used by treeView icons.                                        |
-| Loose            | Inserts unsanitized Mermaid output directly into Obsidian. Icons and interactions work, but this level must only be used with fully trusted diagram content. |
-
-Loose mode can expose Obsidian to malicious HTML or SVG from copied, imported, synchronized, or automatically generated notes.
-
-TreeView icons require Loose. Two icon packs are bundled: `material-icon-theme` and [SVG Logos](https://icon-sets.iconify.design/logos/) (`logos`, CC0). Both are embedded gzip-compressed and decompressed the first time a diagram needs them:
+TreeView icons require Loose and come from two bundled packs, `material-icon-theme` and [SVG Logos](https://icon-sets.iconify.design/logos/) (`logos`, CC0). Set icons per item, or a default pack and file-type mappings in the diagram's frontmatter:
 
 ````markdown
 ```patch-mermaid
@@ -161,11 +72,7 @@ treeView-beta
             index.ts icon(material-icon-theme:typescript)
         package.json icon(logos:nodejs-icon)
 ```
-````
 
-A default pack and file-type mappings can be set per diagram in frontmatter:
-
-````markdown
 ```patch-mermaid
 ---
 config:
@@ -185,23 +92,82 @@ treeView-beta
 ```
 ````
 
-### Mermaid Appearance
+## Patch Banner
 
-There is no font or theme setting. Diagrams use the `--font-mermaid` custom property, the same one as Obsidian's built-in renderer, which defaults to the note's text font. Light themes use Mermaid's `default` theme and dark themes its `dark` theme. A CSS snippet can give diagrams their own font:
+Run **Obsidian Patch: Select cover** to pick an image or video from the vault, or set the property by hand:
 
-```css
-body {
-  --font-mermaid: "Inter", sans-serif;
-}
+```yaml
+---
+patch-banner: "[[assets/banner.png]]"
+---
 ```
 
-### Inline Styles
+The value must be a quoted wikilink to a vault file. The cover appears above the inline title and Properties in Reading View and Live Preview, uncropped at its original aspect ratio, and scrolls with the note. Hover it for **Change cover** and **Remove cover**, which deletes only the property. A note without a cover offers **Add cover** when you hover above the title.
 
-One toggle each for **Bold** (red), **Italic** (green), and **Inline code** (blue on gray). All are on by default.
+| Setting         | Default | Notes                                                                                                                              |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Enabled         | On      |                                                                                                                                    |
+| Cover width (%) | 90      | 10–100% of the note pane, centered. The text keeps its readable width. The reset button restores 90%.                               |
+| Autoplay videos | On      | Videos are muted, loop, and pause when hidden or off-screen. With reduced motion, videos wait for a click and images that may animate wait for **Show media**. |
 
-The feature redefines Obsidian's own typography properties (`--bold-color`, `--italic-color`, `--code-normal`, `--code-background`) on note content only, so Reading View and Live Preview stay consistent, themes keep control of spacing and borders, and the app interface is unaffected. Fenced code blocks keep the theme's colors. Bold and italic keep the surrounding color inside links and highlights, and are colorized inside blockquotes.
+Supported formats are JPG, PNG, WebP, GIF, SVG, BMP, AVIF, APNG, MP4, WebM, and MOV, as far as the platform can decode them. Source mode, embedded notes, hover previews, Canvas, and PDF export show no cover. The property is written through Obsidian's frontmatter serializer, which may reformat YAML and drop comments.
 
-The presets sit near Nord's Aurora and Frost hues at 24-47% saturation, and every color clears a 4.5:1 contrast ratio against its background:
+## HTML Tables
+
+Markdown tables cannot merge cells, group headers, or carry a caption. HTML tables can, and this feature edits them visually instead of by hand.
+
+- Run **Obsidian Patch: Insert HTML table** to start a 3 × 3 table at the cursor.
+- To edit a table, hover it in Reading View or Live Preview and click **Edit table**, or run **Edit HTML table** with the cursor in its source.
+
+![The table editor with part of a row selected](docs/images/html-table-editor.png)
+
+Type into any cell or the caption. Drag across cells, or Shift-click, to select a range, then use the toolbar or the right-click menu:
+
+| Action           | How                                                         |
+| ---------------- | ----------------------------------------------------------- |
+| Merge or split   | **Merge cells**, **Split cell**                             |
+| Rows and columns | **Row** and **Column** menus: insert on either side, delete |
+| Header cells     | **Toggle header cell**                                      |
+| Alignment        | **Align left**, **Align center**, **Align right**           |
+| Undo and redo    | Toolbar, or Mod+Z and Mod+Shift+Z                           |
+| Save or discard  | **Save** or Mod+Enter; **Cancel**, or Escape outside a cell |
+
+In a cell, Tab moves to the next one and adds a row after the last, Enter starts a new line, and Escape leaves the cell.
+
+The editor writes HTML that looks like a native table in both views. The block has no blank lines, every new cell has an explicit `align`, merged row spans are centered vertically, and the first header row carries the column widths:
+
+```html
+<table style="width:100%">
+  <caption style="caption-side:top; text-align:center; font-weight:600; padding:0 0 4px">五十音</caption>
+  <thead>
+    <tr>
+      <th align="center" style="width:20%">假名</th>
+      <th colspan="2" align="center" style="width:40%">い段</th>
+      <th align="center" style="width:40%">う段</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th rowspan="2" align="center" style="vertical-align:middle">さ行</th>
+      <td colspan="2" align="center">し シ</td>
+      <td align="center">す ス</td>
+    </tr>
+    <tr>
+      <td align="center">si</td>
+      <td align="center">shi</td>
+      <td align="center">su</td>
+    </tr>
+  </tbody>
+</table>
+```
+
+Cells you do not edit keep their markup and attributes, and an unchanged table is not written back. If the note changed while the editor was open, saving shows a notice instead of overwriting it. Tables inside callouts and blockquotes are not detected.
+
+## Inline Styles
+
+Toggles for **Bold** (red), **Italic** (green), and **Inline code** (blue on gray), all on by default. They color note content in Reading View and Live Preview and leave the app interface alone. Fenced code blocks keep the theme's colors, and bold or italic text inside links and highlights keeps the surrounding color.
+
+![Bold, italic, and inline code colorized in light and dark themes](docs/images/inline-styles.png)
 
 | Style                  | Light     | Dark      |
 | ---------------------- | --------- | --------- |
@@ -210,7 +176,7 @@ The presets sit near Nord's Aurora and Frost hues at 24-47% saturation, and ever
 | Inline code            | `#4c6f96` | `#81a1c1` |
 | Inline code background | `#f0f1f3` | `#2a2b2e` |
 
-Override any color from a CSS snippet, with a `body.theme-dark` block for a separate dark value:
+The presets are muted Nord hues with at least 4.5:1 contrast. Override them from a CSS snippet, with a `body.theme-dark` block for dark values:
 
 ```css
 body {
@@ -223,9 +189,11 @@ body.theme-dark {
 }
 ```
 
-### Active Line
+## Active Line
 
-A single toggle under **Editor**, on by default. It tints the cursor's line in Live Preview and Source mode and highlights its line number, which is visible when **Settings > Editor > Show line numbers** is on. The tint stays on unfocused splits, so it does not flicker with window focus. Adjust it from a snippet:
+A toggle under **Editor**, on by default. It tints the cursor's line in Live Preview and Source mode and highlights its line number when line numbers are shown, including in unfocused splits.
+
+![The cursor's line tinted, with its line number highlighted](docs/images/active-line.png)
 
 ```css
 body {
@@ -233,9 +201,47 @@ body {
 }
 ```
 
+## Development
+
+```bash
+npm run dev     # rebuild main.js on every change
+npm test        # unit tests
+npm run build   # type-check, then build main.js
+```
+
+The integration suites run inside Obsidian through the Obsidian CLI. Point them at a development vault: each run installs the current build into its `obsidian-patch` plugin directory and overwrites its test notes. Keep the Obsidian window visible, because a hidden window receives no animation frames or observer callbacks.
+
+```bash
+node scripts/test-banner.mjs /path/to/dev-vault   # needs banner.png in the vault root, ffmpeg, and gif2webp
+node scripts/test-table.mjs /path/to/dev-vault
+```
+
+```text
+.
+├── .github/                       Dependabot and the build workflow
+├── docs/                          Design notes, verification records, README images
+├── scripts/                       Obsidian integration suites
+├── src/
+│   ├── features/                  One independent module per feature
+│   │   ├── active-line.ts
+│   │   ├── banner.ts, banner/     Cover properties, media, mounting, and picker
+│   │   ├── inline-styles.ts
+│   │   ├── mermaid-runtime.ts     Loads Mermaid from jsDelivr or the bundle
+│   │   ├── patch-mermaid.ts       Code block processor, theming, re-rendering
+│   │   └── table.ts, table/       Table model, editor, and entry points
+│   ├── build.d.ts                 Types for values the build injects
+│   └── main.ts                    Plugin entry point and settings tab
+├── tests/                         Unit tests
+├── esbuild.config.mjs             Bundles src/ into main.js
+├── manifest.json, versions.json   Plugin metadata and minimum app versions
+└── styles.css                     All plugin styles
+```
+
+Add a feature as a focused module under `src/features/` with a small registration function called from `src/main.ts`. CSS classes use the `obsidian-patch-<feature>` prefix, and user-visible changes go under `Unreleased` in [CHANGELOG.md](CHANGELOG.md). Design notes: [Patch Banner](docs/banner-design.md) and its [verification record](docs/banner-testing.md), [HTML Tables](docs/table-design.md).
+
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). The upcoming release adds Mermaid version selection with Latest as the default, Mermaid 12, theme and font following, Inline Styles, and Active Line, and removes the Sandbox security level.
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## References
 
