@@ -24,7 +24,7 @@
     "mermaid": "12.3.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.17",
+    "@types/node": "^26.6.6",
     "esbuild": "0.28.2",
     "obsidian": "1.14.4",
     "typescript": "^5.8.3"
