@@ -4,7 +4,7 @@ Obsidian Patch collects focused fixes and enhancements for Obsidian. Each featur
 
 | Feature                         | What it does                                                                                        |
 | ------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Patch Mermaid](#patch-mermaid) | Renders `patch-mermaid` code blocks with the latest, bundled, or a chosen Mermaid version           |
+| [Patch Mermaid](#patch-mermaid) | Renders `patch-mermaid` code blocks with the bundled, latest, or a chosen Mermaid version           |
 | [Patch Banner](#patch-banner)   | Shows a vault image, animation, or video as a cover above the note title                            |
 | [HTML Tables](#html-tables)     | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions       |
 | [Patch Icons](#patch-icons)     | Puts Lucide and the newest Simple Icons before file and folder names in the file explorer           |
@@ -49,11 +49,11 @@ flowchart LR
 
 | Setting         | Options                                                                                                                                                                               |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mermaid version | **Latest** (default) loads the newest release from jsDelivr. **Bundled** uses the copy inside `main.js` and works offline. **Custom** loads an exact release from 11.0.0 on, such as `12.0.0`. |
+| Mermaid version | **Bundled** (default) uses the copy inside `main.js` and works offline. **Latest** loads the newest release from jsDelivr. **Custom** loads an exact release from 11.0.0 on, such as `12.0.0`. |
 | Security level  | **Strict** (default) sanitizes the SVG, which currently hides treeView icons. **Loose** inserts Mermaid's output unsanitized.                                                          |
 
 - **Fallback.** A remote version that cannot be loaded falls back to the bundled copy, and the setting shows the version in use and why. Latest remembers the version it last resolved, so offline startups can use the cached copy.
-- **Trust.** Remote versions run with full access to Obsidian and come from npm through jsDelivr without an integrity check, because `latest` changes with every release. Choose Bundled to run only code shipped with the plugin.
+- **Trust.** Remote versions run with full access to Obsidian and come from npm through jsDelivr without an integrity check, because `latest` changes with every release. Bundled, the default, runs only code shipped with the plugin, and Dependabot keeps it close to the newest release.
 - **Loose** exposes Obsidian to any HTML or SVG in a diagram. Use it only for diagrams you fully trust, not for copied, imported, synchronized, or generated notes.
 
 Diagrams follow Obsidian's light or dark theme and use the `--font-mermaid` font, like the built-in renderer, re-rendering when either changes. ELK layouts load in the `@mermaid-js/layout-elk` line that matches Mermaid's major version. To give diagrams their own font:

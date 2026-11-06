@@ -171,7 +171,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   private displayMermaidVersion(): void {
     const setting = new Setting(this.containerEl).setName("Mermaid version");
     setting.descEl.createDiv({
-      text: "Latest and custom versions are downloaded from jsDelivr and run with full access to Obsidian. Bundled works offline and runs only code shipped with this plugin. Remote versions fall back to Bundled when they cannot be loaded.",
+      text: "Bundled, the default, works offline and runs only code shipped with this plugin. Latest and custom versions are downloaded from jsDelivr and run with full access to Obsidian, and fall back to Bundled when they cannot be loaded.",
     });
     const status = setting.descEl.createDiv({ cls: "obsidian-patch-setting-status" });
 
@@ -231,8 +231,8 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
 
     setting.addDropdown((dropdown) =>
       dropdown
-        .addOption(LATEST_VERSION, "Latest")
         .addOption(BUNDLED_VERSION, `Bundled (${BUNDLED_MERMAID_VERSION})`)
+        .addOption(LATEST_VERSION, "Latest")
         .addOption(CUSTOM_CHOICE, "Custom")
         .setValue(isCustom ? CUSTOM_CHOICE : current)
         .onChange(async (value) => {
@@ -417,7 +417,7 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
       : DEFAULT_MERMAID_SECURITY_LEVEL,
     mermaidVersion: isMermaidVersionChoice(record.mermaidVersion)
       ? record.mermaidVersion
-      : LATEST_VERSION,
+      : BUNDLED_VERSION,
     mermaidCachedLatest:
       typeof record.mermaidCachedLatest === "string" ? record.mermaidCachedLatest : undefined,
     banner: parseBannerSettings(record.banner),
