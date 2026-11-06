@@ -13,8 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Patch Icons: Lucide and Simple Icons icons before file and folder names in the file explorer, chosen from a searchable picker in the file menu and kept across renames inside Obsidian. Simple Icons load from jsDelivr in their newest release, and the icons in use are saved so they display offline. Iconize's file and folder icons can be imported.
 - Line Width: the readable line width from a status bar slider or the settings (500–2000 px, 900 px by default), and a `patch-line-width` property that resizes only the pane showing that note.
 - Mermaid version setting with three choices. Latest, the new default, loads the newest Mermaid release from jsDelivr; Bundled works offline; Custom takes an exact release from 11.0.0 on. Remote versions fall back to the bundled copy when they cannot be loaded, and the setting shows the version in use.
-- Inline styles: colorize bold, italic, and inline code with muted light and dark presets, each with its own toggle.
-- Active line: tint the cursor's line and highlight its line number in Live Preview and Source mode.
+- Callout code: inline code in callouts is tinted with the callout's own color instead of the page's gray chip, and code in a callout title takes the title's color, in Reading View and Live Preview.
+- Active line: a bar in the margin marks the cursor's line in Live Preview and Source mode, in the caret's color and faded in unfocused splits, and its line number is highlighted.
 - Mermaid diagrams use Obsidian's text font through `--font-mermaid`, the same property as Obsidian's built-in renderer.
 - Mermaid diagrams follow Obsidian's light or dark theme.
 - Open Mermaid diagrams re-render when the theme, the text font, or the security level changes, including diagrams in Live Preview.

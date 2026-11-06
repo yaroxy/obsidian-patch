@@ -12,11 +12,7 @@ import {
   type MermaidRuntime,
   type MermaidVersionChoice,
 } from "./features/mermaid-runtime";
-import {
-  parseInlineStyleSettings,
-  registerInlineStyles,
-  type InlineStyleSettings,
-} from "./features/inline-styles";
+import { DEFAULT_CALLOUT_CODE_ENABLED, registerCalloutCode } from "./features/callout-code";
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { registerTables } from "./features/table";
@@ -43,7 +39,7 @@ interface ObsidianPatchSettings {
   mermaidVersion: MermaidVersionChoice;
   /** The version that `latest` last resolved to, for offline startups. */
   mermaidCachedLatest?: string;
-  inlineStyles: InlineStyleSettings;
+  calloutCode: boolean;
   activeLine: boolean;
   banner: BannerSettings;
   icons: IconSettings;
@@ -59,7 +55,7 @@ export default class ObsidianPatchPlugin extends Plugin {
   settings: ObsidianPatchSettings = parseSettings(null);
   mermaid?: PatchMermaidController;
   icons?: PatchIconsController;
-  private applyInlineStyles?: (settings: InlineStyleSettings) => void;
+  private applyCalloutCode?: (enabled: boolean) => void;
   private applyActiveLine?: (enabled: boolean) => void;
   private applyBanner?: (settings: BannerSettings) => void;
   private applyLineWidth?: (settings: LineWidthSettings) => void;
@@ -77,7 +73,7 @@ export default class ObsidianPatchPlugin extends Plugin {
         }
       },
     });
-    this.applyInlineStyles = registerInlineStyles(this, this.settings.inlineStyles);
+    this.applyCalloutCode = registerCalloutCode(this, this.settings.calloutCode);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
@@ -101,10 +97,10 @@ export default class ObsidianPatchPlugin extends Plugin {
     return this.mermaid?.setVersion(version);
   }
 
-  async setInlineStyles(inlineStyles: InlineStyleSettings): Promise<void> {
-    this.settings.inlineStyles = inlineStyles;
+  async setCalloutCode(calloutCode: boolean): Promise<void> {
+    this.settings.calloutCode = calloutCode;
     await this.saveData(this.settings);
-    this.applyInlineStyles?.(inlineStyles);
+    this.applyCalloutCode?.(calloutCode);
   }
 
   async setActiveLine(activeLine: boolean): Promise<void> {
@@ -137,7 +133,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     this.displayBannerSection();
     this.displayIconSection();
     this.displayLineWidthSection();
-    this.displayInlineStyleSection();
+    this.displayCalloutSection();
     this.displayEditorSection();
   }
 
@@ -251,31 +247,14 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     );
   }
 
-  private displayInlineStyleSection(): void {
-    new Setting(this.containerEl).setName("Inline styles").setHeading();
-
-    this.containerEl.createEl("p", {
-      cls: "obsidian-patch-setting-note",
-      text: "Applies to note content only, in both Reading View and Live Preview. Colors are muted presets with a light and a dark variant; a CSS snippet can override the --obsidian-patch-* custom properties.",
-    });
-
-    // Read the settings when a toggle changes, not when the tab opens, so one
-    // toggle does not undo another that was changed since.
-    const styles = (): InlineStyleSettings => this.plugin.settings.inlineStyles;
-
-    this.addToggle("Bold", "Bold text is colorized red.", styles().bold, (bold) =>
-      this.plugin.setInlineStyles({ ...styles(), bold }),
-    );
-
-    this.addToggle("Italic", "Italic text is colorized green.", styles().italic, (italic) =>
-      this.plugin.setInlineStyles({ ...styles(), italic }),
-    );
+  private displayCalloutSection(): void {
+    new Setting(this.containerEl).setName("Callouts").setHeading();
 
     this.addToggle(
       "Inline code",
-      "Inline code gets blue text on a gray background. Fenced code blocks keep the theme's own colors.",
-      styles().inlineCode,
-      (inlineCode) => this.plugin.setInlineStyles({ ...styles(), inlineCode }),
+      "Tints inline code with the callout's own color instead of the page's gray, and code in a callout title takes the title's color. Applies to Reading View and Live Preview; fenced code blocks keep the theme's colors.",
+      this.plugin.settings.calloutCode,
+      (enabled) => this.plugin.setCalloutCode(enabled),
     );
   }
 
@@ -405,7 +384,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
 
     this.addToggle(
       "Active line",
-      "Tints the line the cursor is on and highlights its line number. Applies to Live Preview and Source mode.",
+      "Marks the line the cursor is on with a bar in the margin, faded while the editor is unfocused, and highlights its line number. Applies to Live Preview and Source mode.",
       this.plugin.settings.activeLine,
       (enabled) => this.plugin.setActiveLine(enabled),
     );
@@ -441,10 +420,13 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
       : LATEST_VERSION,
     mermaidCachedLatest:
       typeof record.mermaidCachedLatest === "string" ? record.mermaidCachedLatest : undefined,
-    inlineStyles: parseInlineStyleSettings(record.inlineStyles),
     banner: parseBannerSettings(record.banner),
     icons: parseIconSettings(record.icons),
     lineWidth: parseLineWidthSettings(record.lineWidth),
+    calloutCode:
+      typeof record.calloutCode === "boolean"
+        ? record.calloutCode
+        : DEFAULT_CALLOUT_CODE_ENABLED,
     activeLine:
       typeof record.activeLine === "boolean"
         ? record.activeLine

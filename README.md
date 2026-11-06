@@ -9,8 +9,8 @@ Obsidian Patch collects focused fixes and enhancements for Obsidian. Each featur
 | [HTML Tables](#html-tables)     | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions       |
 | [Patch Icons](#patch-icons)     | Puts Lucide and the newest Simple Icons before file and folder names in the file explorer           |
 | [Line Width](#line-width)       | Sets the readable line width from a status bar slider, or per note with `patch-line-width`          |
-| [Inline Styles](#inline-styles) | Colorizes bold, italic, and inline code                                                             |
-| [Active Line](#active-line)     | Tints the line the cursor is on                                                                     |
+| [Callout Code](#callout-code)   | Tints inline code in callouts with the callout's own color                                          |
+| [Active Line](#active-line)     | Marks the line the cursor is on with a bar in the margin                                            |
 
 |                      | Version                                     |
 | -------------------- | ------------------------------------------- |
@@ -213,41 +213,29 @@ The property resizes only the pane that shows the note, so splits can differ, an
 
 Coming from Editor Width Slider: its slider value N is 700 + 10 × N px here, so its default of 20 is the same 900 px. Its `editor-width` property used another scale and is not read.
 
-## Inline Styles
+## Callout Code
 
-Toggles for **Bold** (red), **Italic** (green), and **Inline code** (blue on gray), all on by default. They color note content in Reading View and Live Preview and leave the app interface alone. Fenced code blocks keep the theme's colors, and bold or italic text inside links and highlights keeps the surrounding color.
+A toggle under **Callouts**, on by default. Obsidian paints inline code on an opaque gray chip meant for the page background, so inside a callout's tint the chip reads as a hole. With the toggle on, inline code in a callout is tinted with that callout's own color in Reading View and Live Preview, nested callouts use their own color, and code in a callout title takes the title's color. Fenced code blocks keep the theme's colors.
 
-![Bold, italic, and inline code colorized in light and dark themes](docs/images/inline-styles.png)
+![Inline code in callouts with the toggle off (left) and on (right), in light and dark themes](docs/images/callout-code.png)
 
-| Style                  | Light     | Dark      |
-| ---------------------- | --------- | --------- |
-| Bold                   | `#a54d54` | `#c9757c` |
-| Italic                 | `#487a45` | `#a3be8c` |
-| Inline code            | `#4c6f96` | `#81a1c1` |
-| Inline code background | `#f0f1f3` | `#2a2b2e` |
-
-The presets are muted Nord hues with at least 4.5:1 contrast. Override them from a CSS snippet, with a `body.theme-dark` block for dark values:
+The chip mixes 12% of the callout color over the callout's own 10% tint. Change the strength from a CSS snippet:
 
 ```css
 body {
-  --obsidian-patch-bold-color: #8f4a3c;
-  --obsidian-patch-inline-code-background: var(--background-modifier-hover);
-}
-
-body.theme-dark {
-  --obsidian-patch-bold-color: #c98b78;
+  --obsidian-patch-callout-code-tint: 8%;
 }
 ```
 
 ## Active Line
 
-A toggle under **Editor**, on by default. It tints the cursor's line in Live Preview and Source mode and highlights its line number when line numbers are shown, including in unfocused splits.
+A toggle under **Editor**, on by default. A bar in the margin marks the cursor's line in Live Preview and Source mode, and its line number is highlighted when line numbers are shown. The bar paints nothing under the line, so inline code, highlights, and code blocks keep their own backgrounds. It takes the caret's color rather than the accent, which quote lines already use for their border, and fades in unfocused splits, so each split still shows its cursor's line while the focused one stands out.
 
-![The cursor's line tinted, with its line number highlighted](docs/images/active-line.png)
+![A bar in the margin beside the cursor's line, with its line number highlighted](docs/images/active-line.png)
 
 ```css
 body {
-  --obsidian-patch-active-line-background: rgba(var(--mono-rgb-100), 0.08);
+  --obsidian-patch-active-line-color: var(--color-accent);
 }
 ```
 
@@ -275,8 +263,8 @@ node scripts/test-table.mjs /path/to/dev-vault
 │   ├── features/                  One independent module per feature
 │   │   ├── active-line.ts
 │   │   ├── banner.ts, banner/     Cover properties, media, mounting, and picker
+│   │   ├── callout-code.ts
 │   │   ├── icons.ts, icons/       Explorer icons, picker, Simple Icons loading, Iconize import
-│   │   ├── inline-styles.ts
 │   │   ├── line-width.ts, line-width/ Per-pane width, status bar slider, property parsing
 │   │   ├── mermaid-runtime.ts     Loads Mermaid from jsDelivr or the bundle
 │   │   ├── patch-mermaid.ts       Code block processor, theming, re-rendering

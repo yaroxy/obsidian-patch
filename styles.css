@@ -29,101 +29,76 @@
   color: var(--text-warning);
 }
 
-/* Inline styles */
+/* Callout code */
 
 /*
- * Muted presets kept close to Nord's Aurora and Frost hues. Saturation stays
- * between 24% and 47% so the colors read as emphasis rather than decoration,
- * and every color clears 4.5:1 against the background it sits on.
- * Override any of them from a CSS snippet.
+ * Inline code is painted with --code-background, an opaque page-level gray
+ * that reads as a hole in a callout's tinted background. Inside a callout the
+ * chip takes the callout's own color instead, mixed the way Obsidian mixes the
+ * callout background, so nested callouts follow their own color, and code in a
+ * callout title takes the title's color. :not(pre) > code keeps fenced code
+ * blocks on the theme's own background.
  */
 
 body {
-  --obsidian-patch-bold-color: #a54d54;
-  --obsidian-patch-italic-color: #487a45;
-  --obsidian-patch-inline-code-color: #4c6f96;
-  --obsidian-patch-inline-code-background: #f0f1f3;
+  --obsidian-patch-callout-code-tint: 12%;
 }
 
-body.theme-dark {
-  --obsidian-patch-bold-color: #c9757c;
-  --obsidian-patch-italic-color: #a3be8c;
-  --obsidian-patch-inline-code-color: #81a1c1;
-  --obsidian-patch-inline-code-background: #2a2b2e;
+.obsidian-patch-callout-code .markdown-rendered .callout :not(pre) > code {
+  --code-background: color-mix(
+    in oklch,
+    var(--callout-color) var(--obsidian-patch-callout-code-tint),
+    transparent
+  );
 }
 
-/*
- * Obsidian styles bold, italic, and inline code through its own custom
- * properties, so redefining those properties on the target elements keeps
- * Reading View and Live Preview consistent and leaves Obsidian's rules -
- * including the split borders around Live Preview backticks - untouched.
- * The selectors stay inside note content so the app interface is unaffected.
- */
-
-.obsidian-patch-bold :is(.markdown-rendered, .cm-s-obsidian) :is(strong, .cm-strong) {
-  --bold-color: var(--obsidian-patch-bold-color);
-}
-
-.obsidian-patch-italic :is(.markdown-rendered, .cm-s-obsidian) :is(em, .cm-em) {
-  --italic-color: var(--obsidian-patch-italic-color);
-}
-
-/*
- * Redefining a custom property does not change the specificity of the color
- * declaration that reads it, so any Live Preview token that sets its own color
- * still wins. Reading View has the opposite bias, because strong and em carry
- * their own color rule. These two blocks make both modes agree: bold and italic
- * are colorized inside blockquotes, and left alone inside links and highlights.
- */
-
-.obsidian-patch-bold .cm-s-obsidian span.cm-strong.cm-quote {
-  color: var(--obsidian-patch-bold-color);
-}
-
-.obsidian-patch-italic .cm-s-obsidian span.cm-em.cm-quote {
-  color: var(--obsidian-patch-italic-color);
-}
-
-.obsidian-patch-bold
-  :is(.markdown-rendered, .cm-s-obsidian)
-  :is(a, mark)
-  :is(strong, .cm-strong) {
-  --bold-color: inherit;
-}
-
-.obsidian-patch-italic
-  :is(.markdown-rendered, .cm-s-obsidian)
-  :is(a, mark)
-  :is(em, .cm-em) {
-  --italic-color: inherit;
-}
-
-/* :not(pre) > code keeps fenced code blocks on the theme's own colors. */
-.obsidian-patch-inline-code .markdown-rendered :not(pre) > code,
-.obsidian-patch-inline-code .cm-s-obsidian .cm-inline-code {
-  --code-normal: var(--obsidian-patch-inline-code-color);
-  --code-background: var(--obsidian-patch-inline-code-background);
+.obsidian-patch-callout-code .markdown-rendered .callout-title :not(pre) > code {
+  color: inherit;
 }
 
 /* Active line */
 
 /*
- * CodeMirror marks the cursor's line and its gutter entry with .cm-active.
- * --mono-rgb-100 flips between black and white with the theme, so one tint
- * covers both. The highlight is not gated on .cm-focused: an unfocused split
- * would otherwise lose its highlight whenever the window loses focus.
+ * Obsidian marks the cursor's line and its line number with .cm-active, in
+ * unfocused editors too. A bar in the margin marks the line without painting
+ * under it, so inline code, highlights, and code block backgrounds keep their
+ * own colors. The bar takes the caret's color, because an accent bar would read
+ * as a second blockquote border: quote lines draw theirs in the accent at the
+ * text edge. It fades in unfocused editors, so every split still shows its
+ * cursor's line while only the focused one is drawn in full.
+ *
+ * The 18 px gap between bar and text clears the fold arrows that headings and
+ * list items show on hover. Quote lines draw their border with ::before, so the
+ * bar uses ::after. Table cells open a nested editor whose lines sit outside
+ * .cm-contentContainer, so they get no bar.
  */
 
 body {
-  --obsidian-patch-active-line-background: rgba(var(--mono-rgb-100), 0.045);
+  --obsidian-patch-active-line-color: var(--caret-color, var(--text-normal));
 }
 
-body.theme-dark {
-  --obsidian-patch-active-line-background: rgba(var(--mono-rgb-100), 0.06);
+.obsidian-patch-active-line
+  .markdown-source-view.mod-cm6
+  .cm-contentContainer
+  > .cm-content
+  > .cm-line.cm-active::after {
+  content: "";
+  position: absolute;
+  inset-block: 0.25em;
+  inset-inline-start: -21px;
+  inline-size: 3px;
+  border-radius: 3px;
+  background-color: color-mix(in oklch, var(--obsidian-patch-active-line-color) 40%, transparent);
+  pointer-events: none;
 }
 
-.obsidian-patch-active-line .markdown-source-view.mod-cm6 .cm-line.cm-active {
-  background-color: var(--obsidian-patch-active-line-background);
+.obsidian-patch-active-line
+  .markdown-source-view.mod-cm6
+  .cm-editor.cm-focused
+  .cm-contentContainer
+  > .cm-content
+  > .cm-line.cm-active::after {
+  background-color: var(--obsidian-patch-active-line-color);
 }
 
 .obsidian-patch-active-line
@@ -132,12 +107,6 @@ body.theme-dark {
   .cm-gutterElement.cm-active {
   color: var(--text-normal);
   font-weight: var(--bold-weight);
-}
-
-.obsidian-patch-setting-note {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-  margin-block: 0 var(--size-4-3);
 }
 
 .obsidian-patch-setting-status {
