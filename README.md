@@ -17,8 +17,8 @@ Obsidian Patch collects focused fixes and enhancements for Obsidian. Each featur
 | Plugin               | 0.1.0                                       |
 | Tested with Obsidian | 1.14.5 (macOS desktop)                      |
 | Minimum Obsidian     | 1.13.7                                      |
-| Obsidian API typings | 1.13.1                                      |
-| Bundled Mermaid      | 12.1.0, with `@mermaid-js/layout-elk` 1.0.1 |
+| Obsidian API typings | 1.14.4                                      |
+| Bundled Mermaid      | 12.3.0, with `@mermaid-js/layout-elk` 1.0.2 |
 
 ## Installation
 

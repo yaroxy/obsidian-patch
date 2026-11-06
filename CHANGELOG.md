@@ -23,9 +23,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Minimum Obsidian version raised to 1.13.7 for the public editor and frontmatter interfaces used by Patch Banner.
 - Renamed the Mermaid feature to Patch Mermaid and its code block language from `mermaid-latest` to `patch-mermaid`. Existing notes must use `patch-mermaid` to render with the plugin.
-- Bundled Mermaid upgraded from 11.16.0 to 12.1.0, and `@mermaid-js/layout-elk` from 0.2.2 to 1.0.1.
-- DOMPurify, which Strict mode relies on, updated to 3.4.16 for a moderate security advisory.
-- Icon packs are embedded gzip-compressed and decoded on first use, which cuts `main.js` from 13.1 MB to 9.8 MB despite the larger Mermaid 12 bundle.
+- Bundled Mermaid upgraded from 11.16.0 to 12.3.0, and `@mermaid-js/layout-elk` from 0.2.2 to 1.0.2.
+- DOMPurify, which Strict mode relies on, updated to 3.4.17 for a moderate security advisory.
+- Icon packs are embedded gzip-compressed and decoded on first use, which makes `main.js` about 3.3 MB smaller despite the larger Mermaid 12 bundle.
 
 ### Removed
 
