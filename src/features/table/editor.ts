@@ -1,4 +1,5 @@
 import { Menu, Modal, Scope, sanitizeHTMLToDom, setIcon, type App, type IconName } from "obsidian";
+import { makeResizable } from "../../ui/resizable-modal";
 import {
   CAPTION_STYLE, deleteColumns, deleteRows, expand, headRows, inside, insertColumn, insertRow, layout, merge,
   setAlign, setCaption, setHeader, split, toHtml, type Align, type Attrs, type Cell, type Layout, type Rect, type Table,
@@ -80,9 +81,11 @@ export class TableEditor extends Modal {
     this.modalEl.addClass("obsidian-patch-table-modal");
     this.toolbar(this.contentEl.createDiv({ cls: "obsidian-patch-table-toolbar" }));
     this.host = this.contentEl.createDiv({ cls: "obsidian-patch-table-grid markdown-rendered" });
-    const footer = this.contentEl.createDiv({ cls: "modal-button-container" });
+    // Outside the content, so the buttons stay in view while the table scrolls.
+    const footer = this.modalEl.createDiv({ cls: "modal-button-container" });
     footer.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
     footer.createEl("button", { text: "Save", cls: "mod-cta" }).addEventListener("click", () => this.commit());
+    makeResizable(this, "obsidian-patch-table-editor-size");
     this.listen();
 
     // A child scope sees keys before the modal's own: Escape first leaves the

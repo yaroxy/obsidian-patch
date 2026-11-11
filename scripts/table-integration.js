@@ -75,6 +75,7 @@
   }
   let error;
   try {
+    app.saveLocalStorage("obsidian-patch-table-editor-size", null);
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
     await reading();
@@ -86,6 +87,9 @@
     assert(grid().querySelectorAll("th, td").length === 14 && cell("し シ").colSpan === 2 && cell("さ行").rowSpan === 2, "Spans lost");
     assert(cell("（已弃用）").querySelector("small") && cell("（已弃用）").getAttribute("style") === "color:var(--text-muted)", "Cell markup lost");
     checks.push("editor shows caption, header row, spans and cell markup");
+    assert(modal().querySelector(":scope > .obsidian-patch-resize-grip") && modal().querySelector(":scope > .modal-button-container")
+      && !modal().querySelector(".modal-content .modal-button-container"), "Table editor lacks the grip or keeps its buttons in the content");
+    checks.push("the table editor has a resize grip and its buttons below the scrolling content");
     const mtime = file().stat.mtime;
     button("Save").click();
     await until(() => !modal(), "saving an untouched table closes the editor");

@@ -2,20 +2,22 @@
 
 Obsidian Patch collects focused fixes and enhancements for Obsidian. Each feature is an independent module with its own settings under **Settings > Obsidian Patch**, and changes apply immediately.
 
-| Feature                         | What it does                                                                                        |
-| ------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Patch Mermaid](#patch-mermaid) | Renders `patch-mermaid` code blocks with the bundled, latest, or a chosen Mermaid version           |
-| [Patch Banner](#patch-banner)   | Shows a vault image, animation, or video as a cover above the note title                            |
-| [HTML Tables](#html-tables)     | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions       |
-| [Patch Icons](#patch-icons)     | Puts Lucide and the newest Simple Icons before file and folder names in the file explorer           |
-| [Line Width](#line-width)       | Sets the readable line width from a status bar slider, or per note with `patch-line-width`          |
-| [Callout Code](#callout-code)   | Tints inline code in callouts with the callout's own color                                          |
-| [Active Line](#active-line)     | Marks the line the cursor is on with a bar in the margin                                            |
+| Feature                           | What it does                                                                                   |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| [Patch Mermaid](#patch-mermaid)   | Renders `patch-mermaid` code blocks with the bundled, latest, or a chosen Mermaid version      |
+| [Patch Banner](#patch-banner)     | Shows a vault image, animation, or video as a cover above the note title                       |
+| [HTML Tables](#html-tables)       | Inserts and edits HTML tables visually, including merged cells, grouped headers, and captions  |
+| [Callout Editor](#callout-editor) | Inserts, edits, and unwraps callouts visually, and shows whether GitHub renders them as alerts |
+| [Math Format](#math-format)       | Indents `$$` math environments and lines up the `&` of aligned rows                            |
+| [Patch Icons](#patch-icons)       | Puts Lucide and the newest Simple Icons before file and folder names in the file explorer      |
+| [Line Width](#line-width)         | Sets the readable line width from a status bar slider, or per note with `patch-line-width`     |
+| [Callout Code](#callout-code)     | Tints inline code in callouts with the callout's own color                                     |
+| [Active Line](#active-line)       | Marks the line the cursor is on with a bar in the margin                                       |
 
 |                      | Version                                     |
 | -------------------- | ------------------------------------------- |
 | Plugin               | 0.1.0                                       |
-| Tested with Obsidian | 1.14.5 (macOS desktop)                      |
+| Tested with Obsidian | 1.15.0 (macOS desktop)                      |
 | Minimum Obsidian     | 1.13.7                                      |
 | Obsidian API typings | 1.14.4                                      |
 | Bundled Mermaid      | 12.3.0, with `@mermaid-js/layout-elk` 1.0.2 |
@@ -165,6 +167,73 @@ The editor writes HTML that looks like a native table in both views. The block h
 
 Cells you do not edit keep their markup and attributes, and an unchanged table is not written back. If the note changed while the editor was open, saving shows a notice instead of overwriting it. Tables inside callouts and blockquotes are not detected.
 
+To resize the editor, drag its bottom-right corner. It reopens at that size, and a double-click on the corner restores the default.
+
+## Callout Editor
+
+Edit callouts in a form with a live preview instead of typing `>` on every line, and see whether GitHub will show them as alerts.
+
+![The callout editor: type picker, title, fold state, metadata, the content beside its preview, and the GitHub status](docs/images/callout-editor.png)
+
+- **Edit**: hover a callout in Reading View or Live Preview and click **Edit callout**, or run **Obsidian Patch: Edit callout** with the cursor in its source.
+- **Insert**: **Insert callout** starts a callout at the cursor, or wraps the selected lines in one.
+- **Unwrap**: **Convert to text** turns the callout back into normal text, with the title as a bold first line; **Convert to blockquote** leaves a plain quote. Nested callouts move up a level.
+- **Resize**: drag the editor's bottom-right corner. It reopens at that size; double-click the corner to reset.
+
+The type picker shows Obsidian's callout types and any your theme or snippets define, in their own colors; type any other name in the box after them. The content needs no `>` markers. Saving rewrites only what changed, so a new type or title touches only the first line, and a note that changed while the editor was open is never overwritten.
+
+As commands and in the editor menu, **Edit callout**, **Convert callout to text**, and **Convert callout to blockquote** need the cursor in the callout's source. For a callout rendered in Live Preview, use its **Edit callout** button.
+
+### GitHub compatibility
+
+GitHub renders a callout as an alert only in a narrow form, measured on GitHub's own Markdown renderer:
+
+| Renders as an alert on GitHub                                          | Renders as a plain blockquote                                       |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`, in any case          | Any other type, such as `info` or `abstract`                        |
+| The marker alone on the first line                                      | A title after the marker, a fold sign `+` or `-`, or `\|metadata`   |
+| Code blocks, math, and `**bold**` lines in the content                  | A marker with no content                                            |
+| A top-level callout                                                    | A callout in a list, a blockquote, or another callout               |
+
+The editor's GitHub panel says which rule a callout breaks. **Make GitHub-compatible** maps the type to the closest alert, moves the title into the content as a bold line, and drops the fold sign and metadata; moving a callout out of a list or quote is left to you. The panel also flags Obsidian syntax that GitHub shows as plain text, such as `[[links]]` and `==highlights==`. Turn it off with **GitHub compatibility** under **Callouts**.
+
+For notes meant for GitHub, set `github: true` or list their folders under **GitHub folders**: the status bar then counts the callouts GitHub would not show as alerts. Click the count, or run **Check callouts for GitHub**, to list them.
+
+## Math Format
+
+Makes `$$` blocks readable: environments are indented, each row of an aligned environment gets its own line, the `&` of the rows line up, and trailing spaces go. Only whitespace outside braces changes, so formulas render exactly as before.
+
+**Before**
+
+```latex
+$$
+\begin{aligned}
+\text{Minimize:}\quad & \frac{1}{2}\|\omega\|^2+C_1\sum_{i=1}^{N}\delta_i+C_2\sum_{i=1}^{N}\delta_i^2\\
+\text{Subject to:}\quad & \delta_i\ge 0,\quad i=1,2,\dots,N\\
+& y_i\big[\omega^T\varphi(x_i)+b\big]\ge 1-\delta_i
+\end{aligned}
+$$
+```
+
+**After**
+
+```latex
+$$
+\begin{aligned}
+  \text{Minimize:}\quad   & \frac{1}{2}\|\omega\|^2+C_1\sum_{i=1}^{N}\delta_i+C_2\sum_{i=1}^{N}\delta_i^2 \\
+  \text{Subject to:}\quad & \delta_i\ge 0,\quad i=1,2,\dots,N \\
+                          & y_i\big[\omega^T\varphi(x_i)+b\big]\ge 1-\delta_i
+\end{aligned}
+$$
+```
+
+Run **Obsidian Patch: Format math block** with the cursor in a block, or **Format all math blocks in note**; the editor menu offers the first.
+
+- Rows are split and aligned in `aligned`, `align`, `alignat`, `split`, `cases`, the matrix environments, `array`, and `gathered`. Other environments are only indented, and a small environment written inside a line, such as a `pmatrix`, stays as written.
+- Blocks in callouts and lists keep their markers. A block with a blank line, unbalanced braces or environments, or a stray `$` is left alone.
+- Under **Math Format** in the settings, choose 2 or 4 spaces of indent, and whether to align the `&` and the closing `\\` of rows. Alignment assumes the editor's monospace font, so East Asian text in `\text{}` lines up only approximately.
+- To format on lint, add **Format all math blocks in note** to the Linter plugin's custom commands.
+
 ## Patch Icons
 
 Right-click a file or folder in the file explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon, built into Obsidian, or a [Simple Icons](https://simpleicons.org/) brand logo. **Remove icon** clears it, and both work on several selected files at once. An icon takes the color of the name beside it.
@@ -247,11 +316,13 @@ npm test        # unit tests
 npm run build   # type-check, then build main.js
 ```
 
-The integration suites run inside Obsidian through the Obsidian CLI. Point them at a development vault: each run installs the current build into its `obsidian-patch` plugin directory and overwrites its test notes. Keep the Obsidian window visible, because a hidden window receives no animation frames or observer callbacks.
+The integration suites run inside Obsidian through the Obsidian CLI. Point them at a development vault: each run installs the current build into its `obsidian-patch` plugin directory and overwrites its test notes. A hidden window receives no animation frames or observer callbacks, so keep it visible, or first run `require("electron").remote.getCurrentWebContents().setBackgroundThrottling(false)` in its developer console.
 
 ```bash
 node scripts/test-banner.mjs /path/to/dev-vault   # needs banner.png in the vault root, ffmpeg, and gif2webp
 node scripts/test-table.mjs /path/to/dev-vault
+node scripts/test-callout.mjs /path/to/dev-vault
+node scripts/test-math-format.mjs /path/to/dev-vault
 ```
 
 ```text
@@ -263,12 +334,15 @@ node scripts/test-table.mjs /path/to/dev-vault
 │   ├── features/                  One independent module per feature
 │   │   ├── active-line.ts
 │   │   ├── banner.ts, banner/     Cover properties, media, mounting, and picker
+│   │   ├── callout.ts, callout/   Callout model, editor, GitHub checks, and entry points
 │   │   ├── callout-code.ts
 │   │   ├── icons.ts, icons/       Explorer icons, picker, Simple Icons loading, Iconize import
 │   │   ├── line-width.ts, line-width/ Per-pane width, status bar slider, property parsing
+│   │   ├── math-format.ts, math-format/ Display math formatter and its commands
 │   │   ├── mermaid-runtime.ts     Loads Mermaid from jsDelivr or the bundle
 │   │   ├── patch-mermaid.ts       Code block processor, theming, re-rendering
 │   │   └── table.ts, table/       Table model, editor, and entry points
+│   ├── ui/                        Helpers shared by features: resizable editor modals
 │   ├── build.d.ts                 Types for values the build injects
 │   └── main.ts                    Plugin entry point and settings tab
 ├── tests/                         Unit tests
@@ -277,7 +351,7 @@ node scripts/test-table.mjs /path/to/dev-vault
 └── styles.css                     All plugin styles
 ```
 
-Add a feature as a focused module under `src/features/` with a small registration function called from `src/main.ts`. CSS classes use the `obsidian-patch-<feature>` prefix, and user-visible changes go under `Unreleased` in [CHANGELOG.md](CHANGELOG.md). Design notes: [Patch Banner](docs/banner-design.md) and its [verification record](docs/banner-testing.md), [HTML Tables](docs/table-design.md).
+Add a feature as a focused module under `src/features/` with a small registration function called from `src/main.ts`. CSS classes use the `obsidian-patch-<feature>` prefix, and user-visible changes go under `Unreleased` in [CHANGELOG.md](CHANGELOG.md). Design notes: [Patch Banner](docs/banner-design.md) and its [verification record](docs/banner-testing.md), [HTML Tables](docs/table-design.md), [Callout Editor](docs/callout-design.md), [Math Format](docs/math-format-design.md).
 
 ## Changelog
 

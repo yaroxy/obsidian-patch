@@ -47,6 +47,7 @@ src/features/
 - **写回前核对源码。** 表格源码与打开时不一致时只提示重新打开，不覆盖并发修改。阅读视图按 section 行号经 `vault.process` 写回；Live Preview 用 CodeMirror 事务；命令用 `Editor.replaceRange`。
 - **按键。** 弹窗使用以原 scope 为父级的子 `Scope`。单元格内 Escape 只退出单元格，单元格外 Escape 关闭并放弃修改；Mod+Enter 保存；Mod+Z 与 Mod+Shift+Z 撤销和重做，结构操作与每个单元格的一次输入各为一步。
 - **菜单**使用 Obsidian 的 `Menu`，遵循用户的原生菜单设置。
+- **窗口大小。** 弹窗右下角有调整大小的把手，与 callout 编辑器共用 `src/ui/resizable-modal.ts`：多出的空间给表格网格，尺寸按库记住，双击把手恢复默认。保存和取消按钮固定在底部，表格在中间滚动。
 
 ## 宿主依赖
 
@@ -59,5 +60,7 @@ src/features/
 - `npm test`：模型 10 项通过。
 - `node scripts/test-table.mjs <dev-vault>`：22 项通过，覆盖两种视图的按钮、未改动不写回、单格修改只改动该格、拖选合并、撤销重做、Escape、Live Preview 写回和两个命令。
 - spacetime 中的五十音表（176 行 HTML，含 rowspan、colspan、表名和 `<small>`）复制到 dev-vault 后，未改动保存不写文件，修改一格后全文只有该格变化。
+
+2026-11-11，Obsidian 1.15.0：`test-table.mjs` 23 项通过，新增一项检查调整大小的把手和固定在底部的按钮；拖动调整的行为由 callout 集成测试覆盖。
 
 未验证：移动端、pop-out 窗口、RTL、其他桌面平台，以及原生菜单中的菜单项（系统菜单不在 DOM 中，菜单项与工具栏共用同一组操作定义）。

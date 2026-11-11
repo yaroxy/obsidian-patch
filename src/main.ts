@@ -16,6 +16,8 @@ import { DEFAULT_CALLOUT_CODE_ENABLED, registerCalloutCode } from "./features/ca
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { registerTables } from "./features/table";
+import { MATH_INDENTS, parseMathFormatSettings, registerMathFormat, type MathFormatSettings } from "./features/math-format";
+import { GITHUB_PROPERTY, parseCalloutSettings, registerCallouts, type CalloutSettings } from "./features/callout";
 import {
   parseIconSettings,
   registerIcons,
@@ -40,10 +42,12 @@ interface ObsidianPatchSettings {
   /** The version that `latest` last resolved to, for offline startups. */
   mermaidCachedLatest?: string;
   calloutCode: boolean;
+  callouts: CalloutSettings;
   activeLine: boolean;
   banner: BannerSettings;
   icons: IconSettings;
   lineWidth: LineWidthSettings;
+  mathFormat: MathFormatSettings;
 }
 
 /** Dropdown value that reveals the custom version field; never stored. */
@@ -77,6 +81,8 @@ export default class ObsidianPatchPlugin extends Plugin {
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
+    registerMathFormat(this, () => this.settings.mathFormat);
+    registerCallouts(this, () => this.settings.callouts);
     this.icons = registerIcons(this, this.settings.icons, async (icons) => {
       this.settings.icons = icons;
       await this.saveData(this.settings);
@@ -115,6 +121,16 @@ export default class ObsidianPatchPlugin extends Plugin {
     this.applyBanner?.(banner);
   }
 
+  async setCallouts(callouts: CalloutSettings): Promise<void> {
+    this.settings.callouts = callouts;
+    await this.saveData(this.settings);
+  }
+
+  async setMathFormat(mathFormat: MathFormatSettings): Promise<void> {
+    this.settings.mathFormat = mathFormat;
+    await this.saveData(this.settings);
+  }
+
   async setLineWidth(lineWidth: LineWidthSettings): Promise<void> {
     this.settings.lineWidth = lineWidth;
     await this.saveData(this.settings);
@@ -134,6 +150,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
     this.displayIconSection();
     this.displayLineWidthSection();
     this.displayCalloutSection();
+    this.displayMathSection();
     this.displayEditorSection();
   }
 
@@ -255,6 +272,49 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
       "Tints inline code with the callout's own color instead of the page's gray, and code in a callout title takes the title's color. Applies to Reading View and Live Preview; fenced code blocks keep the theme's colors.",
       this.plugin.settings.calloutCode,
       (enabled) => this.plugin.setCalloutCode(enabled),
+    );
+
+    const settings = (): CalloutSettings => this.plugin.settings.callouts;
+    this.addToggle(
+      "GitHub compatibility",
+      "Shows in the callout editor whether GitHub renders the callout as an alert, with a button that makes it one. Edit a callout from its hover button, the editor menu, or Edit callout in the command palette.",
+      settings().github,
+      (github) => this.plugin.setCallouts({ ...settings(), github }),
+    );
+    new Setting(this.containerEl)
+      .setName("GitHub folders")
+      .setDesc(`For notes in these folders, and notes whose ${GITHUB_PROPERTY} property is true, the status bar counts callouts that GitHub would show as plain blockquotes. Separate folders with commas.`)
+      .addText((text) => text
+        .setPlaceholder("docs, projects/site")
+        .setValue(settings().githubFolders.join(", "))
+        .onChange((value) => this.plugin.setCallouts({
+          ...settings(),
+          githubFolders: value.split(",").map((folder) => folder.trim()).filter((folder) => folder !== ""),
+        })));
+  }
+
+  private displayMathSection(): void {
+    new Setting(this.containerEl).setName("Math Format").setHeading();
+    const settings = (): MathFormatSettings => this.plugin.settings.mathFormat;
+    new Setting(this.containerEl)
+      .setName("Indent")
+      .setDesc("Spaces for each environment level, such as the rows of an aligned or cases environment. Run Format math block or Format all math blocks in note from the command palette, or Format math block from the editor menu.")
+      .addDropdown((dropdown) => {
+        for (const indent of MATH_INDENTS) dropdown.addOption(String(indent), `${indent} spaces`);
+        dropdown.setValue(String(settings().indent))
+          .onChange((value) => this.plugin.setMathFormat({ ...settings(), indent: Number(value) }));
+      });
+    this.addToggle(
+      "Align ampersands",
+      "Pads cells so that the & of every row line up. Exact for Latin text in the editor's monospace font; East Asian text in \\text{} lines up approximately.",
+      settings().alignAmpersands,
+      (alignAmpersands) => this.plugin.setMathFormat({ ...settings(), alignAmpersands }),
+    );
+    this.addToggle(
+      "Align row ends",
+      "Pads rows so that their closing \\\\ line up. Long rows push short ones far to the right, so this is off by default.",
+      settings().alignRowEnds,
+      (alignRowEnds) => this.plugin.setMathFormat({ ...settings(), alignRowEnds }),
     );
   }
 
@@ -423,6 +483,8 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
     banner: parseBannerSettings(record.banner),
     icons: parseIconSettings(record.icons),
     lineWidth: parseLineWidthSettings(record.lineWidth),
+    mathFormat: parseMathFormatSettings(record.mathFormat),
+    callouts: parseCalloutSettings(record.callouts),
     calloutCode:
       typeof record.calloutCode === "boolean"
         ? record.calloutCode

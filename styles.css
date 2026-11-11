@@ -220,6 +220,43 @@ body {
 }
 
 /*
+ * Resizable editors (src/ui/resizable-modal.ts). The modal clips instead of
+ * scrolling as a whole, so the header and the buttons stay in view and the
+ * content takes the rest. A resized modal may grow to the window's edges.
+ */
+.modal.obsidian-patch-resizable { overflow: hidden; }
+
+.obsidian-patch-resizable > .modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.obsidian-patch-resizable > .modal-button-container { flex: none; }
+
+.modal.obsidian-patch-resizable.is-resized {
+  max-width: calc(100vw - 2 * var(--size-4-4));
+  max-height: calc(100vh - 2 * var(--size-4-4));
+}
+
+/* Three diagonal strokes, the usual mark of a resizable corner. */
+.obsidian-patch-resize-grip {
+  position: absolute;
+  inset-inline-end: var(--size-2-2);
+  inset-block-end: var(--size-2-2);
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  touch-action: none;
+  color: var(--text-faint);
+  background: linear-gradient(135deg,
+    transparent 0 50%, currentColor 50% 58%, transparent 58% 70%,
+    currentColor 70% 78%, transparent 78% 90%, currentColor 90%);
+}
+
+.obsidian-patch-resize-grip:hover { color: var(--text-muted); }
+
+/*
  * HTML tables. Live Preview puts the edit button among the widget's own
  * actions; Reading View has none, so the button sits in the same corner.
  */
@@ -267,8 +304,15 @@ body {
   background-color: var(--background-modifier-border);
 }
 
+/* The grid scrolls in whatever height the modal leaves it. */
+.obsidian-patch-table-modal > .modal-content {
+  display: flex;
+  flex-direction: column;
+}
+
 .obsidian-patch-table-grid {
-  max-height: 65vh;
+  flex: 1 1 auto;
+  min-height: 6em;
   overflow: auto;
 }
 
@@ -368,4 +412,216 @@ body {
 
 .obsidian-patch-line-width-value.is-invalid {
   color: var(--text-error);
+}
+
+/*
+ * Callout editor. The hover button follows the HTML table button: among the
+ * widget's actions in Live Preview, in the same corner in Reading View.
+ */
+.obsidian-patch-callout-host { position: relative; }
+
+.obsidian-patch-callout-host > .obsidian-patch-callout-edit {
+  position: absolute;
+  inset-block-start: var(--size-2-2);
+  inset-inline-end: var(--size-2-2);
+  opacity: 0;
+}
+
+.obsidian-patch-callout-host:hover > .obsidian-patch-callout-edit,
+.obsidian-patch-callout-host > .obsidian-patch-callout-edit:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .obsidian-patch-callout-host > .obsidian-patch-callout-edit { opacity: 1; }
+}
+
+/*
+ * The header controls span the modal and only the content and its preview sit
+ * side by side. The panes take whatever height the modal has to spare, and a
+ * narrow modal stacks them.
+ */
+.modal.obsidian-patch-callout-modal {
+  width: min(960px, 94vw);
+  max-width: 94vw;
+}
+
+.obsidian-patch-callout-modal > .modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-4);
+  container-type: inline-size;
+}
+
+.obsidian-patch-callout-section,
+.obsidian-patch-callout-field,
+.obsidian-patch-callout-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-3);
+  min-width: 0;
+}
+
+.obsidian-patch-callout-label {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.obsidian-patch-callout-types {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-2-3);
+}
+
+/* The color is a full CSS color: Obsidian 1.14 gives callout colors as hex, so tints use color-mix. */
+.obsidian-patch-callout-types > .obsidian-patch-callout-chip {
+  --obsidian-patch-chip-color: var(--text-normal);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  height: calc(var(--input-height) - var(--size-2-2));
+  padding-inline: var(--size-4-2);
+  border: 1px solid transparent;
+  font-size: var(--font-ui-small);
+  color: var(--obsidian-patch-chip-color);
+  background-color: color-mix(in srgb, var(--obsidian-patch-chip-color) 10%, transparent);
+  box-shadow: none;
+}
+
+.obsidian-patch-callout-types > .obsidian-patch-callout-chip:hover {
+  background-color: color-mix(in srgb, var(--obsidian-patch-chip-color) 20%, transparent);
+}
+
+.obsidian-patch-callout-types > .obsidian-patch-callout-chip.is-active {
+  border-color: var(--obsidian-patch-chip-color);
+  background-color: color-mix(in srgb, var(--obsidian-patch-chip-color) 20%, transparent);
+}
+
+.obsidian-patch-callout-chip-icon { display: inline-flex; }
+
+.obsidian-patch-callout-chip-icon svg {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+}
+
+.obsidian-patch-callout-types > input.obsidian-patch-callout-other {
+  width: 9em;
+  height: calc(var(--input-height) - var(--size-2-2));
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-callout-types > input.obsidian-patch-callout-other.is-active {
+  border-color: var(--interactive-accent);
+}
+
+.obsidian-patch-callout-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--size-4-4);
+}
+
+.obsidian-patch-callout-field > :is(input, select) { width: 100%; }
+
+.obsidian-patch-callout-panes {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--size-4-4);
+  min-height: 16em;
+}
+
+.obsidian-patch-callout-body {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 10em;
+  resize: none;
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-callout-preview {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--size-4-2) var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--input-radius);
+}
+
+.obsidian-patch-callout-github {
+  flex: none;
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-callout-github-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-4-2) var(--size-4-3);
+}
+
+.obsidian-patch-callout-github-head > button { margin-inline-start: auto; }
+
+@container (max-width: 640px) {
+  .obsidian-patch-callout-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .obsidian-patch-callout-fields > :first-child { grid-column: 1 / -1; }
+
+  .obsidian-patch-callout-panes {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+}
+
+/* Convert buttons on the left, Cancel and Save on the right. */
+.obsidian-patch-callout-convert {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-inline-end: auto;
+}
+
+.obsidian-patch-callout-github ul,
+.obsidian-patch-callout-report-row ul {
+  margin-block: var(--size-2-2);
+  color: var(--text-muted);
+}
+
+:is(.obsidian-patch-callout-github-status, .obsidian-patch-callout-report-head) {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+:is(.obsidian-patch-callout-github-status, .obsidian-patch-callout-report-head) svg {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+
+.obsidian-patch-callout-github-status.is-ok,
+.obsidian-patch-callout-report-head .is-ok { color: var(--color-green); }
+
+.obsidian-patch-callout-github-status.is-error,
+.obsidian-patch-callout-report-head .is-error { color: var(--color-orange); }
+
+.obsidian-patch-callout-report-head > button { margin-inline-start: auto; }
+
+.obsidian-patch-callout-report-row {
+  padding-block: var(--size-4-2);
+  border-block-end: 1px solid var(--background-modifier-border);
+}
+
+.obsidian-patch-callout-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+}
+
+.obsidian-patch-callout-status-icon { display: inline-flex; }
+
+.obsidian-patch-callout-status-icon svg {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
 }
