@@ -13,6 +13,16 @@ interface Action {
   allowed?(rect: Rect, layout: Layout): boolean;
 }
 
+interface TableEditorOptions {
+  tables: Table[];
+  title: string;
+  /** An untouched existing HTML table need not be written back. */
+  editing?: boolean;
+  converting?: boolean;
+  /** Returning false leaves the drafts open, for example after a stale-source check. */
+  save(html: string[]): boolean | void;
+}
+
 const cellsIn = (rect: Rect, { placed }: Layout) => placed.filter((at) => inside(at, rect));
 
 const ROW_ACTIONS: Action[] = [
@@ -58,11 +68,14 @@ const SHOWN = new Set(["align", "style", "lang", "dir", "title"]);
  * column, merge and alignment actions apply to.
  */
 export class TableEditor extends Modal {
-  private table: Table;
+  private readonly drafts: { table: Table; undo: Table[]; redo: Table[] }[];
+  private current = 0;
   private grid!: Layout;
-  private readonly unchanged?: string;
-  private readonly undoStack: Table[] = [];
-  private readonly redoStack: Table[] = [];
+  private readonly unchanged?: string[];
+  private get table(): Table { return this.drafts[this.current]!.table; }
+  private set table(value: Table) { this.drafts[this.current]!.table = value; }
+  private get undoStack(): Table[] { return this.drafts[this.current]!.undo; }
+  private get redoStack(): Table[] { return this.drafts[this.current]!.redo; }
   private readonly cells = new Map<HTMLElement, { cell: Cell; row: number; col: number }>();
   private readonly buttons = new Map<Action | "undo" | "redo", HTMLButtonElement>();
   private readonly host: HTMLElement;
@@ -72,19 +85,23 @@ export class TableEditor extends Modal {
   /** The cell or caption whose typing belongs to the current undo step. */
   private typing?: Cell | "caption";
 
-  /** `editing` is false for a new table, which is always written on save. */
-  constructor(app: App, table: Table, title: string, editing: boolean, private readonly save: (html: string) => void) {
+  constructor(app: App, private readonly options: TableEditorOptions) {
     super(app);
-    this.table = table;
-    if (editing) this.unchanged = toHtml(table);
-    this.setTitle(title);
+    if (!options.tables.length) throw new Error("The table editor needs at least one table.");
+    this.drafts = options.tables.map(table => ({ table, undo: [], redo: [] }));
+    if (options.editing) this.unchanged = options.tables.map(toHtml);
+    this.setTitle(options.title);
     this.modalEl.addClass("obsidian-patch-table-modal");
+    if (options.converting) this.contentEl.createEl("p", { cls: "setting-item-description", text:
+      "Review and edit the tables below. Your note changes only when you confirm; one undo restores the whole conversion." });
+    if (this.drafts.length > 1) this.navigation();
     this.toolbar(this.contentEl.createDiv({ cls: "obsidian-patch-table-toolbar" }));
     this.host = this.contentEl.createDiv({ cls: "obsidian-patch-table-grid markdown-rendered" });
     // Outside the content, so the buttons stay in view while the table scrolls.
     const footer = this.modalEl.createDiv({ cls: "modal-button-container" });
     footer.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
-    footer.createEl("button", { text: "Save", cls: "mod-cta" }).addEventListener("click", () => this.commit());
+    const label = options.converting ? this.drafts.length > 1 ? `Convert all ${this.drafts.length} tables` : "Convert to HTML" : "Save";
+    footer.createEl("button", { text: label, cls: "mod-cta" }).addEventListener("click", () => this.commit());
     makeResizable(this, "obsidian-patch-table-editor-size");
     this.listen();
 
@@ -112,7 +129,7 @@ export class TableEditor extends Modal {
   /** A new table starts in its first cell; Modal focuses its first control after onOpen. */
   override open(): void {
     super.open();
-    if (this.unchanged === undefined) this.focus(this.cells.keys().next().value);
+    if (this.unchanged === undefined && !this.options.converting) this.focus(this.cells.keys().next().value);
   }
 
   override onClose(): void {
@@ -120,9 +137,32 @@ export class TableEditor extends Modal {
   }
 
   private commit(): void {
-    const html = toHtml(this.table);
-    if (html !== this.unchanged) this.save(html);
+    const html = this.drafts.map(draft => toHtml(draft.table));
+    if (html.some((value, i) => value !== this.unchanged?.[i]) && this.options.save(html) === false) return;
     this.close();
+  }
+
+  private navigation(): void {
+    const bar = this.contentEl.createDiv({ cls: "obsidian-patch-table-navigation" });
+    const previous = bar.createEl("button", { text: "Previous table" });
+    const position = bar.createSpan({ attr: { "aria-live": "polite" } });
+    const next = bar.createEl("button", { text: "Next table" });
+    const update = (): void => {
+      position.setText(`Table ${this.current + 1} of ${this.drafts.length}`);
+      previous.disabled = this.current === 0;
+      next.disabled = this.current === this.drafts.length - 1;
+    };
+    const move = (step: number): void => {
+      this.endDrag();
+      this.current += step;
+      this.anchor = this.head = { row: 0, col: 0 };
+      this.render();
+      this.host.scrollTop = this.host.scrollLeft = 0;
+      update();
+    };
+    previous.addEventListener("click", () => move(-1));
+    next.addEventListener("click", () => move(1));
+    update();
   }
 
   private toolbar(bar: HTMLElement): void {

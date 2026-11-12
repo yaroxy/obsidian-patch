@@ -24,6 +24,7 @@
     "mermaid": "12.3.0"
   },
   "devDependencies": {
+    "@codemirror/commands": "6.11.1",
     "@codemirror/language": "6.13.1",
     "@types/node": "^26.6.6",
     "esbuild": "0.28.2",

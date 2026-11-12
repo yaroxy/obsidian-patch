@@ -124,6 +124,9 @@ Markdown tables cannot merge cells, group headers, or carry a caption. HTML tabl
 
 - Run **Obsidian Patch: Insert HTML table** to start a 3 × 3 table at the cursor.
 - To edit a table, hover it in Reading View or Live Preview and click **Edit table**, or run **Edit HTML table** with the cursor in its source.
+- To convert Markdown tables, place the cursor inside one table or select several complete tables, then run **Convert Markdown tables to HTML** from the command palette or editor context menu. Review and edit each table in the same editor; **Previous table** and **Next table** switch between drafts. **Convert to HTML** / **Convert all N tables** applies the conversion, and one editor undo restores the entire batch. **Cancel** leaves the note unchanged.
+
+Conversion preserves headers, column alignment, common inline formatting, links and escaped pipes. It handles standalone tables in Source mode and Live Preview. Tables in code blocks, lists or callouts are excluded; formulas, images, embeds, footnotes and rows with excess cells are rejected with a notice before anything is written.
 
 ![The table editor with part of a row selected](docs/images/html-table-editor.png)
 
@@ -344,6 +347,7 @@ The integration suites run inside an open vault named `dev-vault` through the Ob
 ```bash
 node scripts/test-banner.mjs /path/to/dev-vault   # needs ffmpeg and gif2webp; generates its own media
 node scripts/test-table.mjs /path/to/dev-vault
+node scripts/test-table-conversion.mjs /path/to/dev-vault
 node scripts/test-callout.mjs /path/to/dev-vault
 node scripts/test-math-format.mjs /path/to/dev-vault
 node scripts/test-navigation.mjs /path/to/dev-vault   # needs Python with pypdf and pdfplumber

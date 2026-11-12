@@ -2,6 +2,7 @@ import { ViewPlugin, type EditorView } from "@codemirror/view";
 import { Notice, setIcon, type App, type Editor, type EditorPosition, type MarkdownPostProcessorContext, type Plugin } from "obsidian";
 import { TableEditor } from "./table/editor";
 import { createTable, parseTable, tableRanges } from "./table/model";
+import { registerTableConversion } from "./table/conversion";
 
 const STALE = "The table changed while it was being edited. Open the editor again.";
 
@@ -11,6 +12,7 @@ const STALE = "The table changed while it was being edited. Open the editor agai
  */
 export function registerTables(plugin: Plugin): void {
   const { app } = plugin;
+  registerTableConversion(plugin);
 
   plugin.addCommand({
     id: "insert-html-table",
@@ -18,7 +20,8 @@ export function registerTables(plugin: Plugin): void {
     editorCallback: (editor) => {
       const from = editor.getCursor("from");
       const to = editor.getCursor("to");
-      new TableEditor(app, createTable(3, 3), "Insert HTML table", false, (html) => insertBlock(editor, from, to, html)).open();
+      new TableEditor(app, { tables: [createTable(3, 3)], title: "Insert HTML table",
+        save: ([html]) => insertBlock(editor, from, to, html!) }).open();
     },
   });
 
@@ -83,7 +86,7 @@ export function registerTables(plugin: Plugin): void {
 
 function edit(app: App, source: string, write: (html: string) => void): void {
   const table = parseTable(source);
-  if (table) new TableEditor(app, table, "Edit HTML table", true, write).open();
+  if (table) new TableEditor(app, { tables: [table], title: "Edit HTML table", editing: true, save: ([html]) => write(html!) }).open();
 }
 
 function editWidget(app: App, view: EditorView, embed: HTMLElement): void {

@@ -327,6 +327,16 @@ body {
   max-width: 92vw;
 }
 
+.obsidian-patch-table-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+  margin-block: var(--size-4-2);
+}
+
+.obsidian-patch-table-navigation > span { color: var(--text-muted); }
+
 .obsidian-patch-table-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -353,6 +363,8 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.obsidian-patch-table-modal > .modal-content > :not(.obsidian-patch-table-grid) { flex-shrink: 0; }
 
 .obsidian-patch-table-grid {
   flex: 1 1 auto;

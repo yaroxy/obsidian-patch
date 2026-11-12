@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Markdown-to-HTML table conversion from the cursor or a selection of complete tables, available through a command and the editor context menu. Tables open as editable previews with batch navigation; confirmation writes the whole batch in one isolated undo step. Alignment, inline formatting and links survive, and stale notes or unsupported content cannot cause a partial conversion.
 - Heading Levels: right-aligned H1–H6 labels in Reading View, Live Preview, and Source mode, with room for wrapped headings and a toggle under Editor. Labels do not change note source or appear in PDFs.
 - PDF Export: heading bookmarks and same-note heading jumps through Obsidian's native desktop export dialog. Both features can be toggled independently; Unicode headings, common Markdown fragments, and repeated-heading fragments are supported.
 - Callout Editor: edit a callout's type, title, fold state, metadata, and content in a form with a rendered preview, from a button on the callout in Reading View and Live Preview or with **Edit callout**. **Insert callout** adds a callout or wraps the selected lines in one, and **Convert to text** and **Convert to blockquote** unwrap one. A header-only change rewrites only the header line. A GitHub panel tells whether GitHub renders the callout as an alert and can make it compatible, and notes with `github: true` or in chosen folders get a status bar count of callouts GitHub would show as plain blockquotes.

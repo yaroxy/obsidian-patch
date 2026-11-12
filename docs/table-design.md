@@ -10,9 +10,10 @@ Markdown 表格无法合并单元格、分组表头或添加表名，这类表�
 
 - 命令 **Insert HTML table**：在光标处插入新表格（3×3，首行为表头）。
 - 命令 **Edit HTML table**：光标位于表格源码内时可用。
+- 命令与编辑器右键菜单 **Convert Markdown tables to HTML**：转换光标所在的 Markdown 表格，或选区内的完整表格；先在同一编辑器中逐张预览和修改，确认后一次写入。
 - 阅读视图和 Live Preview 中，悬停 HTML 表格时出现 **Edit table** 按钮。Live Preview 中它位于原生 **Edit this block** 旁边。
 
-不包括 callout 或引用块内的表格、嵌入笔记和悬浮预览里的表格、行内格式工具栏和表格导入。
+不包括 callout、引用块或列表内的 Markdown 表格、嵌入笔记和悬浮预览里的表格、行内格式工具栏，以及外部文件导入。
 
 ## 输出格式
 
@@ -35,6 +36,8 @@ src/features/
 ├── table.ts        命令、阅读视图与 Live Preview 按钮、写回
 └── table/
     ├── model.ts    解析、HTML 表格布局、行列与合并/拆分操作、序列化
+    ├── markdown.ts Markdown 表格定位、选区检查、参考链接上下文、替换边界
+    ├── conversion.ts 转换入口、原生行内渲染、完整批次校验与事务写回
     └── editor.ts   可视化编辑弹窗
 ```
 
@@ -49,6 +52,15 @@ src/features/
 - **菜单**使用 Obsidian 的 `Menu`，遵循用户的原生菜单设置。
 - **窗口大小。** 弹窗右下角有调整大小的把手，与 callout 编辑器共用 `src/ui/resizable-modal.ts`：多出的空间给表格网格，尺寸按库记住，双击把手恢复默认。保存和取消按钮固定在底部，表格在中间滚动。
 
+## Markdown 转换
+
+- 光标模式只处理当前表格。非空选区必须完整包含所触及的每张表格；选区中的段落和表格之间的文字保持原样。多光标暂不支持。
+- `markdown.ts` 先排除 frontmatter、代码、注释、公式块、原始 HTML 和嵌套容器，再识别表头、分隔行和正文。按 Obsidian 实际解析，表格在文首、空行或 ATX 标题后开始，不从普通段落中途开始；没有管道符的后续行保留为普通段落。保留源范围，不把转义管道误当分列。表头与分隔行的列数必须一致；正文缺列由原生渲染补空，超出表头的列则拒绝，避免丢失文字。
+- 使用 Obsidian 的 `MarkdownRenderer.render` 解析行内格式，带入同一笔记中的参考链接定义，并再次核对渲染的行列数。转换为原有 `Table` 模型；表头、对齐、常见 HTML 行内标签和链接保留。公式、图片、嵌入、脚注及动态渲染内容不序列化为 HTML，而是拒绝整个批次并说明原因。
+- `TableEditor` 接收多个草稿，逐张保存自己的撤销/重做栈。切换表格不写正文；确认写全部，取消丢弃全部。现有 HTML 插入和编辑使用同一接口传入单张表。
+- 确认时核对整篇源文本、文件对象和路径。通过一次 `Editor.transaction` 替换全部范围，并用 CodeMirror `isolateHistory` 将它与前后的输入分开；一次撤销/重做作用于整个转换批次。过期草稿保留在弹窗中并提示重新打开。
+- HTML 块内无空行，必要时在块外补空行，保证相邻正文继续按 Markdown 渲染。保留外围文本和原有换行风格。
+
 ## 宿主依赖
 
 阅读视图使用公开的 markdown post processor 和 `getSectionInfo`。Live Preview 依赖 `.cm-html-embed` 与其中的 `.embed-actions` DOM；容器不存在时不加按钮，命令仍然可用。Obsidian 的 HTML 部件让 CodeMirror 忽略其内部事件，因此按钮由直接挂在 `contentDOM` 上的 mouseover 监听按需添加。`Modal` 自带 `selection` 实例属性，编辑器的方法避开了这个名称。
@@ -62,5 +74,7 @@ src/features/
 - spacetime 中的五十音表（176 行 HTML，含 rowspan、colspan、表名和 `<small>`）复制到 dev-vault 后，未改动保存不写文件，修改一格后全文只有该格变化。
 
 2026-11-11，Obsidian 1.15.0：`test-table.mjs` 23 项通过，新增一项检查调整大小的把手和固定在底部的按钮；拖动调整的行为由 callout 集成测试覆盖。
+
+2026-11-12，Obsidian 1.15.0，dev-vault：Markdown 转换新增 8 项纯模型测试；`test-table-conversion.mjs` 覆盖批量草稿和取消、63 行数据及 3 行表头的逐格对照、一次撤销/重做及其与输入的隔离、单表入口、行内格式与链接、边界、异常批次和并发保护、原生 Live Preview 单元格入口及阅读视图。原 HTML 表格 23 项集成检查仍通过。脚本使用隔离标签页并恢复设置、窗口状态和测试笔记。
 
 未验证：移动端、pop-out 窗口、RTL、其他桌面平台，以及原生菜单中的菜单项（系统菜单不在 DOM 中，菜单项与工具栏共用同一组操作定义）。
