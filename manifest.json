@@ -3,7 +3,7 @@
   "name": "Obsidian Patch",
   "version": "0.1.0",
   "minAppVersion": "1.13.7",
-  "description": "Focused enhancements for Obsidian: Patch Mermaid, image and video banners, visual HTML table and callout editors, a math block formatter, file and folder icons, line width, tinted inline code in callouts, and an active line marker.",
+  "description": "Focused enhancements for Obsidian: diagrams, covers, visual table and callout editors, math formatting, icons, line width, heading levels, and PDF navigation.",
   "author": "yaroxy",
   "authorUrl": "https://github.com/yaroxy",
   "isDesktopOnly": false

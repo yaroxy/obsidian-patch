@@ -1,6 +1,6 @@
 # Obsidian Patch
 
-Obsidian Patch collects focused fixes and enhancements for Obsidian. Each feature is an independent module with its own settings under **Settings > Obsidian Patch**, and changes apply immediately.
+Obsidian Patch collects focused fixes and enhancements for Obsidian. Settings under **Settings > Obsidian Patch** are grouped alphabetically by their displayed names, and changes apply immediately.
 
 | Feature                           | What it does                                                                                   |
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -13,6 +13,8 @@ Obsidian Patch collects focused fixes and enhancements for Obsidian. Each featur
 | [Line Width](#line-width)         | Sets the readable line width from a status bar slider, or per note with `patch-line-width`     |
 | [Callout Code](#callout-code)     | Tints inline code in callouts with the callout's own color                                     |
 | [Active Line](#active-line)       | Marks the line the cursor is on with a bar in the margin                                       |
+| [Heading Levels](#heading-levels) | Shows H1–H6 in a right-aligned column beside headings                                          |
+| [PDF Export](#pdf-export)         | Adds heading bookmarks and same-note heading jumps to exported PDFs                           |
 
 |                      | Version                                     |
 | -------------------- | ------------------------------------------- |
@@ -234,6 +236,27 @@ Run **Obsidian Patch: Format math block** with the cursor in a block, or **Forma
 - Under **Math Format** in the settings, choose 2 or 4 spaces of indent, and whether to align the `&` and the closing `\\` of rows. Alignment assumes the editor's monospace font, so East Asian text in `\text{}` lines up only approximately.
 - To format on lint, add **Format all math blocks in note** to the Linter plugin's custom commands.
 
+## Heading Levels
+
+Shows a small H1–H6 label at the right edge of each heading in Reading View, Live Preview, and Source mode. Long headings keep space for the label when they wrap. Setext headings are supported, and heading examples inside fenced code are left alone.
+
+The labels are on by default; toggle **Editor > Heading levels** in the plugin settings. They are visual only: your Markdown, copied source, and exported PDF do not acquire labels.
+
+![Heading levels aligned at the right edge of the reading column](docs/images/heading-levels.png)
+
+## PDF Export
+
+Use Obsidian's usual **Export to PDF** on desktop. Under **PDF Export** in the plugin settings, two options are on by default:
+
+| Setting | Result |
+| --- | --- |
+| Document outline | Heading bookmarks arranged by level in the PDF reader's outline/bookmarks panel |
+| Heading links | Clickable jumps to headings within the exported note |
+
+Same-note wikilinks such as `[[#Results]]` and Markdown links such as `[Results](#results)` work, including Unicode headings and links that name the current note. Common Markdown TOC fragments with hyphens are supported; repeated fragments use suffixes such as `#results-1`. Native Obsidian heading matching takes precedence, so a wikilink to a repeated heading follows Obsidian's first match.
+
+Links to other notes, block references, and links inside embedded notes keep Obsidian's native export behavior. External web links remain external. The feature preserves the printed content and uses the native export dialog's paper size, margins, orientation, and title options.
+
 ## Patch Icons
 
 Right-click a file or folder in the file explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon, built into Obsidian, or a [Simple Icons](https://simpleicons.org/) brand logo. **Remove icon** clears it, and both work on several selected files at once. An icon takes the color of the name beside it.
@@ -316,14 +339,18 @@ npm test        # unit tests
 npm run build   # type-check, then build main.js
 ```
 
-The integration suites run inside Obsidian through the Obsidian CLI. Point them at a development vault: each run installs the current build into its `obsidian-patch` plugin directory and overwrites its test notes. A hidden window receives no animation frames or observer callbacks, so keep it visible, or first run `require("electron").remote.getCurrentWebContents().setBackgroundThrottling(false)` in its developer console.
+The integration suites run inside an open vault named `dev-vault` through the Obsidian CLI. Enable Obsidian Patch and close its dialogs first. Each run installs the current build, overwrites only its dedicated test fixtures, and opens a temporary tab. It restores plugin settings, editor dialog sizes, the active tab, and background throttling on success, failure, or a cooperative timeout. The native macOS CLI is detected automatically; set `OBSIDIAN_CLI` to use another executable.
 
 ```bash
-node scripts/test-banner.mjs /path/to/dev-vault   # needs banner.png in the vault root, ffmpeg, and gif2webp
+node scripts/test-banner.mjs /path/to/dev-vault   # needs ffmpeg and gif2webp; generates its own media
 node scripts/test-table.mjs /path/to/dev-vault
 node scripts/test-callout.mjs /path/to/dev-vault
 node scripts/test-math-format.mjs /path/to/dev-vault
+node scripts/test-navigation.mjs /path/to/dev-vault   # needs Python with pypdf and pdfplumber
+node scripts/test-runner-recovery.mjs /path/to/dev-vault
 ```
+
+Results and the original settings backup are saved in a unique temporary directory printed by the runner; pass a second path to choose it. `PDF_PYTHON` selects the Python executable. To defer the known intermittent Banner playback issue, add `--skip-playback` explicitly; skipped checks are listed in the report. See [integration testing](docs/integration-testing.md) for prerequisites, cleanup behavior, and the verified scope.
 
 ```text
 .
@@ -336,11 +363,13 @@ node scripts/test-math-format.mjs /path/to/dev-vault
 │   │   ├── banner.ts, banner/     Cover properties, media, mounting, and picker
 │   │   ├── callout.ts, callout/   Callout model, editor, GitHub checks, and entry points
 │   │   ├── callout-code.ts
+│   │   ├── heading-levels.ts      Right-aligned heading labels in reading and editing views
 │   │   ├── icons.ts, icons/       Explorer icons, picker, Simple Icons loading, Iconize import
 │   │   ├── line-width.ts, line-width/ Per-pane width, status bar slider, property parsing
 │   │   ├── math-format.ts, math-format/ Display math formatter and its commands
 │   │   ├── mermaid-runtime.ts     Loads Mermaid from jsDelivr or the bundle
 │   │   ├── patch-mermaid.ts       Code block processor, theming, re-rendering
+│   │   ├── pdf-export.ts, pdf-export/ Native PDF outline and same-note heading links
 │   │   └── table.ts, table/       Table model, editor, and entry points
 │   ├── ui/                        Helpers shared by features: resizable editor modals
 │   ├── build.d.ts                 Types for values the build injects

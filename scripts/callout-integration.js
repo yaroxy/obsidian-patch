@@ -1,11 +1,9 @@
-(async (app, runId) => {
-  const checks = [];
-  const reportPath = "Patch Callout Tests/results.json";
+(async (app, context) => {
+  const { leaf, wait, report } = context;
+  const checks = report.checks;
   const notePath = "Patch Callout Tests/Callouts.md";
-  const leaf = app.workspace.getLeavesOfType("markdown")[0] ?? app.workspace.getLeaf("tab");
   const doc = leaf.view.contentEl.ownerDocument;
   const win = doc.defaultView;
-  const wait = ms => new Promise(resolve => win.setTimeout(resolve, ms));
   const assert = (value, message) => { if (!value) throw new Error(message); };
   async function until(check, label) {
     for (let i = 0; i < 100; i++) {
@@ -41,8 +39,8 @@
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: true } });
     await wait(150);
   }
-  let error;
   try {
+    await app.plugins.plugins["obsidian-patch"].setCallouts({ github: true, githubFolders: [] });
     app.saveLocalStorage(sizeKey, null);
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
@@ -213,14 +211,13 @@
     await until(() => status && status.style.display !== "none" && status.textContent === "GitHub: 2/2 callouts not alerts",
       "the status bar counts callouts GitHub would not show as alerts in a note marked github: true");
   } catch (failure) {
-    error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode?.(), hidden: doc.hidden, modal: !!modal() });
+    report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode?.(), hidden: doc.hidden, modal: !!modal() });
   } finally {
     for (const el of doc.querySelectorAll(".obsidian-patch-callout-modal button")) if (el.textContent === "Cancel") el.click();
-    if (file()) await app.vault.modify(file(), original);
-    await wait(100);
-    const report = JSON.stringify({ runId, checks, error }, null, 2);
-    const results = app.vault.getFileByPath(reportPath);
-    if (results) await app.vault.modify(results, report);
-    else await app.vault.create(reportPath, report);
+    if (file()) {
+      if (leaf.view.getMode?.() === "source") leaf.view.editor.setValue(original);
+      await leaf.view.save?.();
+      await app.vault.modify(file(), original);
+    }
   }
 })

@@ -1,11 +1,8 @@
-(async (app, runId) => {
-  const checks = [];
-  const reportPath = "Patch Math Tests/results.json";
+(async (app, context) => {
+  const { leaf, wait, report } = context;
+  const checks = report.checks;
   const notePath = "Patch Math Tests/Math.md";
-  const leaf = app.workspace.getLeavesOfType("markdown")[0] ?? app.workspace.getLeaf("tab");
   const doc = leaf.view.contentEl.ownerDocument;
-  const win = doc.defaultView;
-  const wait = ms => new Promise(resolve => win.setTimeout(resolve, ms));
   const assert = (value, message) => { if (!value) throw new Error(message); };
   async function until(check, label) {
     for (let i = 0; i < 100; i++) {
@@ -49,8 +46,8 @@
   const cases = lines("> $$", "> \\begin{cases}", ">   x  & x>0 \\\\", ">   -x & x\\le 0", "> \\end{cases}", "> $$");
   const file = () => app.vault.getFileByPath(notePath);
   const notices = () => Array.from(doc.querySelectorAll(".notice")).map(n => n.textContent);
-  let error;
   try {
+    await app.plugins.plugins["obsidian-patch"].setMathFormat({ indent: 2, alignAmpersands: true, alignRowEnds: false });
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: true } });
@@ -85,13 +82,12 @@
     assert(editor.getValue() === formatted, "Formatting twice changed the note");
     checks.push("formatting is idempotent");
   } catch (failure) {
-    error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode?.(), hidden: doc.hidden });
+    report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode?.(), hidden: doc.hidden });
   } finally {
-    if (file()) await app.vault.modify(file(), original);
-    await wait(100);
-    const report = JSON.stringify({ runId, checks, error }, null, 2);
-    const results = app.vault.getFileByPath(reportPath);
-    if (results) await app.vault.modify(results, report);
-    else await app.vault.create(reportPath, report);
+    if (file()) {
+      if (leaf.view.getMode?.() === "source") leaf.view.editor.setValue(original);
+      await leaf.view.save?.();
+      await app.vault.modify(file(), original);
+    }
   }
 })

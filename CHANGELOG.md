@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Heading Levels: right-aligned H1–H6 labels in Reading View, Live Preview, and Source mode, with room for wrapped headings and a toggle under Editor. Labels do not change note source or appear in PDFs.
+- PDF Export: heading bookmarks and same-note heading jumps through Obsidian's native desktop export dialog. Both features can be toggled independently; Unicode headings, common Markdown fragments, and repeated-heading fragments are supported.
 - Callout Editor: edit a callout's type, title, fold state, metadata, and content in a form with a rendered preview, from a button on the callout in Reading View and Live Preview or with **Edit callout**. **Insert callout** adds a callout or wraps the selected lines in one, and **Convert to text** and **Convert to blockquote** unwrap one. A header-only change rewrites only the header line. A GitHub panel tells whether GitHub renders the callout as an alert and can make it compatible, and notes with `github: true` or in chosen folders get a status bar count of callouts GitHub would show as plain blockquotes.
 - Math Format: **Format math block** and **Format all math blocks in note** indent the environments of `$$` blocks, put each row of alignment environments on its own line, line up the `&` of the rows, and remove trailing spaces, changing only whitespace outside braces so formulas render as before. Blocks in callouts and lists keep their markers. The indent and the alignment of `&` and row ends are settings.
 - HTML Tables: a visual editor for HTML tables in notes. **Insert HTML table** adds a new table at the cursor, and **Edit table**, on hover in Reading View and Live Preview, or **Edit HTML table** from the command palette, opens an existing one. Cells are edited in place; drag across cells to merge or split them, insert or delete rows and columns, toggle header cells, set alignment, and edit the caption, with undo and redo. The editor writes HTML that renders cleanly in Obsidian, keeps the markup of cells you do not touch, and writes nothing when a table is unchanged.
@@ -24,6 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Integration tests share native CLI detection, exact vault verification, isolated tabs, settings and UI-state restoration, cancellation, and completion reports. Banner generates its own media fixtures and supports explicitly skipping playback checks. Recovery checks cover success, failure, and timeout.
+- Aligned `versions.json` with the manifest's minimum Obsidian version, 1.13.7.
+- Settings groups are sorted alphabetically by their displayed names.
 - Minimum Obsidian version raised to 1.13.7 for the public editor and frontmatter interfaces used by Patch Banner.
 - Renamed the Mermaid feature to Patch Mermaid and its code block language from `mermaid-latest` to `patch-mermaid`. Existing notes must use `patch-mermaid` to render with the plugin.
 - Bundled Mermaid upgraded from 11.16.0 to 12.3.0, and `@mermaid-js/layout-elk` from 0.2.2 to 1.0.2.

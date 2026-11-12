@@ -14,6 +14,8 @@ import {
 } from "./features/mermaid-runtime";
 import { DEFAULT_CALLOUT_CODE_ENABLED, registerCalloutCode } from "./features/callout-code";
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
+import { DEFAULT_HEADING_LEVELS_ENABLED, registerHeadingLevels } from "./features/heading-levels";
+import { parsePdfExportSettings, registerPdfExport, type PdfExportSettings } from "./features/pdf-export";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { registerTables } from "./features/table";
 import { MATH_INDENTS, parseMathFormatSettings, registerMathFormat, type MathFormatSettings } from "./features/math-format";
@@ -44,6 +46,8 @@ interface ObsidianPatchSettings {
   calloutCode: boolean;
   callouts: CalloutSettings;
   activeLine: boolean;
+  headingLevels: boolean;
+  pdfExport: PdfExportSettings;
   banner: BannerSettings;
   icons: IconSettings;
   lineWidth: LineWidthSettings;
@@ -63,6 +67,7 @@ export default class ObsidianPatchPlugin extends Plugin {
   private applyActiveLine?: (enabled: boolean) => void;
   private applyBanner?: (settings: BannerSettings) => void;
   private applyLineWidth?: (settings: LineWidthSettings) => void;
+  private applyHeadingLevels?: (enabled: boolean) => void;
 
   override async onload(): Promise<void> {
     this.settings = parseSettings(await this.loadData());
@@ -79,6 +84,8 @@ export default class ObsidianPatchPlugin extends Plugin {
     });
     this.applyCalloutCode = registerCalloutCode(this, this.settings.calloutCode);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
+    this.applyHeadingLevels = registerHeadingLevels(this, this.settings.headingLevels);
+    registerPdfExport(this, () => this.settings.pdfExport);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
     registerMathFormat(this, () => this.settings.mathFormat);
@@ -115,6 +122,17 @@ export default class ObsidianPatchPlugin extends Plugin {
     this.applyActiveLine?.(activeLine);
   }
 
+  async setHeadingLevels(headingLevels: boolean): Promise<void> {
+    this.settings.headingLevels = headingLevels;
+    await this.saveData(this.settings);
+    this.applyHeadingLevels?.(headingLevels);
+  }
+
+  async setPdfExport(pdfExport: PdfExportSettings): Promise<void> {
+    this.settings.pdfExport = pdfExport;
+    await this.saveData(this.settings);
+  }
+
   async setBanner(banner: BannerSettings): Promise<void> {
     this.settings.banner = banner;
     await this.saveData(this.settings);
@@ -145,17 +163,23 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
 
   override display(): void {
     this.containerEl.empty();
-    this.displayMermaidSection();
-    this.displayBannerSection();
-    this.displayIconSection();
-    this.displayLineWidthSection();
-    this.displayCalloutSection();
-    this.displayMathSection();
-    this.displayEditorSection();
+    const sections = [
+      { name: "Patch Mermaid", render: () => this.displayMermaidSection() },
+      { name: "Patch Banner", render: () => this.displayBannerSection() },
+      { name: "Patch Icons", render: () => this.displayIconSection() },
+      { name: "Line Width", render: () => this.displayLineWidthSection() },
+      { name: "Callouts", render: () => this.displayCalloutSection() },
+      { name: "Math Format", render: () => this.displayMathSection() },
+      { name: "Editor", render: () => this.displayEditorSection() },
+      { name: "PDF Export", render: () => this.displayPdfSection() },
+    ];
+    for (const section of sections.sort((a, b) => a.name.localeCompare(b.name, "en"))) {
+      new Setting(this.containerEl).setName(section.name).setHeading();
+      section.render();
+    }
   }
 
   private displayMermaidSection(): void {
-    new Setting(this.containerEl).setName("Patch Mermaid").setHeading();
     this.displayMermaidVersion();
 
     const warning = this.containerEl.createEl("p", {
@@ -265,8 +289,6 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayCalloutSection(): void {
-    new Setting(this.containerEl).setName("Callouts").setHeading();
-
     this.addToggle(
       "Inline code",
       "Tints inline code with the callout's own color instead of the page's gray, and code in a callout title takes the title's color. Applies to Reading View and Live Preview; fenced code blocks keep the theme's colors.",
@@ -294,7 +316,6 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayMathSection(): void {
-    new Setting(this.containerEl).setName("Math Format").setHeading();
     const settings = (): MathFormatSettings => this.plugin.settings.mathFormat;
     new Setting(this.containerEl)
       .setName("Indent")
@@ -319,7 +340,6 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayBannerSection(): void {
-    new Setting(this.containerEl).setName("Patch Banner").setHeading();
     const settings = (): BannerSettings => this.plugin.settings.banner;
     this.addToggle("Enabled", "Display vault media from the patch-banner note property in Reading View and Live Preview.", settings().enabled,
       (enabled) => this.plugin.setBanner({ ...settings(), enabled }));
@@ -343,7 +363,6 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayIconSection(): void {
-    new Setting(this.containerEl).setName("Patch Icons").setHeading();
     const icons = this.plugin.icons;
     this.addToggle(
       "Enabled",
@@ -408,7 +427,6 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayLineWidthSection(): void {
-    new Setting(this.containerEl).setName("Line Width").setHeading();
     const settings = (): LineWidthSettings => this.plugin.settings.lineWidth;
     this.addToggle(
       "Enabled",
@@ -440,13 +458,33 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 
   private displayEditorSection(): void {
-    new Setting(this.containerEl).setName("Editor").setHeading();
-
     this.addToggle(
       "Active line",
       "Marks the line the cursor is on with a bar in the margin, faded while the editor is unfocused, and highlights its line number. Applies to Live Preview and Source mode.",
       this.plugin.settings.activeLine,
       (enabled) => this.plugin.setActiveLine(enabled),
+    );
+    this.addToggle(
+      "Heading levels",
+      "Shows right-aligned H1–H6 labels beside headings in Reading View, Live Preview, and Source mode. Labels are not saved in your notes or included in PDF exports.",
+      this.plugin.settings.headingLevels,
+      (enabled) => this.plugin.setHeadingLevels(enabled),
+    );
+  }
+
+  private displayPdfSection(): void {
+    const settings = (): PdfExportSettings => this.plugin.settings.pdfExport;
+    this.addToggle(
+      "Document outline",
+      "Adds a hierarchy of heading bookmarks to Obsidian's Export to PDF on desktop. Open the PDF reader's outline or bookmarks panel to navigate.",
+      settings().outline,
+      (outline) => this.plugin.setPdfExport({ ...settings(), outline }),
+    );
+    this.addToggle(
+      "Heading links",
+      "Makes links to headings in the exported note jump within the PDF. Links to other notes and block references are not converted.",
+      settings().headingLinks,
+      (headingLinks) => this.plugin.setPdfExport({ ...settings(), headingLinks }),
     );
   }
 
@@ -485,6 +523,8 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
     lineWidth: parseLineWidthSettings(record.lineWidth),
     mathFormat: parseMathFormatSettings(record.mathFormat),
     callouts: parseCalloutSettings(record.callouts),
+    pdfExport: parsePdfExportSettings(record.pdfExport),
+    headingLevels: typeof record.headingLevels === "boolean" ? record.headingLevels : DEFAULT_HEADING_LEVELS_ENABLED,
     calloutCode:
       typeof record.calloutCode === "boolean"
         ? record.calloutCode

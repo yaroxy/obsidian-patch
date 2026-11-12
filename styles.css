@@ -114,6 +114,50 @@ body {
   margin-block-start: var(--size-2-2);
 }
 
+/* Heading levels: visual labels, separate from the document text and fold controls. */
+.obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6),
+.obsidian-patch-heading-levels .markdown-source-view.mod-cm6 .cm-line.HyperMD-header {
+  position: relative;
+  padding-inline-end: 2.75rem;
+}
+
+.obsidian-patch-heading-level,
+.obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6)::after {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  inline-size: 2rem;
+  color: var(--text-muted);
+  font: 500 10px/1.5 var(--font-interface);
+  letter-spacing: 0.025em;
+  vertical-align: middle;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+.obsidian-patch-heading-levels .markdown-rendered h1::after { content: "H1"; }
+.obsidian-patch-heading-levels .markdown-rendered h2::after { content: "H2"; }
+.obsidian-patch-heading-levels .markdown-rendered h3::after { content: "H3"; }
+.obsidian-patch-heading-levels .markdown-rendered h4::after { content: "H4"; }
+.obsidian-patch-heading-levels .markdown-rendered h5::after { content: "H5"; }
+.obsidian-patch-heading-levels .markdown-rendered h6::after { content: "H6"; }
+
+.print .obsidian-patch-heading-level { display: none; }
+@media print {
+  .obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6) {
+    padding-inline-end: 0;
+  }
+  .obsidian-patch-heading-level,
+  .obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6)::after {
+    display: none;
+    content: none;
+  }
+}
+
 .obsidian-patch-input-invalid {
   border-color: var(--background-modifier-error);
 }

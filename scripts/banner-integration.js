@@ -1,13 +1,9 @@
-(async (app, runId) => {
-  const checks = [];
-  const reportPath = "Patch Banner Tests/results.json";
+(async (app, context) => {
+  const { leaf, wait, report } = context;
+  const checks = report.checks;
   const plugin = () => app.plugins.plugins["obsidian-patch"];
-  const original = { ...plugin().settings.banner };
   app.setting.close();
-  const leaf = app.workspace.activeLeaf?.view.getViewType() === "markdown"
-    ? app.workspace.activeLeaf : app.workspace.getLeavesOfType("markdown")[0] ?? app.workspace.getLeaf("tab");
   const doc = leaf.view.contentEl.ownerDocument;
-  const wait = ms => new Promise(resolve => doc.defaultView.setTimeout(resolve, ms));
   const assert = (value, message) => { if (!value) throw new Error(message); };
   async function until(check, label) {
     for (let i = 0; i < 100; i++) {
@@ -46,12 +42,11 @@
     const left = viewport.getBoundingClientRect().left + viewport.clientLeft + (viewport.clientWidth - expected) / 2;
     return Math.abs(box.width - expected) < 1 && Math.abs(box.left - left) < 1;
   }
-  let error;
   try {
     await plugin().setBanner({ enabled: true, autoplayVideos: true, widthPercent: 100 });
     await until(() => !!app.vault.getFileByPath("Patch Banner Tests/media/test-portrait.png"), "media indexed");
     const cases = [
-      ["Image", "banner.png"],
+      ["Image", "Patch Banner Tests/media/test-image.png"],
       ["Portrait", "Patch Banner Tests/media/test-portrait.png"],
       ["GIF", "Patch Banner Tests/media/test-animation.gif"],
       ["Animated WebP", "Patch Banner Tests/media/test-animation.webp"],
@@ -131,7 +126,7 @@
     await until(() => plugin().settings.banner.widthPercent === 90 && coverWidthIs(90), "reset percentage survives a plugin reload");
     await plugin().setBanner({ ...plugin().settings.banner, widthPercent: 100 });
     await open("Patch Banner Tests/Image.md", "preview");
-    await until(() => fullImage() && root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/banner.png?"), "image identity settled before rerender checks");
+    await until(() => fullImage() && root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/test-image.png?"), "image identity settled before rerender checks");
     const coverImage = root().querySelector("img.obsidian-patch-banner-media");
     for (let i = 0; i < 3; i++) {
       leaf.view.previewMode.rerender(true);
@@ -179,14 +174,14 @@
     checks.push("Live Preview scrolls down a long note with a tall cover without jumping");
     await open("Patch Banner Tests/Image.md");
     const value = leaf.view.editor.getValue();
-    const start = value.indexOf("banner.png");
-    leaf.view.editor.replaceRange("Patch Banner Tests/media/test-portrait.png", leaf.view.editor.offsetToPos(start), leaf.view.editor.offsetToPos(start + "banner.png".length));
+    const start = value.indexOf("Patch Banner Tests/media/test-image.png");
+    leaf.view.editor.replaceRange("Patch Banner Tests/media/test-portrait.png", leaf.view.editor.offsetToPos(start), leaf.view.editor.offsetToPos(start + "Patch Banner Tests/media/test-image.png".length));
     await until(() => {
       const img = root()?.querySelector("img.obsidian-patch-banner-media");
       return img?.naturalHeight > img?.naturalWidth;
     }, "Live Preview reacts to the current editor frontmatter");
     leaf.view.editor.setValue(value);
-    await until(() => root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/banner.png?"), "editor fixture restored after frontmatter edit");
+    await until(() => root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/test-image.png?"), "editor fixture restored after frontmatter edit");
     await open("Patch Banner Tests/Portrait.md");
     await until(() => {
       const img = root()?.querySelector("img.obsidian-patch-banner-media");
@@ -196,27 +191,34 @@
 
     // Keep standard body shapes and empty-note fixtures available in the test vault.
     for (const [name, body] of [["List", "- First\n- Second"], ["Quote", "> Quote\n\nBody"], ["Code", "```js\nconsole.log(1)\n```\n\nBody"], ["Empty", ""], ["Rename", "# Rename fixture"], ["Missing", "# Restored image fixture"], ["Corrupt", "# Replaced image fixture"]]) {
-      await write(name, "banner.png", body);
+      await write(name, "Patch Banner Tests/media/test-image.png", body);
     }
     for (const [name, ext] of [["Video", "mp4"], ["WebM", "webm"]]) {
-      const path = await write(name, `Patch Banner Tests/media/test-clip.${ext}`);
-      for (let round = 0; round < 3; round++) for (const mode of ["preview", "source"]) {
-        await open(path, mode);
-        await until(() => {
-          const video = root()?.querySelector("video");
-          if (!video || video.readyState < 2 || video.paused) return false;
-          const box = video.getBoundingClientRect();
-          return Math.abs(box.width / box.height - video.videoWidth / video.videoHeight) < 0.01;
-        }, `${name}: full aspect ratio and playback in ${mode}, round ${round + 1}`);
-      }
+      await write(name, `Patch Banner Tests/media/test-clip.${ext}`);
     }
-    const video = root().querySelector("video");
-    Array.from(root().querySelectorAll("button")).find(b => b.textContent === "Pause video").click();
-    await until(() => video.paused, "manual pause still works");
-    await plugin().setBanner({ ...plugin().settings.banner, enabled: true, autoplayVideos: false });
-    await until(() => root().querySelector("video") === video && video.paused, "settings preserve media instance and pause state");
+    if (context.options.skipPlayback) {
+      report.skipped.push("MP4/WebM automatic playback and manual pause checks (--skip-playback)");
+    } else {
+      for (const name of ["Video", "WebM"]) {
+        const path = `Patch Banner Tests/${name}.md`;
+        for (let round = 0; round < 3; round++) for (const mode of ["preview", "source"]) {
+          await open(path, mode);
+          await until(() => {
+            const video = root()?.querySelector("video");
+            if (!video || video.readyState < 2 || video.paused) return false;
+            const box = video.getBoundingClientRect();
+            return Math.abs(box.width / box.height - video.videoWidth / video.videoHeight) < 0.01;
+          }, `${name}: full aspect ratio and playback in ${mode}, round ${round + 1}`);
+        }
+      }
+      const video = root().querySelector("video");
+      Array.from(root().querySelectorAll("button")).find(b => b.textContent === "Pause video").click();
+      await until(() => video.paused, "manual pause still works");
+      await plugin().setBanner({ ...plugin().settings.banner, enabled: true, autoplayVideos: false });
+      await until(() => root().querySelector("video") === video && video.paused, "settings preserve media instance and pause state");
+    }
 
-    const empty = await write("Empty", "banner.png", "");
+    const empty = await write("Empty", "Patch Banner Tests/media/test-image.png", "");
     for (const mode of ["preview", "source"]) {
       await open(empty, mode);
       await until(fullImage, `frontmatter-only note has a cover in ${mode}`);
@@ -227,7 +229,7 @@
       const add = root()?.querySelector(".obsidian-patch-banner-add");
       return add && !add.hidden;
     }, "empty cover offers Add cover above the title");
-    await app.fileManager.processFrontMatter(app.vault.getFileByPath(plain), fm => { fm["patch-banner"] = "[[banner.png]]"; });
+    await app.fileManager.processFrontMatter(app.vault.getFileByPath(plain), fm => { fm["patch-banner"] = "[[Patch Banner Tests/media/test-image.png]]"; });
     await until(fullImage, "first banner added to an open Reading View");
     Array.from(root().querySelectorAll("button")).find(b => b.textContent === "Remove cover").click();
     await until(() => !app.metadataCache.getFileCache(app.vault.getFileByPath(plain))?.frontmatter?.["patch-banner"], "remove command deletes only the banner reference");
@@ -282,16 +284,9 @@
         width: video.videoWidth, height: video.videoHeight, error: video.error?.message,
         box: box && { x: box.x, y: box.y, width: box.width, height: box.height } },
       scroll: Array.from(leaf.view.contentEl.querySelectorAll(".cm-scroller,.markdown-preview-view")).map(e => ({ cls: e.className, top: e.scrollTop })) };
-    error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify(diagnostics);
+    report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify(diagnostics);
   } finally {
     app.setting.close();
     if (!plugin()) await app.plugins.enablePlugin("obsidian-patch");
-    await plugin().setBanner(original);
-    await open("Patch Banner Tests/Image.md", "preview");
-    await wait(100);
-    const report = JSON.stringify({ runId, checks, error }, null, 2);
-    const file = app.vault.getFileByPath(reportPath);
-    if (file) await app.vault.modify(file, report);
-    else await app.vault.create(reportPath, report);
   }
 })
