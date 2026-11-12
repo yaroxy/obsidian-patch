@@ -1,0 +1,841 @@
+{
+  "date": "2026-11-12",
+  "timezone": "Asia/Taipei",
+  "scope": "Stages 1 and 2 native-host experiment; not a production implementation",
+  "sourceCommit": "2f60da5fb7a674af5c0c5cfaf46a41576b675c17",
+  "environment": {
+    "obsidian": "1.15.0",
+    "installer": "1.14.5",
+    "electron": "43.8.3",
+    "chromium": "150.0.7871.250",
+    "pypdf": "6.21.4",
+    "pdfplumber": "0.11.9",
+    "viewportCssPx": [
+      1455,
+      864
+    ],
+    "devicePixelRatio": 2,
+    "readingWidthsCssPx": [
+      741.9140625,
+      520
+    ]
+  },
+  "fixtureSha256": {
+    "Claude Pages.md": "cac52f79b1a1648ddee55d97893b440311c4d2dcf7f729024ce425cea2fb6a33",
+    "Edge Cases.md": "fd8f263b35198fd80855f1b621fe725f46f1e2255a2f0bdac9ae624241dc3444",
+    "banner.png": "00b818b7a3dbb056e21b6738102d3defb7cad26d46ec1daf3b4a3a0647edb149"
+  },
+  "outputDirectory": "/private/tmp/obsidian-patch-pdf-20261112/experiment",
+  "exportRunId": "1794486114586-6526",
+  "mappingRunId": "1794486387710-6694",
+  "cases": [
+    {
+      "name": "claude-pages-a4-landscape-80",
+      "file": "Patch PDF Prototype/Claude Pages.md",
+      "profile": {
+        "name": "a4-landscape-80",
+        "pageSize": "A4",
+        "landscape": true,
+        "scale": 0.8,
+        "marginsType": 1,
+        "margins": {
+          "top": 0,
+          "left": 0,
+          "bottom": 0,
+          "right": 0
+        }
+      },
+      "plainPages": 6,
+      "markedPages": 6,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 4686
+    },
+    {
+      "name": "claude-pages-a4",
+      "file": "Patch PDF Prototype/Claude Pages.md",
+      "profile": {
+        "name": "a4",
+        "pageSize": "A4",
+        "landscape": false,
+        "scale": 1,
+        "marginsType": 0
+      },
+      "plainPages": 7,
+      "markedPages": 7,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 4686
+    },
+    {
+      "name": "claude-pages-letter",
+      "file": "Patch PDF Prototype/Claude Pages.md",
+      "profile": {
+        "name": "letter",
+        "pageSize": "Letter",
+        "landscape": false,
+        "scale": 1,
+        "marginsType": 0
+      },
+      "plainPages": 7,
+      "markedPages": 7,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 4686
+    },
+    {
+      "name": "edge-cases-a4-landscape-80",
+      "file": "Patch PDF Prototype/Edge Cases.md",
+      "profile": {
+        "name": "a4-landscape-80",
+        "pageSize": "A4",
+        "landscape": true,
+        "scale": 0.8,
+        "marginsType": 1,
+        "margins": {
+          "top": 0,
+          "left": 0,
+          "bottom": 0,
+          "right": 0
+        }
+      },
+      "plainPages": 7,
+      "markedPages": 7,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 3121
+    },
+    {
+      "name": "edge-cases-a4",
+      "file": "Patch PDF Prototype/Edge Cases.md",
+      "profile": {
+        "name": "a4",
+        "pageSize": "A4",
+        "landscape": false,
+        "scale": 1,
+        "marginsType": 0
+      },
+      "plainPages": 8,
+      "markedPages": 8,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 3121
+    },
+    {
+      "name": "edge-cases-letter",
+      "file": "Patch PDF Prototype/Edge Cases.md",
+      "profile": {
+        "name": "letter",
+        "pageSize": "Letter",
+        "landscape": false,
+        "scale": 1,
+        "marginsType": 0
+      },
+      "plainPages": 8,
+      "markedPages": 8,
+      "paginationAndLinesPreserved": true,
+      "pixelPerfectGlyphs": false,
+      "annotatedTokens": 3121
+    }
+  ],
+  "pdfFileCount": 12,
+  "referencePageCount": 43,
+  "pageBoundaries": 37,
+  "usableSourcePositions": 32,
+  "unsupportedStartsByVisualReview": {
+    "formula": 4,
+    "image": 1
+  },
+  "mappingCounts": {
+    "live-preview": {
+      "mapped": 20,
+      "mapped-widget-dom": 9,
+      "page-start-is-uninstrumented-content": 5,
+      "hidden-by-fold": 3
+    },
+    "reading": {
+      "mapped": 29,
+      "page-start-is-uninstrumented-content": 5,
+      "hidden-by-fold": 3
+    },
+    "reading-narrow": {
+      "mapped": 29,
+      "page-start-is-uninstrumented-content": 5,
+      "hidden-by-fold": 3
+    },
+    "source": {
+      "mapped": 32,
+      "page-start-is-uninstrumented-content": 5
+    }
+  },
+  "maxGlyphDeltaPt": 0.25430152940396056,
+  "maxVerticalGlyphDeltaPt": 0.0,
+  "allImageGeometryPreserved": true,
+  "clippedAnnotationRectanglesIgnored": 9725,
+  "visuallyReviewedReferencePages": 43,
+  "baseline": {
+    "unitTestsPassed": 52,
+    "build": "passed",
+    "tableIntegrationPassed": 23,
+    "calloutIntegrationPassed": 41,
+    "mathFormatIntegrationPassed": 8,
+    "banner": {
+      "status": "failed",
+      "checksPassedBeforeFailure": 61,
+      "failure": "Video: full aspect ratio and playback in preview, round 1",
+      "diagnostics": {
+        "readyState": 4,
+        "paused": true,
+        "documentHidden": false,
+        "naturalSize": [
+          320,
+          160
+        ],
+        "displaySize": [
+          806,
+          403
+        ]
+      },
+      "cause": "not established"
+    }
+  },
+  "exportJobs": [
+    {
+      "name": "claude-pages-a4-plain",
+      "elapsedMs": 852,
+      "pdfBytes": 384918,
+      "tokens": 0
+    },
+    {
+      "name": "claude-pages-a4-marked",
+      "elapsedMs": 1072,
+      "pdfBytes": 3467294,
+      "tokens": 4686
+    },
+    {
+      "name": "claude-pages-letter-plain",
+      "elapsedMs": 761,
+      "pdfBytes": 386020,
+      "tokens": 0
+    },
+    {
+      "name": "claude-pages-letter-marked",
+      "elapsedMs": 1032,
+      "pdfBytes": 3597857,
+      "tokens": 4686
+    },
+    {
+      "name": "claude-pages-a4-landscape-80-plain",
+      "elapsedMs": 752,
+      "pdfBytes": 383559,
+      "tokens": 0
+    },
+    {
+      "name": "claude-pages-a4-landscape-80-marked",
+      "elapsedMs": 1031,
+      "pdfBytes": 3519746,
+      "tokens": 4686
+    },
+    {
+      "name": "edge-cases-a4-plain",
+      "elapsedMs": 915,
+      "pdfBytes": 469663,
+      "tokens": 0
+    },
+    {
+      "name": "edge-cases-a4-marked",
+      "elapsedMs": 1115,
+      "pdfBytes": 2744178,
+      "tokens": 3121
+    },
+    {
+      "name": "edge-cases-letter-plain",
+      "elapsedMs": 833,
+      "pdfBytes": 469956,
+      "tokens": 0
+    },
+    {
+      "name": "edge-cases-letter-marked",
+      "elapsedMs": 1081,
+      "pdfBytes": 2683404,
+      "tokens": 3121
+    },
+    {
+      "name": "edge-cases-a4-landscape-80-plain",
+      "elapsedMs": 814,
+      "pdfBytes": 469171,
+      "tokens": 0
+    },
+    {
+      "name": "edge-cases-a4-landscape-80-marked",
+      "elapsedMs": 1108,
+      "pdfBytes": 2724361,
+      "tokens": 3121
+    }
+  ],
+  "boundaries": [
+    {
+      "case": "claude-pages-a4-landscape-80",
+      "page": 2,
+      "sourceOffset": 1964,
+      "lineOneBased": 38,
+      "columnOneBased": 7,
+      "text": "嵌",
+      "contentType": "list",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4-landscape-80",
+      "page": 3,
+      "sourceOffset": 3115,
+      "lineOneBased": 76,
+      "columnOneBased": 3,
+      "text": "6",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "claude-pages-a4-landscape-80",
+      "page": 4,
+      "sourceOffset": 4025,
+      "lineOneBased": 111,
+      "columnOneBased": 1,
+      "text": "def",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4-landscape-80",
+      "page": 5,
+      "sourceOffset": 5433,
+      "lineOneBased": 154,
+      "columnOneBased": 348,
+      "text": "一",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4-landscape-80",
+      "page": 6,
+      "sourceOffset": null,
+      "lineOneBased": null,
+      "columnOneBased": null,
+      "text": null,
+      "contentType": "image",
+      "views": {
+        "reading": "page-start-is-uninstrumented-content",
+        "reading-narrow": "page-start-is-uninstrumented-content",
+        "source": "page-start-is-uninstrumented-content",
+        "live-preview": "page-start-is-uninstrumented-content"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 2,
+      "sourceOffset": 1376,
+      "lineOneBased": 22,
+      "columnOneBased": 5,
+      "text": "1",
+      "contentType": "heading",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 3,
+      "sourceOffset": 2628,
+      "lineOneBased": 52,
+      "columnOneBased": 7,
+      "text": "嵌",
+      "contentType": "list",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 4,
+      "sourceOffset": 3557,
+      "lineOneBased": 91,
+      "columnOneBased": 3,
+      "text": "21",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 5,
+      "sourceOffset": 4666,
+      "lineOneBased": 135,
+      "columnOneBased": 1,
+      "text": "def",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 6,
+      "sourceOffset": 6201,
+      "lineOneBased": 154,
+      "columnOneBased": 1116,
+      "text": "的",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-a4",
+      "page": 7,
+      "sourceOffset": null,
+      "lineOneBased": null,
+      "columnOneBased": null,
+      "text": null,
+      "contentType": "formula",
+      "views": {
+        "reading": "page-start-is-uninstrumented-content",
+        "reading-narrow": "page-start-is-uninstrumented-content",
+        "source": "page-start-is-uninstrumented-content",
+        "live-preview": "page-start-is-uninstrumented-content"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 2,
+      "sourceOffset": 1296,
+      "lineOneBased": 20,
+      "columnOneBased": 129,
+      "text": "会",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 3,
+      "sourceOffset": 2456,
+      "lineOneBased": 49,
+      "columnOneBased": 3,
+      "text": "列",
+      "contentType": "list",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 4,
+      "sourceOffset": 3335,
+      "lineOneBased": 84,
+      "columnOneBased": 3,
+      "text": "14",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 5,
+      "sourceOffset": 4315,
+      "lineOneBased": 122,
+      "columnOneBased": 1,
+      "text": "def",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 6,
+      "sourceOffset": 5636,
+      "lineOneBased": 154,
+      "columnOneBased": 551,
+      "text": "行",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "claude-pages-letter",
+      "page": 7,
+      "sourceOffset": 7004,
+      "lineOneBased": 171,
+      "columnOneBased": 3,
+      "text": "callout",
+      "contentType": "callout",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 2,
+      "sourceOffset": 3351,
+      "lineOneBased": 17,
+      "columnOneBased": 401,
+      "text": "另",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 3,
+      "sourceOffset": 5406,
+      "lineOneBased": 47,
+      "columnOneBased": 3,
+      "text": "Row",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 4,
+      "sourceOffset": 6590,
+      "lineOneBased": 79,
+      "columnOneBased": 3,
+      "text": "Row",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 5,
+      "sourceOffset": 8242,
+      "lineOneBased": 121,
+      "columnOneBased": 1,
+      "text": "print",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 6,
+      "sourceOffset": null,
+      "lineOneBased": null,
+      "columnOneBased": null,
+      "text": null,
+      "contentType": "formula",
+      "views": {
+        "reading": "page-start-is-uninstrumented-content",
+        "reading-narrow": "page-start-is-uninstrumented-content",
+        "source": "page-start-is-uninstrumented-content",
+        "live-preview": "page-start-is-uninstrumented-content"
+      }
+    },
+    {
+      "case": "edge-cases-a4-landscape-80",
+      "page": 7,
+      "sourceOffset": 11490,
+      "lineOneBased": 196,
+      "columnOneBased": 772,
+      "text": "in",
+      "contentType": "callout",
+      "views": {
+        "reading": "hidden-by-fold",
+        "reading-narrow": "hidden-by-fold",
+        "source": "mapped",
+        "live-preview": "hidden-by-fold"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 2,
+      "sourceOffset": 2002,
+      "lineOneBased": 13,
+      "columnOneBased": 190,
+      "text": "words",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 3,
+      "sourceOffset": 4332,
+      "lineOneBased": 21,
+      "columnOneBased": 244,
+      "text": "Repeated",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 4,
+      "sourceOffset": 5702,
+      "lineOneBased": 55,
+      "columnOneBased": 3,
+      "text": "Row",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 5,
+      "sourceOffset": 6867,
+      "lineOneBased": 90,
+      "columnOneBased": 1,
+      "text": "print",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 6,
+      "sourceOffset": 9052,
+      "lineOneBased": 139,
+      "columnOneBased": 1,
+      "text": "print",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 7,
+      "sourceOffset": null,
+      "lineOneBased": null,
+      "columnOneBased": null,
+      "text": null,
+      "contentType": "formula",
+      "views": {
+        "reading": "page-start-is-uninstrumented-content",
+        "reading-narrow": "page-start-is-uninstrumented-content",
+        "source": "page-start-is-uninstrumented-content",
+        "live-preview": "page-start-is-uninstrumented-content"
+      }
+    },
+    {
+      "case": "edge-cases-a4",
+      "page": 8,
+      "sourceOffset": 11364,
+      "lineOneBased": 196,
+      "columnOneBased": 646,
+      "text": "另",
+      "contentType": "callout",
+      "views": {
+        "reading": "hidden-by-fold",
+        "reading-narrow": "hidden-by-fold",
+        "source": "mapped",
+        "live-preview": "hidden-by-fold"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 2,
+      "sourceOffset": 1813,
+      "lineOneBased": 13,
+      "columnOneBased": 1,
+      "text": "Repeated",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 3,
+      "sourceOffset": 4006,
+      "lineOneBased": 19,
+      "columnOneBased": 487,
+      "text": "Repeated",
+      "contentType": "paragraph",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 4,
+      "sourceOffset": 5406,
+      "lineOneBased": 47,
+      "columnOneBased": 3,
+      "text": "Row",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 5,
+      "sourceOffset": 6553,
+      "lineOneBased": 78,
+      "columnOneBased": 3,
+      "text": "Row",
+      "contentType": "table",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped-widget-dom"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 6,
+      "sourceOffset": 8152,
+      "lineOneBased": 119,
+      "columnOneBased": 1,
+      "text": "print",
+      "contentType": "code",
+      "views": {
+        "reading": "mapped",
+        "reading-narrow": "mapped",
+        "source": "mapped",
+        "live-preview": "mapped"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 7,
+      "sourceOffset": null,
+      "lineOneBased": null,
+      "columnOneBased": null,
+      "text": null,
+      "contentType": "formula",
+      "views": {
+        "reading": "page-start-is-uninstrumented-content",
+        "reading-narrow": "page-start-is-uninstrumented-content",
+        "source": "page-start-is-uninstrumented-content",
+        "live-preview": "page-start-is-uninstrumented-content"
+      }
+    },
+    {
+      "case": "edge-cases-letter",
+      "page": 8,
+      "sourceOffset": 11207,
+      "lineOneBased": 196,
+      "columnOneBased": 489,
+      "text": "Repeated",
+      "contentType": "callout",
+      "views": {
+        "reading": "hidden-by-fold",
+        "reading-narrow": "hidden-by-fold",
+        "source": "mapped",
+        "live-preview": "hidden-by-fold"
+      }
+    }
+  ],
+  "limitations": [
+    "Fixture-specific source mapping, not a general Markdown source map.",
+    "Formula and image page starts are unsupported; four formula cases start at the first formula row, not within a split formula.",
+    "Three callout boundaries have source positions but no visible coordinates while folded.",
+    "Horizontal glyph bounds changed slightly; pixel identity is not established.",
+    "Existing links, transformed text, arbitrary vector graphics and text-free pages need additional page-start handling."
+  ],
+  "disposition": "The user deferred PDF pagination display implementation on 2026-11-12; retain the experiment as research."
+}
