@@ -1,7 +1,7 @@
 (async (app, context) => {
   const { leaf, wait, report } = context;
   const checks = report.checks;
-  const plugin = () => app.plugins.plugins["obsidian-patch"];
+  const plugin = () => app.plugins.plugins["patches"];
   app.setting.close();
   const doc = leaf.view.contentEl.ownerDocument;
   const assert = (value, message) => { if (!value) throw new Error(message); };
@@ -102,7 +102,7 @@
       }
     }
     app.setting.open();
-    app.setting.openTabById("obsidian-patch");
+    app.setting.openTabById("patches");
     await until(() => Array.from(app.setting.activeTab.containerEl.querySelectorAll(".setting-item")).some(el => el.querySelector(".setting-item-name")?.textContent === "Cover width (%)"), "percentage control appears in plugin settings");
     const control = Array.from(app.setting.activeTab.containerEl.querySelectorAll(".setting-item")).find(el => el.querySelector(".setting-item-name")?.textContent === "Cover width (%)");
     const slider = control.querySelector("input[type=range]");
@@ -121,8 +121,8 @@
     assert((await plugin().loadData()).banner.widthPercent === 90, "Reset percentage was not persisted");
     checks.push("reset percentage is saved in plugin settings");
     app.setting.close();
-    await app.plugins.disablePlugin("obsidian-patch");
-    await app.plugins.enablePlugin("obsidian-patch");
+    await app.plugins.disablePlugin("patches");
+    await app.plugins.enablePlugin("patches");
     await until(() => plugin().settings.banner.widthPercent === 90 && coverWidthIs(90), "reset percentage survives a plugin reload");
     await plugin().setBanner({ ...plugin().settings.banner, widthPercent: 100 });
     await open("Patch Banner Tests/Image.md", "preview");
@@ -242,7 +242,7 @@
     await until(() => Array.from(doc.querySelectorAll(".suggestion-item")).some(el => el.textContent.includes("test-image.png")), "picker finds the vault image");
     Array.from(doc.querySelectorAll(".suggestion-item")).find(el => el.textContent.includes("test-image.png")).click();
     await until(() => app.metadataCache.getFileCache(app.vault.getFileByPath(plain))?.frontmatter?.["patch-banner"] === "[[Patch Banner Tests/media/test-image.png]]", "picker writes one canonical property");
-    assert(!app.commands.commands["obsidian-patch:adjust-banner"], "Obsolete adjustment command registered");
+    assert(!app.commands.commands["patches:adjust-banner"], "Obsolete adjustment command registered");
 
     await open("Patch Banner Tests/Video.md");
     await until(() => (root()?.querySelector("video")?.readyState ?? 0) >= 2, "video loaded before unload");
@@ -271,10 +271,10 @@
       background.detach();
       app.workspace.setActiveLeaf(leaf, { focus: false });
     }
-    await app.plugins.disablePlugin("obsidian-patch");
+    await app.plugins.disablePlugin("patches");
     await until(() => !leaf.view.contentEl.querySelector(".obsidian-patch-banner"), "unload removes banner DOM");
     assert(retiring.paused && !retiring.getAttribute("src"), "Video source retained after unload");
-    await app.plugins.enablePlugin("obsidian-patch");
+    await app.plugins.enablePlugin("patches");
     await until(() => !!leaf.view.contentEl.querySelector(".obsidian-patch-banner"), "re-enable restores the banner");
   } catch (failure) {
     const video = root()?.querySelector("video");
@@ -287,6 +287,6 @@
     report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify(diagnostics);
   } finally {
     app.setting.close();
-    if (!plugin()) await app.plugins.enablePlugin("obsidian-patch");
+    if (!plugin()) await app.plugins.enablePlugin("patches");
   }
 })

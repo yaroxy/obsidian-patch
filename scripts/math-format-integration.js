@@ -47,13 +47,13 @@
   const file = () => app.vault.getFileByPath(notePath);
   const notices = () => Array.from(doc.querySelectorAll(".notice")).map(n => n.textContent);
   try {
-    await app.plugins.plugins["obsidian-patch"].setMathFormat({ indent: 2, alignAmpersands: true, alignRowEnds: false });
+    await app.plugins.plugins["patches"].setMathFormat({ indent: 2, alignAmpersands: true, alignRowEnds: false });
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: true } });
     await until(() => leaf.view.editor?.getValue() === original, "the test note opens in Source mode");
     const editor = leaf.view.editor;
-    const command = app.commands.commands["obsidian-patch:format-math-block"];
+    const command = app.commands.commands["patches:format-math-block"];
 
     editor.setCursor({ line: 0, ch: 0 });
     assert(!command.editorCheckCallback(true, editor, leaf.view), "Format math block offered outside math");
@@ -61,7 +61,7 @@
     assert(command.editorCheckCallback(true, editor, leaf.view), "Format math block missing inside math");
     checks.push("Format math block is offered only with the cursor in a math block");
 
-    app.commands.executeCommandById("obsidian-patch:format-math-block");
+    app.commands.executeCommandById("patches:format-math-block");
     await until(() => editor.getValue().includes(aligned), "the block at the cursor is aligned and loses its trailing spaces");
     assert(editor.getValue().includes("> \\begin{cases}x&x>0"), "Format math block changed another block");
     assert(editor.getCursor().line === 4, `Cursor moved to line ${editor.getCursor().line}`);
@@ -70,14 +70,14 @@
     editor.undo();
     await until(() => editor.getValue() === original, "a single undo restores the note");
 
-    app.commands.executeCommandById("obsidian-patch:format-math-blocks");
+    app.commands.executeCommandById("patches:format-math-blocks");
     await until(() => editor.getValue().includes(aligned) && editor.getValue().includes(cases), "Format all math blocks also formats a block in a callout");
     assert(editor.getValue().includes(lines("$$", "a", "", "b", "$$")), "A block with a blank line was changed");
     await until(() => notices().some(text => text.includes("Formatted 2 math blocks.") && text.includes("1 left as it is")),
       "the notice counts formatted and skipped blocks");
 
     const formatted = editor.getValue();
-    app.commands.executeCommandById("obsidian-patch:format-math-blocks");
+    app.commands.executeCommandById("patches:format-math-blocks");
     await wait(100);
     assert(editor.getValue() === formatted, "Formatting twice changed the note");
     checks.push("formatting is idempotent");

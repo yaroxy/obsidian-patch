@@ -17,7 +17,7 @@ export function registerPdfExport(plugin: Plugin, settings: () => PdfExportSetti
   const prototype = MarkdownView.prototype as ExportView;
   const original = prototype.printToPdf;
   if (typeof original !== "function") {
-    console.warn("Obsidian Patch: the native PDF export hook is unavailable.");
+    console.warn("Patches: the native PDF export hook is unavailable.");
     return;
   }
   let disposed = false;

@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-13
+
+### Added
+
+- Separate community and full builds from the same source. `npm run build` writes the community package to `dist/community/`; `npm run build:full` writes the full package to `dist/full/`.
+- A migration command that previews the move from `obsidian-patch` to `patches`, then backs up and migrates settings, enabled-plugin entries, and command hotkeys when explicitly applied with Obsidian closed.
+- Release checks that require package, lockfile, manifest, and compatibility-map versions to agree before building publishable files.
+
+### Changed
+
+- Renamed the plugin to Patches with the plugin ID `patches`. Note properties, `patch-mermaid` blocks, and existing CSS customization names are unchanged.
+- Minimum Obsidian version raised to 1.15.0, matching the recorded desktop test baseline.
+- Community builds contain only bundled Mermaid and omit remote Mermaid/ELK loading and its settings. Old Latest or Custom choices become Bundled; full builds retain all three options.
+- Integration runners deploy the selected build package and use the new plugin ID. Both build variants share settings, so a Community Directory update replaces a manually installed full build.
+
+### Fixed
+
+- Corrected the release metadata workflow after the 0.2.0 preview shipped with `0.1.0` in its plugin manifest. The published 0.2.0 tag remains unchanged.
+
+## [0.2.1] - 2026-11-13
+
+### Fixed
+
+- Aligned the plugin manifest, npm package, lockfile, and compatibility map with the release version. The 0.2.0 release shipped a manifest that still reported 0.1.0.
+
+### Changed
+
+- Set the minimum Obsidian version to the tested baseline, 1.15.0.
+
+## [0.2.0] - 2026-11-13
+
+The first GitHub public preview was published under the name Obsidian Patch. Its package version was 0.2.0, but the attached plugin manifest still reported 0.1.0.
+
 ### Added
 
 - Markdown-to-HTML table conversion from the cursor or a selection of complete tables, available through a command and the editor context menu. Tables open as editable previews with batch navigation; confirmation writes the whole batch in one isolated undo step. Alignment, inline formatting and links survive, and stale notes or unsupported content cannot cause a partial conversion.

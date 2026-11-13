@@ -25,8 +25,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build plugin
+      - name: Build community plugin
         run: npm run build
+
+      - name: Build full plugin
+        run: npm run build:full
 
       - name: Run unit tests
         run: npm test
+
+      - name: Check community release files
+        run: npm run check:release
+
+      - name: Check full build files
+        run: npm run check:release -- --build=full

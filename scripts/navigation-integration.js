@@ -3,7 +3,7 @@ async function navigationIntegration(app, config) {
   const wc = require("electron").remote.getCurrentWebContents();
   const { leaf, report, save, wait } = config;
   report.exports = [];
-  const plugin = () => app.plugins.plugins["obsidian-patch"];
+  const plugin = () => app.plugins.plugins["patches"];
   const assert = (ok, message) => { if (!ok) throw new Error(message); };
   const pass = label => { config.checkpoint(); report.checks.push(label); save(); };
   const until = async (condition, label) => {
@@ -69,7 +69,7 @@ async function navigationIntegration(app, config) {
     save();
     await until(() => app.vault.getFileByPath("Patch Navigation Tests/Headings.md"), "fixture indexing");
     await plugin().setHeadingLevels(true);
-    app.setting.open(); app.setting.openTabById("obsidian-patch");
+    app.setting.open(); app.setting.openTabById("patches");
     await wait(200);
     const settings = app.setting.activeTab.containerEl;
     const names = [...settings.querySelectorAll(".setting-item-heading .setting-item-name")].map(el => el.textContent);
@@ -167,11 +167,11 @@ async function navigationIntegration(app, config) {
     await plugin().setPdfExport({ outline: false, headingLinks: false }); await exportPdf("disabled");
     await plugin().setPdfExport({ outline: true, headingLinks: true });
     const pending = capture();
-    await app.plugins.disablePlugin("obsidian-patch");
+    await app.plugins.disablePlugin("patches");
     assert(!leaf.view.contentEl.classList.contains("obsidian-patch-heading-levels"), "Reading style survived unload");
     assert(leaf.view.printToPdf.toString().includes("new "), "The native export method was not restored");
     await exportPdf("unloaded", pending);
-    await app.plugins.enablePlugin("obsidian-patch");
+    await app.plugins.enablePlugin("patches");
     await exportPdf("reloaded");
     pass("unload restores the native exporter, including an already-open modal; reload re-enables navigation once");
   } catch (e) {
@@ -179,7 +179,7 @@ async function navigationIntegration(app, config) {
     report.diagnostics = { file: leaf.view.file?.path, mode: leaf.view.getMode?.(), lines: [...leaf.view.contentEl.querySelectorAll(".cm-line")].slice(0,15).map(e => e.outerHTML) };
   } finally {
     app.setting.close();
-    if (!plugin()) await app.plugins.enablePlugin("obsidian-patch");
+    if (!plugin()) await app.plugins.enablePlugin("patches");
     save();
   }
 }

@@ -1,10 +1,10 @@
 <div align="center">
 
-# Obsidian Patch
+# Patches
 
 Focused fixes and enhancements for Obsidian
 
-[![Obsidian](https://img.shields.io/badge/Obsidian-1.13.7%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **[Install](#installation) · [Features](#features) · [Development](#development) · [Changelog](CHANGELOG.md)**
 
@@ -12,7 +12,7 @@ Focused fixes and enhancements for Obsidian
 
 ## Features
 
-Configure the plugin under **Settings → Obsidian Patch**.
+Configure the plugin under **Settings → Patches**.
 
 | Feature                           | What it does                                                                                        |
 | --------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -25,19 +25,25 @@ Configure the plugin under **Settings → Obsidian Patch**.
 | [Math Format](#math-format)       | Indents and aligns display-math blocks while preserving formulas.                                   |
 | [Patch Banner](#patch-banner)     | Adds vault images, animations, or videos as note covers.                                            |
 | [Patch Icons](#patch-icons)       | Adds Lucide icons or Simple Icons logos to files and folders in the explorer.                       |
-| [Patch Mermaid](#patch-mermaid)   | Brings newer Mermaid diagram types and syntax to notes, with selectable versions and theme support. |
+| [Patch Mermaid](#patch-mermaid)   | Brings newer Mermaid diagram types and syntax to notes, with theme support. |
 | [PDF Export](#pdf-export)         | Adds heading bookmarks and same-note heading links to exported PDFs.                                |
 
 ## Installation
 
-Requires Obsidian **1.13.7 or later**. Build with Node.js **22 or later**:
+Requires Obsidian **1.15.0 or later**. Patches 0.3.0 is in development and is not yet available in the Community Directory. For an older [Obsidian Patch release](https://github.com/yaroxy/obsidian-patch/releases), follow the instructions included with that version.
+
+Build the current source with Node.js **22 or later**:
 
 ```bash
-npm install
+npm ci
 npm run build
 ```
 
-Copy `main.js`, `manifest.json`, and `styles.css` to `<vault>/.obsidian/plugins/obsidian-patch/`, reload Obsidian, and enable **Obsidian Patch** under **Settings → Community plugins**.
+For a new installation, copy `main.js`, `manifest.json`, and `styles.css` from `dist/community/` to `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable **Patches** under **Settings → Community plugins**.
+
+Upgrading from `obsidian-patch`? Use the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
+
+For Mermaid's **Latest** and **Custom** options, run `npm run build:full` and install the three files from `dist/full/` instead. Both builds use the same plugin ID and settings. A later Community Directory update replaces a manually installed full build with the community build; rebuild and reinstall the full build to keep its extra options.
 
 ## Active Line
 
@@ -58,7 +64,7 @@ Edit a callout's type, title, fold state, metadata, and content with a live prev
 ![Editing a travel reminder and checking its live preview before saving](docs/images/callout-editor.gif)
 
 - **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**.
-- **Insert:** run **Obsidian Patch: Insert callout** to add one at the cursor or wrap selected lines.
+- **Insert:** run **Patches: Insert callout** to add one at the cursor or wrap selected lines.
 - **Unwrap:** choose **Convert to text** or **Convert to blockquote** in the editor.
 
 The command palette and editor context menu also offer editing and conversion when the cursor is in the callout's source. Header-only edits preserve the body, and saving checks for conflicting changes.
@@ -90,7 +96,7 @@ H1–H6 labels appear beside headings in Reading View, Live Preview, and Source 
 
 Create tables with merged cells, grouped headers, and captions through a visual editor.
 
-- **New table:** run **Obsidian Patch: Insert HTML table**.
+- **New table:** run **Patches: Insert HTML table**.
 - **Existing HTML table:** hover it and choose **Edit table**, or run **Edit HTML table** with the cursor in its source.
 - **Markdown table:** place the cursor inside it, then run **Convert Markdown tables to HTML** from the command palette or editor context menu.
 
@@ -133,7 +139,7 @@ A quoted value such as `"1200px"` also works. Each pane uses its note's width. T
 
 ## Math Format
 
-Run **Obsidian Patch: Format math block** with the cursor inside a `$$` block, or **Format all math blocks in note**.
+Run **Patches: Format math block** with the cursor inside a `$$` block, or **Format all math blocks in note**.
 
 **Before**
 
@@ -164,7 +170,7 @@ Under **Math Format**, choose 2 or 4 spaces of indentation and whether to align 
 
 ## Patch Banner
 
-Run **Obsidian Patch: Select cover**, or add a quoted link to an image or video in your vault:
+Run **Patches: Select cover**, or add a quoted link to an image or video in your vault:
 
 ```yaml
 ---
@@ -194,7 +200,7 @@ The picker downloads the latest Simple Icons from jsDelivr on first use in a ses
 
 ## Patch Mermaid
 
-Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block and choose the bundled, latest, or a specific Mermaid version in settings.
+Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. The community build uses the Mermaid version bundled with Patches, updated through plugin releases; the full build also offers remote versions.
 
 For example, organize incident response with a [Cynefin diagram](https://mermaid.js.org/syntax/cynefin.html), introduced in Mermaid 11.16.0. This works with the default **Bundled** version and **Strict** security level:
 
@@ -229,10 +235,10 @@ Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagra
 
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mermaid version | **Bundled** (default) works offline. **Latest** fetches the newest release; **Custom** selects an exact release from 11.0.0 onward. Failed remote loads fall back to Bundled. |
+| Mermaid version | **Community:** the bundled version is shown. **Full:** choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
 | Security level  | **Strict** (default) sanitizes SVG and currently hides treeView icons. **Loose** preserves them but inserts unsanitized output; use it only with diagrams you fully trust.    |
 
-Remote Mermaid versions load from jsDelivr without an integrity check and run with full access to Obsidian. Bundled runs the code shipped with the plugin.
+In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build excludes this remote loader and uses the code shipped with the plugin, even if old settings selected Latest or Custom. Simple Icons may still download icon data as described above.
 
 Show the plugin's project structure with [treeView](https://mermaid.js.org/syntax/treeView.html). With **Bundled** selected, switch to **Loose** for this trusted example to display icons from the included `material-icon-theme` and `logos` packs:
 
@@ -285,12 +291,14 @@ body {
 ## Development
 
 ```bash
-npm run dev     # rebuild main.js on changes
-npm test        # unit tests
-npm run build   # type-check and build
+npm run dev         # watch the community build
+npm run dev:full    # watch the full build
+npm test            # unit tests
+npm run build       # type-check and build dist/community/
+npm run build:full  # type-check and build dist/full/
 ```
 
-See [AGENTS.md](AGENTS.md) for development conventions and feature design references. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, restoration behavior, and dated verification records. Integration suites deploy the build into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards.
+See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Releases and migration](docs/releases.md) for build variants, version checks, and publishing. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, restoration behavior, and dated verification records. Integration suites deploy the build into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards.
 
 ## Acknowledgments
 

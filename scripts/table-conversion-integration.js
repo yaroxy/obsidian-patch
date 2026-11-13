@@ -13,7 +13,7 @@
   const button = name => [...modal().querySelectorAll("button")].find(b => b.textContent === name || b.getAttribute("aria-label") === name);
   const confirm = () => modal().querySelector(".mod-cta").click();
   const notices = () => [...doc.querySelectorAll(".notice")].map(n => n.textContent).join("\n");
-  const cmd = "obsidian-patch:convert-markdown-tables";
+  const cmd = "patches:convert-markdown-tables";
   const simple = "| A | B |\n| --- | --- |\n| x | y |";
   async function until(check, label) {
     for (let i = 0; i < 120; i++) { if (await check()) return; await wait(25); }
@@ -40,7 +40,7 @@
   const cells = table => [...table.rows].map(r => [...r.cells].map(c => c.textContent));
   function tables(html) { return [...new DOMParser().parseFromString(html, "text/html").querySelectorAll("table")]; }
   async function nativeTables(markdown) {
-    let Component = app.plugins.plugins["obsidian-patch"].constructor;
+    let Component = app.plugins.plugins["patches"].constructor;
     while (Object.getPrototypeOf(Component)?.prototype?.addChild) Component = Object.getPrototypeOf(Component);
     const component = new Component(), container = doc.createElement("div");
     component.load();

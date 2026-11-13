@@ -1,5 +1,5 @@
 async function runnerRecovery(app, context) {
-  const plugin = app.plugins.plugins["obsidian-patch"];
+  const plugin = app.plugins.plugins["patches"];
   await plugin.setMathFormat({ ...plugin.settings.mathFormat, indent: plugin.settings.mathFormat.indent === 2 ? 4 : 2 });
   app.saveLocalStorage("obsidian-patch-table-editor-size", { width: 777, height: 555 });
   app.saveLocalStorage("obsidian-patch-callout-editor-size", { width: 888, height: 666 });

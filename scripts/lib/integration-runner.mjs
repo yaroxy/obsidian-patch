@@ -11,21 +11,34 @@ export function obsidianCli(env = process.env, platform = process.platform, exis
   return platform === "darwin" && exists(native) ? native : "obsidian";
 }
 
+export function integrationBuild(env = process.env) {
+  const build = env.PATCHES_BUILD ?? "community";
+  if (build !== "community" && build !== "full") throw new Error("PATCHES_BUILD must be community or full");
+  return build;
+}
+
 /** All mutating suites share vault verification, deployment, completion and cleanup. */
 export async function runIntegration({ name, folder, script, prepare, verify, options = {},
   vault = process.argv[2], output = process.argv[3], timeoutMs = 120000 }) {
   if (!vault) throw new Error("Supply the path to an open dev-vault");
   vault = realpathSync(resolve(vault));
   if (basename(vault) !== "dev-vault") throw new Error("Mutating integration tests are restricted to dev-vault");
+  const build = integrationBuild();
+  const buildDir = new URL(`../../dist/${build}/`, import.meta.url);
+  for (const file of ["main.js", "manifest.json", "styles.css"]) {
+    if (!existsSync(new URL(file, buildDir))) throw new Error(`Build ${build} before testing: missing dist/${build}/${file}`);
+  }
+  const manifest = JSON.parse(readFileSync(new URL("manifest.json", buildDir), "utf8"));
+  if (manifest.id !== "patches") throw new Error("The integration build must use plugin ID patches");
   const cli = (command, ...args) => {
     const result = execFileSync(obsidianCli(), [`vault=${basename(vault)}`, command, ...args], { encoding: "utf8", timeout: 30000 }).trim();
     // Obsidian sometimes returns CLI errors with exit code zero (e.g. during startup).
     if (/^Error:/m.test(result)) throw new Error(result);
     return result;
   };
-  const preflight = JSON.parse(cli("eval", 'code=JSON.stringify({path:app.vault.adapter.getBasePath(),enabled:!!app.plugins.plugins["obsidian-patch"],busy:!!globalThis.__obsidianPatchTest,modal:app.setting.containerEl.isConnected||!!document.querySelector(".modal-container")})').replace(/^=>\s*/, ""));
+  const preflight = JSON.parse(cli("eval", 'code=JSON.stringify({path:app.vault.adapter.getBasePath(),enabled:!!app.plugins.plugins["patches"],legacyEnabled:!!app.plugins.plugins["obsidian-patch"],busy:!!globalThis.__obsidianPatchTest,modal:app.setting.containerEl.isConnected||!!document.querySelector(".modal-container")})').replace(/^=>\s*/, ""));
   if (realpathSync(preflight.path) !== vault) throw new Error("The CLI selected a different vault; no files were changed");
-  if (!preflight.enabled || preflight.busy || preflight.modal) throw new Error("Enable obsidian-patch, close dialogs, and finish any running test in dev-vault first");
+  if (!preflight.enabled || preflight.legacyEnabled || preflight.busy || preflight.modal) throw new Error("Enable patches, disable obsidian-patch, close dialogs, and finish any running test in dev-vault first");
   const lock = join(tmpdir(), `obsidian-patch-test-${createHash("sha256").update(vault).digest("hex").slice(0, 16)}.lock`);
   const lockFd = openSync(lock, "wx");
   closeSync(lockFd);
@@ -43,18 +56,18 @@ export async function runIntegration({ name, folder, script, prepare, verify, op
     output = output ? resolve(output) : mkdtempSync(join(tmpdir(), `obsidian-patch-${name}-`));
     mkdirSync(output, { recursive: true });
     writeFileSync(lock, JSON.stringify({ pid: process.pid, runId, output }));
-    const settings = join(vault, ".obsidian/plugins/obsidian-patch/data.json");
+    const settings = join(vault, ".obsidian/plugins/patches/data.json");
     const settingsExisted = existsSync(settings);
     if (settingsExisted) copyFileSync(settings, join(output, "settings-before.json"));
-    const config = { runId, vault, output, timeoutMs, settingsExisted, options };
+    const config = { runId, vault, output, timeoutMs, settingsExisted, options, build };
     writeFileSync(join(output, "run.json"), JSON.stringify(config, null, 2));
     console.log(`Results: ${output}`);
     mkdirSync(join(vault, folder), { recursive: true });
     await prepare?.({ vault, output });
     for (const file of ["main.js", "manifest.json", "styles.css"]) {
-      copyFileSync(new URL(`../../${file}`, import.meta.url), join(vault, ".obsidian/plugins/obsidian-patch", file));
+      copyFileSync(new URL(file, buildDir), join(vault, ".obsidian/plugins/patches", file));
     }
-    console.log(cli("plugin:reload", "id=obsidian-patch"));
+    console.log(cli("plugin:reload", "id=patches"));
     const host = readFileSync(new URL("./obsidian-session.js", import.meta.url), "utf8");
     const suite = readFileSync(script, "utf8");
     process.on("SIGINT", onInt); process.on("SIGTERM", onTerm);

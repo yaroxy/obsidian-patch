@@ -1,8 +1,8 @@
 {
-  "id": "obsidian-patch",
-  "name": "Obsidian Patch",
-  "version": "0.1.0",
-  "minAppVersion": "1.13.7",
+  "id": "patches",
+  "name": "Patches",
+  "version": "0.3.0",
+  "minAppVersion": "1.15.0",
   "description": "Focused enhancements for Obsidian: diagrams, covers, visual table and callout editors, math formatting, icons, line width, heading levels, and PDF navigation.",
   "author": "yaroxy",
   "authorUrl": "https://github.com/yaroxy",

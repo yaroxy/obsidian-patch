@@ -5,10 +5,16 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
-import { obsidianCli, runIntegration } from "../scripts/lib/integration-runner.mjs";
+import { integrationBuild, obsidianCli, runIntegration } from "../scripts/lib/integration-runner.mjs";
 
 const require = createRequire(import.meta.url);
 const source = readFileSync(new URL("../scripts/lib/obsidian-session.js", import.meta.url), "utf8");
+
+test("integration builds default to community and require an explicit valid full selection", () => {
+  assert.equal(integrationBuild({}), "community");
+  assert.equal(integrationBuild({ PATCHES_BUILD: "full" }), "full");
+  assert.throws(() => integrationBuild({ PATCHES_BUILD: "../other" }), /community or full/);
+});
 
 test("CLI override wins; macOS uses the native CLI without relying on PATH", () => {
   assert.equal(obsidianCli({ OBSIDIAN_CLI: "/custom/cli" }, "darwin", () => true), "/custom/cli");
@@ -29,9 +35,9 @@ function fixture(t, reloadFailure = false) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "obsidian-session-")));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const vault = join(root, "dev-vault"), output = join(root, "output");
-  mkdirSync(join(vault, ".obsidian/plugins/obsidian-patch"), { recursive: true });
+  mkdirSync(join(vault, ".obsidian/plugins/patches"), { recursive: true });
   mkdirSync(output);
-  const settings = join(vault, ".obsidian/plugins/obsidian-patch/data.json");
+  const settings = join(vault, ".obsidian/plugins/patches/data.json");
   const original = '{\n  "custom": "preserve whitespace too"\n}\n';
   writeFileSync(settings, original); writeFileSync(join(output, "settings-before.json"), original);
   const storage = new Map([["test-obsidian-patch-table-editor-size", '{"width":900}']]);
@@ -41,7 +47,7 @@ function fixture(t, reloadFailure = false) {
   let active = previous;
   const app = { appId: "test", vault: { adapter: { getBasePath: () => vault } },
     setting: { containerEl: { isConnected: false }, close() {} },
-    plugins: { plugins: { "obsidian-patch": {} },
+    plugins: { plugins: { "patches": {} },
       async disablePlugin(id) { delete this.plugins[id]; },
       async enablePlugin(id) { if (reloadFailure) throw new Error("Reload failed"); this.plugins[id] = {}; } },
     workspace: { getMostRecentLeaf: () => active, getLeaf: () => leaf, setActiveLeaf: value => { active = value; } } };

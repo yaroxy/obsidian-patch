@@ -147,7 +147,7 @@
     await until(() => leaf.view.editor.getValue() === original.replace(">ゆ ユ<", ">ゆ ユ!<"), "Live Preview saves through the editor");
 
     leaf.view.editor.setValue(original);
-    const command = app.commands.findCommand("obsidian-patch:edit-html-table");
+    const command = app.commands.findCommand("patches:edit-html-table");
     const lines = original.split("\n");
     leaf.view.editor.setCursor({ line: lines.findIndex(line => line.includes(">yi<")), ch: 10 });
     assert(command.editorCheckCallback(true, leaf.view.editor, leaf.view), "Edit command unavailable inside the table");
@@ -156,7 +156,7 @@
     checks.push("Edit HTML table is offered only with the cursor in a table");
 
     leaf.view.editor.setCursor({ line: 2, ch: "Intro.".length });
-    app.commands.executeCommandById("obsidian-patch:insert-html-table");
+    app.commands.executeCommandById("patches:insert-html-table");
     await until(() => grid() && doc.activeElement?.tagName === "TH", "Insert HTML table starts in the first cell");
     type(doc.activeElement, "A");
     key(doc.activeElement, { key: "Tab" });

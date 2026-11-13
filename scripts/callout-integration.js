@@ -40,21 +40,21 @@
     await wait(150);
   }
   try {
-    await app.plugins.plugins["obsidian-patch"].setCallouts({ github: true, githubFolders: [] });
+    await app.plugins.plugins["patches"].setCallouts({ github: true, githubFolders: [] });
     app.saveLocalStorage(sizeKey, null);
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
     await source();
     await until(() => editor()?.getValue() === original, "the test note opens in Source mode");
 
-    const command = app.commands.commands["obsidian-patch:edit-callout"];
+    const command = app.commands.commands["patches:edit-callout"];
     editor().setCursor({ line: 0, ch: 0 });
     assert(!command.editorCheckCallback(true, editor(), leaf.view), "Edit callout offered outside a callout");
     editor().setCursor({ line: 4, ch: 2 });
     assert(command.editorCheckCallback(true, editor(), leaf.view), "Edit callout missing inside a callout");
     checks.push("Edit callout is offered only with the cursor in a callout");
 
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout[data-callout='info']"), "the editor opens with a rendered preview");
     assert(modal().querySelectorAll(".obsidian-patch-callout-chip").length >= 27, "Type picker lacks Obsidian's types");
     assert(chip("info").classList.contains("is-active"), "Current type not selected");
@@ -73,7 +73,7 @@
     await until(() => editor().getValue() === original.replace("> [!info] Title", "> [!warning] New title"), "a header change rewrites only the header line");
 
     editor().setCursor({ line: 3, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal(), "the editor opens again");
     const body = modal().querySelector(".obsidian-patch-callout-body");
     input(body, `${body.value}\nmore`);
@@ -83,7 +83,7 @@
 
     editor().setValue(original);
     editor().setCursor({ line: 3, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal()?.querySelector(".obsidian-patch-callout-github-status.is-error"), "GitHub status flags a titled info callout");
     button("Make GitHub-compatible").click();
     await until(() => modal().querySelector(".obsidian-patch-callout-github-status.is-ok") && chip("NOTE") === null && other().value === "NOTE"
@@ -94,18 +94,18 @@
 
     editor().setValue(original);
     editor().setCursor({ line: 4, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:callout-to-text");
+    app.commands.executeCommandById("patches:callout-to-text");
     await until(() => editor().getValue() === lines("Paragraph one.", "Paragraph two.", "", "**Title**", "", "body line", "> [!tip]", "> nested", "", "End"),
       "Convert callout to text keeps the title as bold text and lifts the nested callout");
     editor().undo();
     await until(() => editor().getValue() === original, "one undo restores the callout");
     editor().setCursor({ line: 6, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:callout-to-blockquote");
+    app.commands.executeCommandById("patches:callout-to-blockquote");
     await until(() => editor().getValue().includes(lines("> [!info] Title", ">body line", "> > nested", "", "End")), "Convert callout to blockquote works on the nested callout");
 
     editor().setValue(original);
     editor().setCursor({ line: 4, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout[data-callout='info']"), "the editor opens to convert");
     input(field("Title"), "Edited");
     button("Convert to text").click();
@@ -114,7 +114,7 @@
 
     editor().setValue(original);
     editor().setSelection({ line: 0, ch: 0 }, { line: 1, ch: "Paragraph two.".length });
-    app.commands.executeCommandById("obsidian-patch:insert-callout");
+    app.commands.executeCommandById("patches:insert-callout");
     await until(() => modal()?.querySelector(".modal-title")?.textContent === "Wrap in callout", "Insert callout wraps a selection");
     assert(!button("Convert to text"), "A new callout offers to convert");
     chip("tip").click();
@@ -123,7 +123,7 @@
 
     editor().setValue(original);
     editor().setCursor({ line: 8, ch: 3 });
-    app.commands.executeCommandById("obsidian-patch:insert-callout");
+    app.commands.executeCommandById("patches:insert-callout");
     await until(() => modal()?.querySelector(".modal-title")?.textContent === "Insert callout", "Insert callout opens for a new callout");
     button("Save").click();
     await until(() => editor().getValue().endsWith(lines("End", "", "> [!note]", "> ")), "a new callout is added after a blank line, with a line to type in");
@@ -132,7 +132,7 @@
 
     editor().setValue(original);
     editor().setCursor({ line: 3, ch: 0 });
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout"), "the editor opens at its default size");
     input(modal().querySelector(".obsidian-patch-callout-body"), Array.from({ length: 80 }, (_, i) => `line ${i}`).join("\n"));
     await wait(300);
@@ -153,7 +153,7 @@
       `Grip resized ${before.width}x${before.height} to ${after.width}x${after.height}`);
     checks.push("dragging the grip resizes the centered editor by twice the pointer's travel");
     button("Cancel").click();
-    app.commands.executeCommandById("obsidian-patch:edit-callout");
+    app.commands.executeCommandById("patches:edit-callout");
     await until(() => {
       const box = modal()?.getBoundingClientRect();
       return box && Math.abs(box.width - after.width) <= 1 && Math.abs(box.height - after.height) <= 1;

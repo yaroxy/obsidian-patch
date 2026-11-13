@@ -115,7 +115,7 @@ export function registerIcons(
       },
       (error: unknown) => {
         status = { status: "error", message: describeError(error) };
-        console.warn("Obsidian Patch: could not load Simple Icons from jsDelivr", error);
+        console.warn("Patches: could not load Simple Icons from jsDelivr", error);
         // A later picker or update retries instead of reusing the failure.
         if (simpleIcons === loading) simpleIcons = undefined;
       },

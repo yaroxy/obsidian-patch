@@ -1,4 +1,4 @@
-# Obsidian Patch
+# Patches
 
 ## Project memory
 
@@ -15,6 +15,8 @@ Before changing a feature's behavior, read its design document:
 - Heading labels or PDF navigation: `docs/heading-and-pdf-design.md`.
 
 Use current source and configuration for implementation status and versions. Treat dated verification records as historical evidence.
+
+Before changing release packaging, build variants, or plugin ID migration, read `docs/releases.md`.
 
 ## Repository conventions
 

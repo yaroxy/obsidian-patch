@@ -23,7 +23,7 @@ async function obsidianSession(app, config, suite) {
   try {
     if (fs.realpathSync(app.vault.adapter.getBasePath()) !== config.vault) throw new Error("CLI selected a different vault");
     if (globalThis.__obsidianPatchTest) throw new Error("Another integration test is running");
-    if (!app.plugins.plugins["obsidian-patch"]) throw new Error("Enable obsidian-patch before running integration tests");
+    if (!app.plugins.plugins["patches"]) throw new Error("Enable patches before running integration tests");
     if (app.setting.containerEl.isConnected || document.querySelector(".modal-container")) throw new Error("Close the development vault's dialogs before testing");
     globalThis.__obsidianPatchTest = { runId: config.runId, abort: reason => controller.abort(new Error(reason)) };
     wc = require("electron").remote.getCurrentWebContents();
@@ -55,12 +55,12 @@ async function obsidianSession(app, config, suite) {
         try { await leaf?.view.save?.(); } finally { leaf?.detach(); }
       });
       await cleanup("plugin settings", async () => {
-        if (app.plugins.plugins["obsidian-patch"]) await app.plugins.disablePlugin("obsidian-patch");
-        const file = path.join(config.vault, ".obsidian/plugins/obsidian-patch/data.json");
+        if (app.plugins.plugins["patches"]) await app.plugins.disablePlugin("patches");
+        const file = path.join(config.vault, ".obsidian/plugins/patches/data.json");
         if (config.settingsExisted) fs.copyFileSync(path.join(config.output, "settings-before.json"), file);
         else fs.rmSync(file, { force: true });
-        await app.plugins.enablePlugin("obsidian-patch");
-        if (!app.plugins.plugins["obsidian-patch"]) throw new Error("Plugin did not reload");
+        await app.plugins.enablePlugin("patches");
+        if (!app.plugins.plugins["patches"]) throw new Error("Plugin did not reload");
       });
       await cleanup("editor sizes", () => {
         for (const [key, value] of Object.entries(sizes ?? {})) {

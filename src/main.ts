@@ -9,6 +9,8 @@ import {
   BUNDLED_VERSION,
   isMermaidVersionChoice,
   LATEST_VERSION,
+  parseMermaidSettings,
+  REMOTE_MERMAID_ENABLED,
   type MermaidRuntime,
   type MermaidVersionChoice,
 } from "./features/mermaid-runtime";
@@ -38,7 +40,7 @@ import {
   type LineWidthSettings,
 } from "./features/line-width";
 
-interface ObsidianPatchSettings {
+interface PatchesSettings {
   mermaidSecurityLevel: MermaidSecurityLevel;
   mermaidVersion: MermaidVersionChoice;
   /** The version that `latest` last resolved to, for offline startups. */
@@ -59,8 +61,8 @@ const CUSTOM_CHOICE = "custom";
 
 const DEFAULT_MERMAID_SECURITY_LEVEL: MermaidSecurityLevel = "strict";
 
-export default class ObsidianPatchPlugin extends Plugin {
-  settings: ObsidianPatchSettings = parseSettings(null);
+export default class PatchesPlugin extends Plugin {
+  settings: PatchesSettings = parseSettings(null);
   mermaid?: PatchMermaidController;
   icons?: PatchIconsController;
   private applyCalloutCode?: (enabled: boolean) => void;
@@ -70,7 +72,14 @@ export default class ObsidianPatchPlugin extends Plugin {
   private applyHeadingLevels?: (enabled: boolean) => void;
 
   override async onload(): Promise<void> {
-    this.settings = parseSettings(await this.loadData());
+    const storedSettings = await this.loadData();
+    this.settings = parseSettings(storedSettings);
+    if (!REMOTE_MERMAID_ENABLED && typeof storedSettings === "object" && storedSettings !== null && (
+      (storedSettings.mermaidVersion !== undefined && storedSettings.mermaidVersion !== BUNDLED_VERSION)
+      || storedSettings.mermaidCachedLatest !== undefined
+    )) {
+      await this.saveData(this.settings);
+    }
     this.mermaid = registerPatchMermaid(this, {
       securityLevel: this.settings.mermaidSecurityLevel,
       version: this.settings.mermaidVersion,
@@ -95,7 +104,7 @@ export default class ObsidianPatchPlugin extends Plugin {
       await this.saveData(this.settings);
     });
     this.applyLineWidth = registerLineWidth(this, this.settings.lineWidth, (lineWidth) => this.setLineWidth(lineWidth));
-    this.addSettingTab(new ObsidianPatchSettingTab(this));
+    this.addSettingTab(new PatchesSettingTab(this));
   }
 
   async setMermaidSecurityLevel(securityLevel: MermaidSecurityLevel): Promise<void> {
@@ -105,9 +114,14 @@ export default class ObsidianPatchPlugin extends Plugin {
   }
 
   async setMermaidVersion(version: MermaidVersionChoice): Promise<MermaidRuntime | undefined> {
-    this.settings.mermaidVersion = version;
+    const settings = parseMermaidSettings({
+      mermaidVersion: version,
+      mermaidCachedLatest: this.settings.mermaidCachedLatest,
+    });
+    this.settings.mermaidVersion = settings.mermaidVersion;
+    this.settings.mermaidCachedLatest = settings.mermaidCachedLatest;
     await this.saveData(this.settings);
-    return this.mermaid?.setVersion(version);
+    return this.mermaid?.setVersion(settings.mermaidVersion);
   }
 
   async setCalloutCode(calloutCode: boolean): Promise<void> {
@@ -156,8 +170,8 @@ export default class ObsidianPatchPlugin extends Plugin {
   }
 }
 
-class ObsidianPatchSettingTab extends PluginSettingTab {
-  constructor(private readonly plugin: ObsidianPatchPlugin) {
+class PatchesSettingTab extends PluginSettingTab {
+  constructor(private readonly plugin: PatchesPlugin) {
     super(plugin.app, plugin);
   }
 
@@ -211,6 +225,10 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
 
   private displayMermaidVersion(): void {
     const setting = new Setting(this.containerEl).setName("Mermaid version");
+    if (!REMOTE_MERMAID_ENABLED) {
+      setting.setDesc(`Bundled Mermaid ${BUNDLED_MERMAID_VERSION}. Works offline and updates with Patches releases.`);
+      return;
+    }
     setting.descEl.createDiv({
       text: "Bundled, the default, works offline and runs only code shipped with this plugin. Latest and custom versions are downloaded from jsDelivr and run with full access to Obsidian, and fall back to Bundled when they cannot be loaded.",
     });
@@ -505,7 +523,7 @@ class ObsidianPatchSettingTab extends PluginSettingTab {
   }
 }
 
-function parseSettings(data: unknown): ObsidianPatchSettings {
+function parseSettings(data: unknown): PatchesSettings {
   const record: Record<string, unknown> =
     typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
 
@@ -513,11 +531,7 @@ function parseSettings(data: unknown): ObsidianPatchSettings {
     mermaidSecurityLevel: isMermaidSecurityLevel(record.mermaidSecurityLevel)
       ? record.mermaidSecurityLevel
       : DEFAULT_MERMAID_SECURITY_LEVEL,
-    mermaidVersion: isMermaidVersionChoice(record.mermaidVersion)
-      ? record.mermaidVersion
-      : BUNDLED_VERSION,
-    mermaidCachedLatest:
-      typeof record.mermaidCachedLatest === "string" ? record.mermaidCachedLatest : undefined,
+    ...parseMermaidSettings(record),
     banner: parseBannerSettings(record.banner),
     icons: parseIconSettings(record.icons),
     lineWidth: parseLineWidthSettings(record.lineWidth),
