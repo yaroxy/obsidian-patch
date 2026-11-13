@@ -30,24 +30,26 @@ Configure the plugin under **Settings → Patches**.
 
 ## Installation
 
-Requires Obsidian **1.15.0 or later**. [Patches 0.3.1 is available on GitHub](https://github.com/yaroxy/obsidian-patch/releases/tag/0.3.1). It is not yet listed in the Community Directory.
+Requires Obsidian **1.15.0 or later**. [Patches is available in the Community Directory](https://community.obsidian.md/plugins/patches).
 
-**Upgrading from Obsidian Patch?** Follow the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) before creating a `patches` directory to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
+**Upgrading from Obsidian Patch?** Follow the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) before installing Patches to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
 
 For a **new installation**:
 
-1. Download `main.js`, `manifest.json`, and `styles.css` from the release's **Assets**.
-2. Place the three files in `<vault>/.obsidian/plugins/patches/`.
-3. Reload Obsidian and enable **Patches** under **Settings → Community plugins**.
+1. Open **Settings → Community plugins** and enable community plugins if prompted.
+2. Select **Browse**, search for **Patches**, and open its listing.
+3. Select **Install**, then **Enable**.
 
-The release includes the **Community** build. Both distributions provide the same note features; they differ in how Mermaid versions are loaded:
+For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/yaroxy/obsidian-patch/releases/latest), place them in `<vault>/.obsidian/plugins/patches/`, then reload Obsidian and enable **Patches** under **Settings → Community plugins**.
+
+The Community Directory and GitHub releases provide the **Community** build. Both distributions provide the same note features; they differ in how Mermaid versions are loaded:
 
 | Build | How to get it | Mermaid versions |
 | --- | --- | --- |
-| Community | GitHub release, or `main`: `npm run build` → `dist/community/` | Bundled only; no remote Mermaid or ELK code loader |
+| Community | Community Directory, GitHub release, or `main`: `npm run build` → `dist/community/` | Bundled only; no remote Mermaid or ELK code loader |
 | Full | `codex/full` branch: `npm run build` → `dist/full/` | Bundled, Latest, or Custom; remote versions load from jsDelivr |
 
-Both builds use the same plugin ID and settings, so installing one replaces the other. A future Community Directory update will replace a manually installed Full build with Community. See [Development](#development) for source builds and [Patch Mermaid](#patch-mermaid) for remote-loading details.
+Both builds use the same plugin ID and settings, so installing one replaces the other. Updating through Community plugins replaces a manually installed Full build with Community. See [Development](#development) for source builds and [Patch Mermaid](#patch-mermaid) for remote-loading details.
 
 ## Active Line
 
