@@ -87,6 +87,12 @@ Official local recommended lint now reports zero errors and only the six previou
 
 These changes have been synchronized to both working trees but have not received a new service preview. The earlier preview of `fc5c2f5` does not cover this later implementation. Recheck the next committed Community revision with **Review branch** before publishing. Local results are retained under ignored `dist/validation/remaining-warnings/`.
 
+## Community preview — maintainer-confirmed pass, 2026-11-13
+
+The maintainer confirmed that the follow-up preview passed and both the PDF unbound-method warning and table `execCommand` recommendation disappeared. The requested scan ref was Community commit `a4ba9639094548ab4cbf187a6d5a0e44e97e89f2`. This entry records that confirmation; no new full report or scan identifier was supplied, so it does not infer results for unreported checks.
+
+Prepare 0.3.2 from that reviewed Community implementation, with version metadata and release documentation updated. Full remains a separate manual distribution and receives the same feature version. Preview success does not establish that 0.3.2 release assets have passed attestation/build verification or that the directory listing is publicly available; append the release review separately after publication.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

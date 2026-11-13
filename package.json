@@ -1,6 +1,6 @@
 {
   "name": "patches",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Focused fixes and enhancements for Obsidian.",
   "main": "dist/community/main.js",
   "type": "module",
