@@ -1,2 +1,2 @@
-/** The default build never imports the remote Mermaid loader. */
-export * from "./mermaid-runtime/community";
+/** This independent source distribution includes optional remote Mermaid loading. */
+export * from "./mermaid-runtime/full";

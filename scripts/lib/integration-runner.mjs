@@ -12,8 +12,8 @@ export function obsidianCli(env = process.env, platform = process.platform, exis
 }
 
 export function integrationBuild(env = process.env) {
-  const build = env.PATCHES_BUILD ?? "community";
-  if (build !== "community" && build !== "full") throw new Error("PATCHES_BUILD must be community or full");
+  const build = env.PATCHES_BUILD ?? "full";
+  if (build !== "full") throw new Error("PATCHES_BUILD must be full on the codex/full branch");
   return build;
 }
 

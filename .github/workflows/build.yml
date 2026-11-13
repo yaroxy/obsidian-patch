@@ -3,8 +3,10 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - codex/full
   pull_request:
+    branches:
+      - codex/full
 
 permissions:
   contents: read
@@ -25,17 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build community plugin
+      - name: Build Full plugin
         run: npm run build
-
-      - name: Build full plugin
-        run: npm run build:full
 
       - name: Run unit tests
         run: npm test
 
-      - name: Check community release files
+      - name: Check Full installation files
         run: npm run check:release
-
-      - name: Check full build files
-        run: npm run check:release -- --build=full

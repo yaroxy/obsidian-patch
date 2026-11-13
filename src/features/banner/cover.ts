@@ -40,7 +40,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     constructor(private readonly view: MarkdownView) {
       const doc = view.contentEl.ownerDocument;
       this.win = doc.defaultView!;
-      this.element = doc.createDocumentFragment().createDiv({ cls: "obsidian-patch-banner-cover" });
+      this.element = this.win.createDiv({ cls: "obsidian-patch-banner-cover" });
       const select = (): void => { if (view.file) bannerActions(plugin.app, view.file).select(); };
       this.add = this.element.createEl("button", {
         text: "Add cover", cls: "obsidian-patch-banner-add", attr: { type: "button" },

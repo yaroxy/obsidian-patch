@@ -2,13 +2,13 @@
   "name": "patches",
   "version": "0.3.1",
   "description": "Focused fixes and enhancements for Obsidian.",
-  "main": "dist/community/main.js",
+  "main": "dist/full/main.js",
   "type": "module",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "dev:full": "node esbuild.config.mjs development full",
+    "dev:full": "npm run dev",
     "build": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production",
-    "build:full": "tsc --noEmit --skipLibCheck && node esbuild.config.mjs production full",
+    "build:full": "npm run build",
     "check:release": "node scripts/check-release.mjs",
     "test": "node --test tests/*.test.mjs"
   },

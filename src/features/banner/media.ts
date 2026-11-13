@@ -115,11 +115,10 @@ export class BannerMedia {
       return;
     }
     if (!this.media && !this.failed) {
-      const doc = this.element.ownerDocument;
-      const fragment = doc.createDocumentFragment();
+      const win = this.element.ownerDocument.defaultView!;
       const media = banner.kind === "video"
-        ? fragment.createEl("video", { cls: "obsidian-patch-banner-media" })
-        : fragment.createEl("img", { cls: "obsidian-patch-banner-media" });
+        ? win.createEl("video", { cls: "obsidian-patch-banner-media" })
+        : win.createEl("img", { cls: "obsidian-patch-banner-media" });
       this.media = media;
       this.message.textContent = "Loading banner…";
       this.message.hidden = false;

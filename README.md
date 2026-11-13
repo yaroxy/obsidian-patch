@@ -1,14 +1,16 @@
 <div align="center">
 
-# Patches
+# Patches — Full
 
 Focused fixes and enhancements for Obsidian
 
-[![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg?branch=codex%2Ffull)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **[Install](#installation) · [Features](#features) · [Development](#development) · [Changelog](CHANGELOG.md)**
 
 </div>
+
+This is the independent **Full** source branch, `codex/full`, with optional Latest and Custom Mermaid loading. Community Directory source and standard release assets come from [`main`](https://github.com/yaroxy/obsidian-patch/tree/main).
 
 ## Features
 
@@ -30,24 +32,26 @@ Configure the plugin under **Settings → Patches**.
 
 ## Installation
 
-Requires Obsidian **1.15.0 or later**. [Patches 0.3.0 is available on GitHub](https://github.com/yaroxy/obsidian-patch/releases/tag/0.3.0). It is not yet listed in the Community Directory.
+Requires Obsidian **1.15.0 or later** and Node.js **22 or later** to build. Full is installed from this branch's source; standard GitHub release assets contain Community.
+
+```sh
+git clone --branch codex/full --single-branch https://github.com/yaroxy/obsidian-patch.git obsidian-patch-full
+cd obsidian-patch-full
+npm ci
+npm run build
+npm run check:release
+```
+
+For a new installation, copy `main.js`, `manifest.json`, and `styles.css` from `dist/full/` into `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable **Patches** under **Settings → Community plugins**. To update an existing Patches installation, replace those three files and keep `data.json`.
 
 **Upgrading from Obsidian Patch?** Follow the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) before creating a `patches` directory to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
 
-For a **new installation**:
-
-1. Download `main.js`, `manifest.json`, and `styles.css` from the release's **Assets**.
-2. Place the three files in `<vault>/.obsidian/plugins/patches/`.
-3. Reload Obsidian and enable **Patches** under **Settings → Community plugins**.
-
-The release includes the **Community** build. Both builds provide the same features; they differ in how Mermaid versions are loaded:
-
-| Build | How to get it | Mermaid versions |
+| Distribution | Source | Mermaid versions |
 | --- | --- | --- |
-| Community | GitHub release, or `npm run build` → `dist/community/` | Bundled only; no remote Mermaid or ELK code loader |
-| Full | Build from source with `npm run build:full` → `dist/full/` | Bundled, Latest, or Custom; remote versions load from jsDelivr |
+| Full | This branch, `codex/full`; `npm run build` → `dist/full/` | Bundled, Latest, or Custom; remote versions load from jsDelivr |
+| Community | [`main`](https://github.com/yaroxy/obsidian-patch/tree/main) and standard GitHub release assets | Bundled only; no remote Mermaid or ELK code loader |
 
-Both builds use the same plugin ID and settings, so installing one replaces the other. A future Community Directory update will replace a manually installed Full build with Community. See [Development](#development) for source builds and [Patch Mermaid](#patch-mermaid) for remote-loading details.
+Both distributions use the same plugin ID and settings, so installing one replaces the other. A Community Directory update replaces a manually installed Full build with Community. To keep using Full, rebuild and install this branch when updating. See [Patch Mermaid](#patch-mermaid) for remote-loading details.
 
 ## Active Line
 
@@ -206,7 +210,7 @@ The picker downloads the latest Simple Icons from jsDelivr on first use in a ses
 
 ## Patch Mermaid
 
-Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. The community build uses the Mermaid version bundled with Patches, updated through plugin releases; the full build also offers remote versions.
+Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. This Full distribution offers the bundled Mermaid version plus optional Latest and Custom versions.
 
 For example, organize incident response with a [Cynefin diagram](https://mermaid.js.org/syntax/cynefin.html), introduced in Mermaid 11.16.0. This works with the default **Bundled** version and **Strict** security level:
 
@@ -241,12 +245,12 @@ Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagra
 
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mermaid version | **Community:** the bundled version is shown. **Full:** choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
+| Mermaid version | Choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
 | Security level  | **Strict** (default) restricts diagram content and currently hides treeView icons. **Loose** allows additional content and interactions; use it only with diagrams you fully trust. Both modes sanitize the generated SVG before display. |
 
 Some bundled icons, including `material-icon-theme:folder-css` and `logos:chrome-web-store`, currently render incompletely because of Mermaid's own icon filtering, even in Loose mode.
 
-In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build excludes this remote loader and uses the code shipped with the plugin, even if old settings selected Latest or Custom. Simple Icons may still download icon data as described above.
+Latest and Custom load Mermaid and ELK code from jsDelivr without an integrity check and run it with full access to Obsidian. Bundled uses the code shipped with the plugin. Full is a separate source distribution and is not submitted to the Community Directory. Simple Icons may download icon data as described above.
 
 Show the plugin's project structure with [treeView](https://mermaid.js.org/syntax/treeView.html). With **Bundled** selected, switch to **Loose** for this trusted example to display icons from the included `material-icon-theme` and `logos` packs:
 
@@ -298,19 +302,18 @@ body {
 
 ## Development
 
-Use Node.js **22 or later** and run `npm ci` once after checking out the source.
+Use Node.js **22 or later**, check out `codex/full`, and run `npm ci`.
 
-```bash
-npm run dev         # watch the community build
-npm run dev:full    # watch the full build
-npm test            # unit tests
-npm run build       # type-check and build dist/community/
-npm run build:full  # type-check and build dist/full/
+```sh
+npm run dev          # watch dist/full/
+npm test             # unit tests
+npm run build        # type-check and build dist/full/
+npm run check:release
 ```
 
-Install `main.js`, `manifest.json`, and `styles.css` from the selected output directory into `<vault>/.obsidian/plugins/patches/`, then reload Obsidian. Full builds are available through this source-build workflow; release attachments contain Community builds.
+`dev:full` and `build:full` remain aliases for the default commands. Copy the three installation files from `dist/full/` into `<vault>/.obsidian/plugins/patches/` and reload Obsidian after rebuilding.
 
-See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Releases and migration](docs/releases.md) for build variants, version checks, and publishing. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, restoration behavior, and dated verification records. Integration suites deploy the build into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards.
+See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Full builds and migration](docs/releases.md) for distribution checks and migration. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, and restoration behavior. Integration suites deploy Full into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards. This branch's CI tests Full but does not publish GitHub releases or release attestations.
 
 ## Acknowledgments
 

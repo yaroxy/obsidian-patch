@@ -2,14 +2,14 @@ import esbuild from "esbuild";
 import { builtinModules } from "node:module";
 import { readFile, mkdir, copyFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 import { compressBuildData } from "./scripts/lib/build-compression.mjs";
 import { BUILD_TARGETS, RELEASE_FILES, fileHash, sourceHashes, validateMermaidInputs, validateReleaseMetadata } from "./scripts/lib/release-validation.mjs";
 
 const production = process.argv[2] === "production";
-const target = process.argv[3] ?? "community";
+const target = process.argv[3] ?? "full";
 if (!BUILD_TARGETS.includes(target)) throw new Error(`Unknown build target: ${target}`);
 if (process.argv[2] && !["production", "development"].includes(process.argv[2])) throw new Error("Expected production or development");
 const root = fileURLToPath(new URL("./", import.meta.url));
@@ -45,14 +45,6 @@ const distribution = {
   name: "patches-distribution",
   setup(build) {
     build.onStart(() => { validateReleaseMetadata(root); });
-    if (target === "full") {
-      build.onResolve({ filter: /(?:^|\/)mermaid-runtime(?:\.ts)?$/ }, args => {
-        const resolved = resolve(args.resolveDir, args.path.replace(/\.ts$/, ""));
-        if (resolved === join(root, "src/features/mermaid-runtime")) {
-          return { path: join(root, "src/features/mermaid-runtime/full.ts") };
-        }
-      });
-    }
     build.onLoad({ filter: /[/\\]src[/\\]main\.ts$/ }, async args => ({
       contents: await readFile(args.path, "utf8"), loader: "ts", resolveDir: dirname(args.path),
       watchFiles: ["manifest.json", "styles.css", "package.json", "package-lock.json", "versions.json"].map(file => join(root, file)),

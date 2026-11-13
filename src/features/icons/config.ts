@@ -76,30 +76,6 @@ export function renameIconPaths(
   return Object.keys(moved).length > 0 ? { ...kept, ...moved } : undefined;
 }
 
-/**
- * File explorer rules that draw each icon as a mask before the title, so it
- * takes the title's color and the SVG is only ever used as an image.
- */
-export function iconRules(icons: ReadonlyArray<readonly [path: string, svg: string]>): string {
-  if (icons.length === 0) return "";
-  const selector = (path: string): string =>
-    `:is(.nav-folder-title, .nav-file-title)[data-path="${cssString(path)}"] > .tree-item-inner::before`;
-  return [
-    `${icons.map(([path]) => selector(path)).join(",\n")} {
-  content: "";
-  display: inline-block;
-  width: var(--obsidian-patch-icon-size);
-  height: var(--obsidian-patch-icon-size);
-  margin-inline-end: var(--obsidian-patch-icon-gap);
-  vertical-align: var(--obsidian-patch-icon-offset);
-  background-color: var(--obsidian-patch-icon-color);
-  -webkit-mask: var(--obsidian-patch-icon) center / contain no-repeat;
-  mask: var(--obsidian-patch-icon) center / contain no-repeat;
-}`,
-    ...icons.map(([path, svg]) => `${selector(path)} { --obsidian-patch-icon: ${svgUrl(svg)}; }`),
-  ].join("\n");
-}
-
 export function svgUrl(svg: string): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
@@ -116,10 +92,6 @@ function iconizeIconId(icon: string, lucideNames: ReadonlyMap<string, string>): 
   }
   // Simple Icons slugs are lowercase letters and digits; Iconize capitalizes the first.
   return prefix === "Si" && /^[A-Za-z0-9]+$/.test(name) ? `simple-icons:${name.toLowerCase()}` : undefined;
-}
-
-function cssString(value: string): string {
-  return value.replace(/["\\]/g, "\\$&").replace(/[\n\r\f]/g, (char) => `\\${char.charCodeAt(0).toString(16)} `);
 }
 
 function stringEntries(data: unknown, keep: (key: string, value: string) => boolean): Record<string, string> {

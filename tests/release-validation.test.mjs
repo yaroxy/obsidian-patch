@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileHash, sourceHashes, validateReleaseMetadata, validateReleaseBuild, validateMermaidInputs, RELEASE_FILES } from "../scripts/lib/release-validation.mjs";
 
-function fixture(t, target = "community") {
+function fixture(t, target = "full") {
   const root = mkdtempSync(join(tmpdir(), "patches-release-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const write = (path, value) => {
@@ -60,21 +60,21 @@ test("lockfile root and compatibility mapping must match the manifest", t => {
   assert.throws(() => validateReleaseMetadata(f.root), /must map 0.3.0 to 1.15.0/);
 });
 
-test("both distributable variants pass with matching source and artifact metadata", t => {
-  for (const target of ["community", "full"]) {
-    const f = fixture(t, target);
-    assert.equal(validateReleaseBuild(f.root, target, "0.3.0").manifest.id, "patches");
-  }
+test("Full distribution passes with matching source and artifact metadata", t => {
+  const f = fixture(t);
+  assert.equal(validateReleaseBuild(f.root).target, "full");
+  assert.equal(validateReleaseBuild(f.root, "full", "0.3.0").manifest.id, "patches");
+  assert.throws(() => validateReleaseBuild(f.root, "community"), /Unknown build target/);
 });
 
-test("community dependency graph rejects remote code even without endpoint strings", () => {
-  assert.throws(() => validateMermaidInputs({ inputs: { "src/features/mermaid-runtime/remote.ts": {} } }, "community"), /remote Mermaid loader/);
+test("Full dependency graph requires its remote loader and rejects another distribution", () => {
+  assert.throws(() => validateMermaidInputs({ inputs: { "src/features/mermaid-runtime/remote.ts": {} } }, "community"), /Unknown build target/);
   assert.throws(() => validateMermaidInputs({ inputs: { "src/main.ts": {} } }, "full"), /missing/);
 });
 
 test("modified artifacts and stale source files cannot be released", t => {
   const f = fixture(t);
-  f.write("dist/community/main.js", "different build");
+  f.write("dist/full/main.js", "different build");
   assert.throws(() => validateReleaseBuild(f.root), /Build file changed: main.js/);
   f.seal();
   f.write("src/main.ts", "changed after build");
@@ -87,31 +87,31 @@ test("changing the build compressor invalidates previously built release files",
   assert.throws(() => validateReleaseBuild(f.root), /Build sources changed/);
 });
 
-test("remote Mermaid endpoints are forbidden in community bundles", t => {
+test("Full bundles may contain their documented remote Mermaid endpoints", t => {
   const f = fixture(t);
-  f.write("dist/community/main.js", 'fetch("https://data.jsdelivr.com/v1/packages/npm/mermaid")');
+  f.write("dist/full/main.js", 'const endpoint = "https://data.jsdelivr.com/v1/packages/npm/mermaid";');
   f.seal();
-  assert.throws(() => validateReleaseBuild(f.root), /remote Mermaid endpoints/);
+  assert.doesNotThrow(() => validateReleaseBuild(f.root));
 });
 
 test("a release tag needs an exact version and a finalized changelog entry", t => {
   const f = fixture(t);
-  assert.throws(() => validateReleaseBuild(f.root, "community", "v0.3.0"), /without a v prefix/);
+  assert.throws(() => validateReleaseBuild(f.root, "full", "v0.3.0"), /without a v prefix/);
   f.write("CHANGELOG.md", "## [Unreleased]\n");
-  assert.throws(() => validateReleaseBuild(f.root, "community", "0.3.0"), /Finalize/);
+  assert.throws(() => validateReleaseBuild(f.root, "full", "0.3.0"), /Finalize/);
   assert.doesNotThrow(() => validateReleaseBuild(f.root));
 });
 
-test("relabeling the full build is insufficient to pass community validation", t => {
+test("a Community artifact is not accepted as the Full distribution", t => {
   const f = fixture(t);
-  const info = JSON.parse(readFileSync(join(f.root, "dist/community/build-info.json"), "utf8"));
-  f.write("dist/community/build-info.json", { ...info, target: "full" });
+  const info = JSON.parse(readFileSync(join(f.root, "dist/full/build-info.json"), "utf8"));
+  f.write("dist/full/build-info.json", { ...info, target: "community" });
   assert.throws(() => validateReleaseBuild(f.root), /target or version is stale/);
 });
 
 test("development output is not accepted as a release artifact", t => {
   const f = fixture(t);
-  const info = JSON.parse(readFileSync(join(f.root, "dist/community/build-info.json"), "utf8"));
-  f.write("dist/community/build-info.json", { ...info, production: false });
+  const info = JSON.parse(readFileSync(join(f.root, "dist/full/build-info.json"), "utf8"));
+  f.write("dist/full/build-info.json", { ...info, production: false });
   assert.throws(() => validateReleaseBuild(f.root), /production build/);
 });

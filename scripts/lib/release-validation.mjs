@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 
 export const RELEASE_FILES = ["main.js", "manifest.json", "styles.css"];
-export const BUILD_TARGETS = ["community", "full"];
+export const BUILD_TARGETS = ["full"];
 const readJson = path => JSON.parse(readFileSync(path, "utf8"));
 export const fileHash = path => createHash("sha256").update(readFileSync(path)).digest("hex");
 
@@ -29,9 +29,7 @@ export function validateReleaseMetadata(root) {
 export function validateMermaidInputs(metafile, target) {
   if (!BUILD_TARGETS.includes(target)) throw new Error(`Unknown build target: ${target}`);
   const inputs = Object.keys(metafile.inputs).map(path => path.replaceAll("\\", "/"));
-  const remote = inputs.some(path => /src\/features\/mermaid-runtime\/(?:full|remote)\.ts$/.test(path));
-  if (target === "community" && remote) throw new Error("Community build includes the remote Mermaid loader");
-  if (target === "full" && !inputs.some(path => /src\/features\/mermaid-runtime\/remote\.ts$/.test(path))) {
+  if (!inputs.some(path => /src\/features\/mermaid-runtime\/remote\.ts$/.test(path))) {
     throw new Error("Full build is missing the remote Mermaid loader");
   }
 }
@@ -45,7 +43,7 @@ export function sourceHashes(root, metafile) {
   return Object.fromEntries([...paths].sort().map(path => [path, fileHash(join(root, path))]));
 }
 
-export function validateReleaseBuild(root, target = "community", tag) {
+export function validateReleaseBuild(root, target = "full", tag) {
   const manifest = validateReleaseMetadata(root);
   if (!BUILD_TARGETS.includes(target)) throw new Error(`Unknown build target: ${target}`);
   const dir = join(root, "dist", target);
@@ -60,10 +58,6 @@ export function validateReleaseBuild(root, target = "community", tag) {
   if (fileHash(join(dir, "manifest.json")) !== fileHash(join(root, "manifest.json"))) throw new Error("Built manifest differs from the source manifest");
   if (fileHash(join(dir, "styles.css")) !== fileHash(join(root, "styles.css"))) throw new Error("Built styles differ from the source styles");
   if (JSON.stringify(info.sources) !== JSON.stringify(sourceHashes(root, metafile))) throw new Error("Build sources changed; rebuild before releasing");
-  const code = readFileSync(join(dir, "main.js"), "utf8");
-  if (target === "community" && /data\.jsdelivr\.com\/v1\/packages\/npm\/mermaid|\/dist\/mermaid\.esm\.min\.mjs/.test(code)) {
-    throw new Error("Community bundle contains remote Mermaid endpoints");
-  }
   if (tag !== undefined) {
     if (tag !== manifest.version) throw new Error(`Tag ${tag} must match manifest ${manifest.version} without a v prefix`);
     const heading = `## [${tag}] - `;

@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 import { validateReleaseBuild } from "./lib/release-validation.mjs";
 
 try {
-  let target = "community", tag;
+  let target = "full", tag;
   for (const arg of process.argv.slice(2)) {
     if (arg.startsWith("--build=")) target = arg.slice(8);
     else if (arg.startsWith("--tag=")) tag = arg.slice(6);

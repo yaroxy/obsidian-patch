@@ -16,9 +16,9 @@ function plainObject(value) {
 }
 
 /** Resolve all inputs before any write. A plan also holds the original bytes for rollback. */
-export function planMigration(vault, { build = "community", buildDirectory } = {}) {
+export function planMigration(vault, { build = "full", buildDirectory } = {}) {
   if (!vault || !isAbsolute(vault)) throw new Error("Supply an absolute vault path");
-  if (build !== "community" && build !== "full") throw new Error("Build must be community or full");
+  if (build !== "full") throw new Error("Build must be full on the codex/full branch");
   vault = fs.realpathSync(vault);
   const config = join(vault, ".obsidian");
   if (!fs.existsSync(config)) throw new Error("The vault has no .obsidian configuration directory");
@@ -177,14 +177,14 @@ export function applyMigration(plan) {
 function main(args) {
   const vault = args.find(arg => !arg.startsWith("--"));
   if (args.includes("--help") || !vault) {
-    console.log("Usage: node scripts/migrate-plugin.mjs /absolute/vault/path [--build=community|full] [--apply]\nWithout --apply, only previews the migration. Close Obsidian before applying. The old plugin directory is retained.");
+    console.log("Usage: node scripts/migrate-plugin.mjs /absolute/vault/path [--build=full] [--apply]\nUses dist/full. Without --apply, only previews the migration. Close Obsidian before applying. The old plugin directory is retained.");
     return;
   }
   const flags = args.filter(arg => arg.startsWith("--"));
-  if (args.filter(arg => !arg.startsWith("--")).length !== 1 || flags.some(arg => arg !== "--apply" && !/^--build=(community|full)$/.test(arg))) {
-    throw new Error("Expected one absolute vault path, optional --build=community|full, and optional --apply");
+  if (args.filter(arg => !arg.startsWith("--")).length !== 1 || flags.some(arg => arg !== "--apply" && arg !== "--build=full")) {
+    throw new Error("Expected one absolute vault path, optional --build=full, and optional --apply");
   }
-  const build = flags.find(arg => arg.startsWith("--build="))?.slice("--build=".length) ?? "community";
+  const build = flags.find(arg => arg.startsWith("--build="))?.slice("--build=".length) ?? "full";
   if (args.includes("--apply")) assertObsidianClosed();
   const plan = planMigration(vault, { build });
   console.log(JSON.stringify({ mode: args.includes("--apply") ? "apply" : "preview", vault: plan.vault,

@@ -60,8 +60,9 @@ async function load(entryPoint, mockRemote = false) {
   return { module, inputs: Object.keys(result.metafile.inputs) };
 }
 
-const community = await load("src/features/mermaid-runtime.ts");
-const full = (await load("src/features/mermaid-runtime/full.ts", true)).module;
+const community = await load("src/features/mermaid-runtime/community.ts");
+const fullEntry = await load("src/features/mermaid-runtime.ts");
+const full = (await load("src/features/mermaid-runtime.ts", true)).module;
 const remote = (await load("src/features/mermaid-runtime/remote.ts")).module;
 
 beforeEach(() => {
@@ -72,7 +73,12 @@ beforeEach(() => {
   state.response = { version: "12.3.0" };
 });
 
-test("directory runtime has no full adapter, remote loader or Obsidian network dependency", () => {
+test("the Full branch default entry includes its remote adapter", () => {
+  assert.equal(fullEntry.module.REMOTE_MERMAID_ENABLED, true);
+  assert.equal(fullEntry.inputs.some(input => /mermaid-runtime\/remote\.ts$/.test(input)), true);
+});
+
+test("the isolated directory adapter has no full adapter, remote loader or Obsidian network dependency", () => {
   assert.equal(community.module.REMOTE_MERMAID_ENABLED, false);
   assert.equal(community.inputs.some((input) => /mermaid-runtime\/(full|remote)\.ts|runtime-test:obsidian/.test(input)), false);
 });

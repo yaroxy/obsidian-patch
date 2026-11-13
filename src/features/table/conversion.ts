@@ -67,7 +67,7 @@ async function renderTable(plugin: Plugin, source: MarkdownTable, text: string, 
   const width = source.align.length;
   if (source.rows.some(row => row.length > width)) throw new Error("A row has more cells than the header; fix it before converting.");
   if (/\[\^/.test(source.source)) throw new Error("Footnotes are not supported in HTML conversion yet.");
-  const container = document.createDocumentFragment().createDiv();
+  const container = createDiv();
   // Include the rest of the contiguous block for validation. A conservative
   // source scan must never convert only part of a row that the native parser
   // still considers part of this table (for example an indented continuation).
