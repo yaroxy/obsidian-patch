@@ -51,6 +51,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.3.2 release preparation — 2026-11-13
+
+Both distribution versions, lockfile root versions, manifests and compatibility entries were updated to 0.3.2 / Obsidian 1.15.0. Community passed 127 unit tests and Full passed 132, with both production builds, tag-specific package checks and diff whitespace checks passing. Each distribution's `main.js` and `styles.css` hashes are identical to its already-tested remaining-warning candidate; only the installation manifest version changed. The native regression scope below therefore remains applicable to the unchanged implementation, without claiming a new full native-suite run for the version bump.
+
+The maintainer confirmed that the Community preview requested for `a4ba9639094548ab4cbf187a6d5a0e44e97e89f2` passed and the two remaining findings disappeared. Release-asset review is still separate; see [Community review history](community-review-history.md).
+
 ## Remaining warning fixes — unreleased, 2026-11-13
 
 The working trees based on Community `fc5c2f5` and Full `5d4f0c0` replace deprecated table text insertion and make PDF host-method receivers/restoration explicit. Community passed 127 unit tests and Full passed 132; both production builds and release-file checks passed. Three new PDF adapter unit cases cover bound instance receivers, exact shared-descriptor restoration after an exception, and a non-writable host-method fallback.

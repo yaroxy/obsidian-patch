@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-13
+
 ### Changed
 
 - Community source and official releases now live on `main`; the separate `codex/full` branch retains opt-in remote Mermaid versions for manual builds. Each branch builds and validates its own distribution by default.
@@ -15,7 +17,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Replace deprecated table text insertion commands with selection-aware plain-text and line-break insertion, retaining the editor's undo/redo history.
 - Bind native PDF instance methods to their export modal and restore the complete temporary open-method descriptor, including when export throws.
-
 - Render explorer icons using static CSS and per-row image masks instead of attaching style elements, while preserving lazy rendering, path changes, window ownership, and unload cleanup.
 - Create detached banner, heading, and table-conversion elements with supported host helpers directly instead of native document fragments.
 

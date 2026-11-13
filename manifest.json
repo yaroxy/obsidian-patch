@@ -1,7 +1,7 @@
 {
   "id": "patches",
   "name": "Patches",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "minAppVersion": "1.15.0",
   "description": "Edit tables and callouts, render newer Mermaid diagrams, format math, and customize note covers, icons, line width, heading labels, and PDF navigation.",
   "author": "yaroxy",
