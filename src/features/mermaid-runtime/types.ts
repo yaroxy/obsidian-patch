@@ -2,7 +2,7 @@ import type bundledMermaid from "mermaid";
 
 export type Mermaid = typeof bundledMermaid;
 
-/** `bundled`, or (in the full build) `latest` or an exact supported version. */
+/** Persisted choices are normalized to `bundled` by the Community runtime. */
 export type MermaidVersionChoice = string;
 
 export const LATEST_VERSION = "latest";
@@ -20,13 +20,4 @@ export interface MermaidRuntime {
 export interface MermaidSettings {
   mermaidVersion: MermaidVersionChoice;
   mermaidCachedLatest?: string;
-}
-
-/** Icon packs and layout loaders first shipped in Mermaid 11. */
-export function isExactMermaidVersion(value: unknown): value is string {
-  return typeof value === "string" && /^\d+\.\d+\.\d+$/.test(value) && majorOf(value) >= 11;
-}
-
-export function majorOf(version: string): number {
-  return Number.parseInt(version, 10);
 }

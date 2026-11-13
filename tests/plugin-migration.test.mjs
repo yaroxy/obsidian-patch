@@ -161,7 +161,8 @@ test("rollback does not delete new installation data changed by another process"
 test("validation rejects relative paths, unsupported builds, missing assets and wrong plugin IDs", t => {
   const f = fixture(t);
   assert.throws(() => planMigration("relative/vault"), /absolute vault path/);
-  assert.throws(() => planMigration(f.vault, { build: "../other" }), /community or full/);
+  assert.throws(() => planMigration(f.vault, { build: "../other" }), /must be community/);
+  assert.throws(() => planMigration(f.vault, { build: "full", buildDirectory: f.buildDirectory }), /must be community/);
   f.writeJSON(join(f.buildDirectory, "manifest.json"), { id: "obsidian-patch", version: "0.3.0" });
   assert.throws(() => f.plan(), /valid patches manifest/);
   fs.rmSync(join(f.buildDirectory, "main.js"));

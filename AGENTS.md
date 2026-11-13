@@ -18,6 +18,8 @@ Use current source and configuration for implementation status and versions. Tre
 
 Before changing release packaging, build variants, or plugin ID migration, read `docs/releases.md`.
 
+Before addressing Community Directory feedback or preparing a directory release, read `docs/community-review-history.md` and append new review results there, distinguishing local verification from service approval.
+
 ## Repository conventions
 
 - Use the `obsidian-patch-<feature>` prefix for feature CSS classes.

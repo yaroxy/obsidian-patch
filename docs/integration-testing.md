@@ -13,21 +13,22 @@ node scripts/test-callout.mjs /path/to/dev-vault
 node scripts/test-math-format.mjs /path/to/dev-vault
 node scripts/test-mermaid.mjs /path/to/dev-vault
 node scripts/test-navigation.mjs /path/to/dev-vault
+node scripts/test-icons.mjs /path/to/dev-vault
 node scripts/test-banner.mjs /path/to/dev-vault --skip-playback
 node scripts/test-runner-recovery.mjs /path/to/dev-vault
 ```
 
-Run the Mermaid suite against the full build separately:
+Run Full tests from a separate `codex/full` checkout using its own instructions and default build:
 
 ```sh
-npm run build:full
-PATCHES_BUILD=full node scripts/test-mermaid.mjs /path/to/dev-vault
+npm run build
+node scripts/test-mermaid.mjs /path/to/dev-vault
 ```
 
 Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled version number from jsDelivr and render an ELK diagram with that remote runtime. Without this opt-in, the suite stays on bundled Mermaid and records the live-network coverage as skipped. Both variants check Cynefin, ELK, TreeView icons, themes, searchable settings, and hostile SVG handling through the production renderer.
 
 - Obsidian 1.15.0 or later must finish loading, expose the CLI developer commands, and have no open dialogs in the development window.
-- Runners deploy `dist/community/` by default. To test the full build, first run `npm run build:full`, then prefix a runner command with `PATCHES_BUILD=full`, for example `PATCHES_BUILD=full node scripts/test-table.mjs /path/to/dev-vault`.
+- Runners in `main` deploy `dist/community/` and reject Full, including any stale Full output. The separate `codex/full` checkout deploys its own `dist/full/` by default. Run suites from only one checkout at a time.
 - `OBSIDIAN_CLI` overrides the executable. On macOS the runner prefers `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`, avoiding a PATH entry that launches the GUI executable. Other installations fall back to `obsidian` on PATH.
 - Banner needs `ffmpeg` and `gif2webp` on PATH. Its image, portrait, GIF, animated WebP, MP4 and WebM samples are generated inside its fixture directory; a vault-root `banner.png` is no longer needed.
 - Navigation needs `python3` with `pypdf` and `pdfplumber`. Set `PDF_PYTHON` to a Python environment with those packages. PDF verification is required and is not silently skipped.
@@ -38,7 +39,7 @@ Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled v
 
 `scripts/lib/integration-runner.mjs` owns CLI selection, preflight, deployment and result polling. `scripts/lib/obsidian-session.js` runs one suite inside Obsidian and owns its temporary tab, timeout and cleanup. A suite receives that tab, a cancellable `wait`, and a shared report; it must not reuse an existing user tab or leave asynchronous work running after returning.
 
-The runner retains the newly deployed plugin build and test fixtures for inspection. It restores the original `data.json` bytes (or its absence), the two editor-size localStorage entries, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
+The runner retains the newly deployed plugin build and test fixtures for inspection. The Icons suite removes its unique run folder, probe rows, and temporary popout, and restores the explorer expansion and sidebar state. It restores the original `data.json` bytes (or its absence), the two editor-size localStorage entries, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
 
 Each output directory contains:
 
@@ -51,7 +52,19 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
-## Verified candidate — 0.3.1, 2026-11-13
+## Review follow-up verification — unreleased, 2026-11-13
+
+These checks cover the uncommitted Community and Full working trees based on `f85579534c9b8d3c6c585d03b17686db86d7c46f`, after source separation and the icon/DOM fixes. Their manifests still report 0.3.1; these modified packages are not the published 0.3.1 assets and need a new version before release. Community passed 124 unit tests and Full passed 129; both production builds, installation-file checks, and diff whitespace checks passed.
+
+On macOS with Obsidian 1.15.1, the affected native suites passed 170 checks: Icons 12, Community Mermaid 25, Full Mermaid 23, Banner 78, Markdown-to-HTML conversion 16, and Navigation 16. Full made real jsDelivr requests for Mermaid and ELK. Six additional native PDF checks passed, with all exported glyph positions matching the disabled baseline; the fixture still uses explicit two-page pagination.
+
+The new Icons runner verifies actual Lucide and cached Simple Icons masks, enabling/disabling/removing icons, folder and nested-file renames, lazy rows, reused/detached DOM nodes, a real second file explorer in a popout, and unload/reload/close cleanup. It restores explorer/sidebar state and removes its unique fixture and popout. Every suite restored settings and UI state, both Mermaid runs restored the theme, and the final application error log was empty. The development vault retains the Community candidate; its three installation files match the source build exactly. The personal vault was not changed.
+
+The two known upstream Mermaid icon-reference limitations remain. Banner playback was explicitly skipped. Other platforms/themes, live Simple Icons downloads, the native icon-picker menu, natural PDF overflow, and unrelated feature suites were not rerun. These are targeted regression results, not complete platform or feature coverage.
+
+The full official ESLint recommended configuration was also run in isolated compatible tooling against 38 Community source files. The targeted DOM/style findings are absent, but the complete result still has three PDF method-capture errors and nine warnings. [Community review history](community-review-history.md#local-follow-up-checks--not-a-directory-review) records their exact scope and the distinction from service results. Local evidence, screenshots, lint configuration and artifact hashes are under ignored `dist/validation/community-review-followup/`; no Community preview scan has run against this candidate.
+
+## Historical verified scope — 0.3.1, 2026-11-13
 
 The review-fix candidate passed 122 unit tests, both production builds and release-package checks, and `git diff --check`. Its description no longer contains the directory-rejected product name. Direct CodeMirror dependencies match the installed host API's existing peer versions and remain external to the bundles.
 

@@ -2,15 +2,16 @@ import { getIcon, getIconIds, normalizePath, Notice, type Menu, type Plugin, typ
 import {
   convertIconize,
   iconizeName,
-  iconRules,
   parseIconId,
   renameIconPaths,
+  svgUrl,
   type IconId,
   type IconizeImport,
   type IconSettings,
 } from "./icons/config";
 import { IconPicker, type IconChoice } from "./icons/picker";
 import { loadSimpleIcons, type SimpleIconSet } from "./icons/simple-icons";
+import { watchExplorerIcons, type ExplorerIcons } from "./icons/explorer";
 
 export { parseIconSettings, type IconSettings } from "./icons/config";
 
@@ -37,9 +38,8 @@ const LUCIDE_PREFIX = "lucide-";
 const ICONIZE_ID = "obsidian-icon-folder";
 
 /**
- * Icons are drawn by one generated stylesheet keyed on the explorer's
- * data-path attributes, so they survive the explorer re-rendering, collapsed
- * folders and renames without touching its DOM.
+ * Static CSS draws image masks on explorer rows. Each view watches only its
+ * own rows so lazy folders, rebuilt explorers and popouts receive the icons.
  */
 export function registerIcons(
   plugin: Plugin,
@@ -50,7 +50,9 @@ export function registerIcons(
   let settings = initial;
   let simpleIcons: Promise<SimpleIconSet> | undefined;
   let status: SimpleIconsStatus = { status: "idle" };
-  const sheets = new Map<Document, HTMLStyleElement>();
+  let active = true;
+  let iconImages = new Map<string, string>();
+  const explorers = new Map<HTMLElement, { document: Document; icons: ExplorerIcons }>();
 
   const svgFor = (id: IconId): string | undefined => {
     const icon = parseIconId(id);
@@ -61,20 +63,25 @@ export function registerIcons(
     const icons = settings.enabled
       ? Object.entries(settings.paths).flatMap(([path, id]) => {
         const svg = svgFor(id);
-        return svg === undefined ? [] : [[path, svg] as const];
+        return svg === undefined ? [] : [[path, svgUrl(svg)] as const];
       })
       : [];
-    const css = iconRules(icons);
-    for (const sheet of sheets.values()) {
-      if (sheet.textContent !== css) sheet.textContent = css;
-    }
+    iconImages = new Map(icons);
+    for (const explorer of explorers.values()) explorer.icons.update(iconImages);
   };
 
-  const addSheet = (doc: Document): void => {
-    if (sheets.has(doc)) return;
-    const sheet = doc.head.createEl("style", { attr: { id: "obsidian-patch-icons" } });
-    sheets.set(doc, sheet);
-    render();
+  const syncExplorers = (): void => {
+    if (!active) return;
+    const current = new Set(app.workspace.getLeavesOfType("file-explorer").map(leaf => leaf.view.containerEl));
+    for (const [root, explorer] of explorers) {
+      if (!current.has(root) || root.ownerDocument !== explorer.document) {
+        explorer.icons.dispose();
+        explorers.delete(root);
+      }
+    }
+    for (const root of current) {
+      if (!explorers.has(root)) explorers.set(root, { document: root.ownerDocument, icons: watchExplorerIcons(root, iconImages) });
+    }
   };
 
   const update = async (next: IconSettings): Promise<void> => {
@@ -183,18 +190,26 @@ export function registerIcons(
     const paths = renameIconPaths(settings.paths, oldPath, file.path);
     if (paths !== undefined) void update({ ...settings, paths });
   }));
-  plugin.registerEvent(app.workspace.on("window-open", (_win, win) => addSheet(win.document)));
+  plugin.registerEvent(app.workspace.on("layout-change", syncExplorers));
+  plugin.registerEvent(app.workspace.on("window-open", syncExplorers));
   plugin.registerEvent(app.workspace.on("window-close", (_win, win) => {
-    sheets.get(win.document)?.remove();
-    sheets.delete(win.document);
+    for (const [root, explorer] of explorers) {
+      if (explorer.document !== win.document) continue;
+      explorer.icons.dispose();
+      explorers.delete(root);
+    }
   }));
   plugin.register(() => {
-    for (const sheet of sheets.values()) sheet.remove();
-    sheets.clear();
+    active = false;
+    for (const explorer of explorers.values()) explorer.icons.dispose();
+    explorers.clear();
   });
-  addSheet(document);
+  render();
+  syncExplorers();
   // Icons chosen before an offline import have no SVG yet; fetch them once.
   app.workspace.onLayoutReady(() => {
+    if (!active) return;
+    syncExplorers();
     if (lacksSvgs()) void loadSet();
   });
 

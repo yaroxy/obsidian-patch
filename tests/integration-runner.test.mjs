@@ -10,10 +10,11 @@ import { integrationBuild, obsidianCli, runIntegration } from "../scripts/lib/in
 const require = createRequire(import.meta.url);
 const source = readFileSync(new URL("../scripts/lib/obsidian-session.js", import.meta.url), "utf8");
 
-test("integration builds default to community and require an explicit valid full selection", () => {
+test("Community integration runner rejects Full and unsupported build selections", () => {
   assert.equal(integrationBuild({}), "community");
-  assert.equal(integrationBuild({ PATCHES_BUILD: "full" }), "full");
-  assert.throws(() => integrationBuild({ PATCHES_BUILD: "../other" }), /community or full/);
+  assert.equal(integrationBuild({ PATCHES_BUILD: "community" }), "community");
+  assert.throws(() => integrationBuild({ PATCHES_BUILD: "full" }), /must be community/);
+  assert.throws(() => integrationBuild({ PATCHES_BUILD: "../other" }), /must be community/);
 });
 
 test("CLI override wins; macOS uses the native CLI without relying on PATH", () => {

@@ -4,6 +4,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, openSync, closeSync, 
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { BUILD_TARGETS } from "./release-validation.mjs";
 
 export function obsidianCli(env = process.env, platform = process.platform, exists = existsSync) {
   if (env.OBSIDIAN_CLI) return env.OBSIDIAN_CLI;
@@ -13,7 +14,7 @@ export function obsidianCli(env = process.env, platform = process.platform, exis
 
 export function integrationBuild(env = process.env) {
   const build = env.PATCHES_BUILD ?? "community";
-  if (build !== "community" && build !== "full") throw new Error("PATCHES_BUILD must be community or full");
+  if (!BUILD_TARGETS.includes(build)) throw new Error(`PATCHES_BUILD must be ${BUILD_TARGETS.join(" or ")} in this checkout`);
   return build;
 }
 

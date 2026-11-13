@@ -24,7 +24,7 @@ async function load(entryPoint) {
   return import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`);
 }
 
-const { convertIconize, iconizeName, iconRules, parseIconId, parseIconSettings, renameIconPaths } =
+const { convertIconize, iconizeName, svgUrl, parseIconId, parseIconSettings, renameIconPaths } =
   await load("src/features/icons/config.ts");
 const { parseIconifySet, loadSimpleIcons } = await load("src/features/icons/simple-icons.ts");
 
@@ -105,14 +105,12 @@ test("a moved icon wins over one left at its new path by a deleted file", () => 
   assert.deepEqual(renameIconPaths({ B: "lucide:map", A: "lucide:atom" }, "A", "B"), { B: "lucide:atom" });
 });
 
-test("rules escape paths and embed SVGs as data URLs", () => {
-  assert.equal(iconRules([]), "");
-  const css = iconRules([['Say "hi"\\', SVG], ["Notes/日本語", SVG]]);
-  assert.match(css, /\[data-path="Say \\"hi\\"\\\\"\]/);
-  assert.match(css, /\[data-path="Notes\/日本語"\]/);
-  assert.match(css, /--obsidian-patch-icon: url\("data:image\/svg\+xml,%3Csvg/);
-  assert.doesNotMatch(css, /<svg/);
-  assert.equal(css.match(/content: "";/g)?.length, 1);
+test("SVGs are encoded as image data URLs rather than HTML or CSS declarations", () => {
+  const image = svgUrl(SVG);
+  assert.match(image, /^url\("data:image\/svg\+xml,%3Csvg/);
+  assert.doesNotMatch(image, /<svg/);
+  assert.equal(decodeURIComponent(image.slice('url("data:image/svg+xml,'.length, -2)), SVG);
+  assert.doesNotMatch(svgUrl('<svg><path d="x\"); color: red; /*"/></svg>'), /\); color:/);
 });
 
 test("Iconify sets build SVGs from their defaults and hide deprecated icons", () => {

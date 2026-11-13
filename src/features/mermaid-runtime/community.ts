@@ -8,7 +8,7 @@ export function isMermaidVersionChoice(value: unknown): value is MermaidVersionC
   return value === BUNDLED_VERSION;
 }
 
-/** Old full-build settings cannot enable remote code in the directory build. */
+/** Settings carried over from Full cannot enable remote code in Community. */
 export function parseMermaidSettings(_record: Record<string, unknown>): MermaidSettings {
   return { mermaidVersion: BUNDLED_VERSION };
 }

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Community source and official releases now live on `main`; the separate `codex/full` branch retains opt-in remote Mermaid versions for manual builds. Each branch builds and validates its own distribution by default.
+- Record Community Directory review failures, causes, accepted warnings, and verification boundaries in a dedicated review history.
+
+### Fixed
+
+- Render explorer icons using static CSS and per-row image masks instead of attaching style elements, while preserving lazy rendering, path changes, window ownership, and unload cleanup.
+- Create detached banner, heading, and table-conversion elements with supported host helpers directly instead of native document fragments.
+
 ## [0.3.1] - 2026-11-13
 
 ### Added

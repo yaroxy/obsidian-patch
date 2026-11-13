@@ -396,7 +396,7 @@ body {
 /* Patch Icons */
 
 /*
- * The generated rules draw each icon as a mask before the file or folder name,
+ * Each icon is an image mask before the file or folder name,
  * filled with --obsidian-patch-icon-color, which follows the name's color by
  * default. Override any of these from a CSS snippet.
  */
@@ -406,6 +406,18 @@ body {
   --obsidian-patch-icon-gap: 4px;
   --obsidian-patch-icon-offset: -0.2em;
   --obsidian-patch-icon-color: currentColor;
+}
+
+.obsidian-patch-icons-has-icon > .tree-item-inner::before {
+  content: "";
+  display: inline-block;
+  width: var(--obsidian-patch-icon-size);
+  height: var(--obsidian-patch-icon-size);
+  margin-inline-end: var(--obsidian-patch-icon-gap);
+  vertical-align: var(--obsidian-patch-icon-offset);
+  background-color: var(--obsidian-patch-icon-color);
+  -webkit-mask: var(--obsidian-patch-icon) center / contain no-repeat;
+  mask: var(--obsidian-patch-icon) center / contain no-repeat;
 }
 
 .obsidian-patch-icon-suggestion {

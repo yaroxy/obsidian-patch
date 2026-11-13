@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import { basename, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { validateReleaseBuild } from "./lib/release-validation.mjs";
+import { BUILD_TARGETS, validateReleaseBuild } from "./lib/release-validation.mjs";
 
 const OLD_ID = "obsidian-patch";
 const NEW_ID = "patches";
@@ -18,7 +18,7 @@ function plainObject(value) {
 /** Resolve all inputs before any write. A plan also holds the original bytes for rollback. */
 export function planMigration(vault, { build = "community", buildDirectory } = {}) {
   if (!vault || !isAbsolute(vault)) throw new Error("Supply an absolute vault path");
-  if (build !== "community" && build !== "full") throw new Error("Build must be community or full");
+  if (!BUILD_TARGETS.includes(build)) throw new Error(`Build must be ${BUILD_TARGETS.join(" or ")} in this checkout`);
   vault = fs.realpathSync(vault);
   const config = join(vault, ".obsidian");
   if (!fs.existsSync(config)) throw new Error("The vault has no .obsidian configuration directory");
@@ -177,12 +177,12 @@ export function applyMigration(plan) {
 function main(args) {
   const vault = args.find(arg => !arg.startsWith("--"));
   if (args.includes("--help") || !vault) {
-    console.log("Usage: node scripts/migrate-plugin.mjs /absolute/vault/path [--build=community|full] [--apply]\nWithout --apply, only previews the migration. Close Obsidian before applying. The old plugin directory is retained.");
+    console.log(`Usage: node scripts/migrate-plugin.mjs /absolute/vault/path [--build=${BUILD_TARGETS.join("|")}] [--apply]\nWithout --apply, only previews the migration. Close Obsidian before applying. The old plugin directory is retained.`);
     return;
   }
   const flags = args.filter(arg => arg.startsWith("--"));
-  if (args.filter(arg => !arg.startsWith("--")).length !== 1 || flags.some(arg => arg !== "--apply" && !/^--build=(community|full)$/.test(arg))) {
-    throw new Error("Expected one absolute vault path, optional --build=community|full, and optional --apply");
+  if (args.filter(arg => !arg.startsWith("--")).length !== 1 || flags.some(arg => arg !== "--apply" && !(arg.startsWith("--build=") && BUILD_TARGETS.includes(arg.slice("--build=".length))))) {
+    throw new Error(`Expected one absolute vault path, optional --build=${BUILD_TARGETS.join("|")}, and optional --apply`);
   }
   const build = flags.find(arg => arg.startsWith("--build="))?.slice("--build=".length) ?? "community";
   if (args.includes("--apply")) assertObsidianClosed();
