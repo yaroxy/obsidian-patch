@@ -8,6 +8,7 @@ These suites deploy the current build into a development vault and mutate dedica
 npm test
 npm run build
 node scripts/test-table.mjs /path/to/dev-vault
+node scripts/test-table-conversion.mjs /path/to/dev-vault
 node scripts/test-callout.mjs /path/to/dev-vault
 node scripts/test-math-format.mjs /path/to/dev-vault
 node scripts/test-navigation.mjs /path/to/dev-vault

@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Refreshed the README with a concise introduction, an alphabetical feature guide, an Obsidian logo badge, practical feature demos, and current examples.
 - Integration tests share native CLI detection, exact vault verification, isolated tabs, settings and UI-state restoration, cancellation, and completion reports. Banner generates its own media fixtures and supports explicitly skipping playback checks. Recovery checks cover success, failure, and timeout.
 - Aligned `versions.json` with the manifest's minimum Obsidian version, 1.13.7.
 - Settings groups are sorted alphabetically by their displayed names.
