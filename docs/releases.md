@@ -45,6 +45,8 @@ If rollback also fails, the tool records `recovery-required` in the backup's `mi
 
 Note content does not need migration: `patch-mermaid`, `patch-banner`, and `patch-line-width` keep their existing syntax. CSS classes and variables with the `obsidian-patch-` prefix also stay the same. Do not enable the old and new plugin together; both register the same note-rendering features.
 
+After checking that Patches has your settings and hotkeys and works with your notes, you can uninstall **Obsidian Patch** under **Settings → Community plugins**. Keeping it disabled temporarily is also fine. The migration intentionally retains its directory for recovery; the new plugin uses its own `patches/data.json`. Keep the migration backup until you are satisfied with the new installation, and leave **Patches** installed when removing the old plugin.
+
 ## Preparing a release
 
 Keep these values consistent before building:

@@ -30,20 +30,24 @@ Configure the plugin under **Settings → Patches**.
 
 ## Installation
 
-Requires Obsidian **1.15.0 or later**. Patches 0.3.0 is in development and is not yet available in the Community Directory. For an older [Obsidian Patch release](https://github.com/yaroxy/obsidian-patch/releases), follow the instructions included with that version.
+Requires Obsidian **1.15.0 or later**. [Patches 0.3.0 is available on GitHub](https://github.com/yaroxy/obsidian-patch/releases/tag/0.3.0). It is not yet listed in the Community Directory.
 
-Build the current source with Node.js **22 or later**:
+**Upgrading from Obsidian Patch?** Follow the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) before creating a `patches` directory to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
 
-```bash
-npm ci
-npm run build
-```
+For a **new installation**:
 
-For a new installation, copy `main.js`, `manifest.json`, and `styles.css` from `dist/community/` to `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable **Patches** under **Settings → Community plugins**.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the release's **Assets**.
+2. Place the three files in `<vault>/.obsidian/plugins/patches/`.
+3. Reload Obsidian and enable **Patches** under **Settings → Community plugins**.
 
-Upgrading from `obsidian-patch`? Use the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
+The release includes the **Community** build. Both builds provide the same features; they differ in how Mermaid versions are loaded:
 
-For Mermaid's **Latest** and **Custom** options, run `npm run build:full` and install the three files from `dist/full/` instead. Both builds use the same plugin ID and settings. A later Community Directory update replaces a manually installed full build with the community build; rebuild and reinstall the full build to keep its extra options.
+| Build | How to get it | Mermaid versions |
+| --- | --- | --- |
+| Community | GitHub release, or `npm run build` → `dist/community/` | Bundled only; no remote Mermaid or ELK code loader |
+| Full | Build from source with `npm run build:full` → `dist/full/` | Bundled, Latest, or Custom; remote versions load from jsDelivr |
+
+Both builds use the same plugin ID and settings, so installing one replaces the other. A future Community Directory update will replace a manually installed Full build with Community. See [Development](#development) for source builds and [Patch Mermaid](#patch-mermaid) for remote-loading details.
 
 ## Active Line
 
@@ -290,6 +294,8 @@ body {
 
 ## Development
 
+Use Node.js **22 or later** and run `npm ci` once after checking out the source.
+
 ```bash
 npm run dev         # watch the community build
 npm run dev:full    # watch the full build
@@ -297,6 +303,8 @@ npm test            # unit tests
 npm run build       # type-check and build dist/community/
 npm run build:full  # type-check and build dist/full/
 ```
+
+Install `main.js`, `manifest.json`, and `styles.css` from the selected output directory into `<vault>/.obsidian/plugins/patches/`, then reload Obsidian. Full builds are available through this source-build workflow; release attachments contain Community builds.
 
 See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Releases and migration](docs/releases.md) for build variants, version checks, and publishing. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, restoration behavior, and dated verification records. Integration suites deploy the build into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards.
 

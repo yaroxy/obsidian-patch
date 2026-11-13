@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Updated installation instructions for the published 0.3.0 release, clarified Community and Full builds, and documented when to remove the old plugin after migration.
+
 ## [0.3.0] - 2026-11-13
 
 ### Added
