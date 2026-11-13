@@ -24,6 +24,8 @@ npm run build:full
 PATCHES_BUILD=full node scripts/test-mermaid.mjs /path/to/dev-vault
 ```
 
+Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled version number from jsDelivr and render an ELK diagram with that remote runtime. Without this opt-in, the suite stays on bundled Mermaid and records the live-network coverage as skipped. Both variants check Cynefin, ELK, TreeView icons, themes, searchable settings, and hostile SVG handling through the production renderer.
+
 - Obsidian 1.15.0 or later must finish loading, expose the CLI developer commands, and have no open dialogs in the development window.
 - Runners deploy `dist/community/` by default. To test the full build, first run `npm run build:full`, then prefix a runner command with `PATCHES_BUILD=full`, for example `PATCHES_BUILD=full node scripts/test-table.mjs /path/to/dev-vault`.
 - `OBSIDIAN_CLI` overrides the executable. On macOS the runner prefers `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`, avoiding a PATH entry that launches the GUI executable. Other installations fall back to `obsidian` on PATH.
@@ -49,7 +51,25 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
-## Verified scope — 2026-11-13
+## Verified candidate — 0.3.1, 2026-11-13
+
+The review-fix candidate passed 122 unit tests, both production builds and release-package checks, and `git diff --check`. Its description no longer contains the directory-rejected product name. Direct CodeMirror dependencies match the installed host API's existing peer versions and remain external to the bundles.
+
+On macOS with Obsidian 1.15.1, the final Community Mermaid suite passed 25 checks and Full passed 23, including real jsDelivr imports of Mermaid 12.3.0 and ELK. Both variants retained Cynefin and ELK layouts, the original three TreeView fixture icons, theme changes, searchable settings, HTTPS and Obsidian links, and a real Loose-mode click callback. Two additional TreeView icons have an upstream rendering limitation recorded below; comparing raw Mermaid output with the final DOM confirmed no additional geometry loss. The renderer stripped scripts, event handlers, executable URLs, and unsafe SVG references in both security modes while preserving styles and HTML labels. A separate native DOM probe passed 21 checks, including encoded unsafe links and preserved Obsidian links. Loose mode still requires trusted diagram input because Mermaid renders and binds interactions before or around the final SVG insertion boundary.
+
+Banner passed 78 checks with its playback group explicitly skipped, and Markdown-to-HTML conversion passed 16. Each suite restored settings and UI state. The development vault retains the final Community 0.3.1 candidate and its fixtures for inspection. The personal vault was not modified. Reports and screenshots are retained locally under `dist/validation/0.3.1/` and are not release attachments.
+
+Follow-up regression passed Table editing (23), Callout editing (41), Math Format (8), and Navigation (16), plus six native PDF verifications. A separate native UI smoke test passed 24 checks covering Active Line in both editor modes, actual line widths and note overrides in all three note modes, status-bar controls, and Lucide/cached Simple Icons in the file explorer. Settings, active tabs, sidebar state, and temporary smoke-test notes were restored; the final error log was empty. These reports are under `dist/validation/0.3.1/regression-N4YkTx/`.
+
+The final reports total 254 passing integration and UI checks, excluding the six separate PDF verifications. The final Mermaid runs restored the original settings bytes, active tab, and theme, cleared their temporary probe globals, and left no captured errors. Their reports are under `final-mermaid-community/` and `final-mermaid-full/` within the validation directory.
+
+A further SVG compatibility probe covered all 70 bundled icons containing `<use>` references. The final sanitizer preserves all 213 references with existing targets, and two representative icons match their original rasterized pixels exactly; one source reference already points to a missing ID. Six native reference-safety checks passed. However, Mermaid 12.3.0's own icon sanitization removes these references before returning rendered diagrams, even in Loose mode. The real TreeView output therefore retains this pre-existing limitation for icons such as `material-icon-theme:folder-css` and `logos:chrome-web-store`. The 0.3.0 lockfile already used the same Mermaid and DOMPurify versions. The standalone sanitizer result is not evidence that the complete Mermaid pipeline renders those icons correctly.
+
+Build comparison reproduced the 0.3.0 release exactly from its tag with Node 26.0.0 and zlib 1.2.12. The same locked inputs under Node 22.23.5 and zlib 1.3.1 produced different bytes; substituting only the two original compressed icon payloads restored the exact released bundle. After switching to pinned JavaScript compression with a zero timestamp, fresh dependency installations in two independent directories produced identical Community and Full installation files under both Node versions. Both matched the repository's final `dist/` files. Full icon JSON roundtrips unchanged, the compressor is absent from runtime bundles, and the dependency audit reported no vulnerabilities. Reports are under `dist/validation/0.3.1/build-reproducibility/`; the community service's Linux rebuild has not been run.
+
+Mobile platforms, other desktop platforms and themes, every Mermaid diagram type, and live Simple Icons downloads remain unverified. PDF navigation uses an explicitly paginated two-page fixture; naturally overflowing long documents are not covered by that suite. Banner playback remains explicitly skipped. The release-attestation workflow was validated locally, including seven draft-attachment verification cases, but has not run on GitHub; attestations do not exist until that workflow succeeds. No package-size reduction was attempted, preserving all diagram types, layouts, and icon packs.
+
+## Historical verified scope — 0.3.0, 2026-11-13
 
 The Patches 0.3.0 candidate passed 103 unit tests, both production builds, both release-package checks, and `git diff --check`. These checks ran on the working tree based on `5dcf9ea4a7583b8b1f463f8e4da4f237eba5abbb`, before the release-preparation commit. The local build environment used Node.js 26.0.0 and npm 11.12.1; CI remains configured for Node.js 22.
 

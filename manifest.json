@@ -1,9 +1,9 @@
 {
   "id": "patches",
   "name": "Patches",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minAppVersion": "1.15.0",
-  "description": "Focused enhancements for Obsidian: diagrams, covers, visual table and callout editors, math formatting, icons, line width, heading levels, and PDF navigation.",
+  "description": "Edit tables and callouts, render newer Mermaid diagrams, format math, and customize note covers, icons, line width, heading labels, and PDF navigation.",
   "author": "yaroxy",
   "authorUrl": "https://github.com/yaroxy",
   "isDesktopOnly": false

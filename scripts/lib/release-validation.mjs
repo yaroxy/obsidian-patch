@@ -12,6 +12,9 @@ export function validateReleaseMetadata(root) {
   const pkg = readJson(join(root, "package.json"));
   const lock = readJson(join(root, "package-lock.json"));
   const versions = readJson(join(root, "versions.json"));
+  if (/\bobsidian\b/i.test(manifest.description ?? "")) {
+    throw new Error("manifest.description must not include Obsidian");
+  }
   if (!/^\d+\.\d+\.\d+$/.test(manifest.version)) throw new Error("manifest.version must be x.y.z");
   for (const [name, version] of [["package.json", pkg.version], ["package-lock.json", lock.version], ["lock root package", lock.packages?.[""]?.version]]) {
     if (version !== manifest.version) throw new Error(`${name} version ${version} does not match manifest ${manifest.version}`);
@@ -34,7 +37,7 @@ export function validateMermaidInputs(metafile, target) {
 }
 
 export function sourceHashes(root, metafile) {
-  const paths = new Set(["manifest.json", "styles.css", "package.json", "package-lock.json", "versions.json", "esbuild.config.mjs", "scripts/lib/release-validation.mjs"]);
+  const paths = new Set(["manifest.json", "styles.css", "package.json", "package-lock.json", "versions.json", "esbuild.config.mjs", "scripts/lib/build-compression.mjs", "scripts/lib/release-validation.mjs"]);
   for (const input of Object.keys(metafile.inputs)) {
     const path = relative(root, resolve(root, input)).replaceAll("\\", "/");
     if (!path.startsWith("../") && !isAbsolute(path) && !path.startsWith("node_modules/") && existsSync(join(root, path))) paths.add(path);

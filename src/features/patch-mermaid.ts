@@ -2,6 +2,7 @@ import type { AsyncIconLoader } from "mermaid";
 import { MarkdownRenderChild, type Plugin } from "obsidian";
 import logosIcons from "gzip:@iconify-json/logos/icons.json";
 import materialIcons from "gzip:@iconify-json/material-icon-theme/icons.json";
+import { sanitizeMermaidSvg } from "./mermaid-dom";
 import {
   loadMermaidRuntime,
   type Mermaid,
@@ -85,7 +86,7 @@ export function registerPatchMermaid(
         return;
       }
       diagram.container.classList.remove("obsidian-patch-mermaid--error");
-      diagram.container.innerHTML = svg;
+      diagram.container.replaceChildren(sanitizeMermaidSvg(svg, diagram.container.ownerDocument));
       bindFunctions?.(diagram.container);
     } catch (error) {
       if (generation === diagram.generation) {
@@ -219,11 +220,6 @@ function renderError(container: HTMLElement, error: unknown): void {
   container.replaceChildren();
   container.classList.add("obsidian-patch-mermaid--error");
 
-  const title = document.createElement("strong");
-  title.textContent = "Mermaid rendering failed";
-
-  const details = document.createElement("pre");
-  details.textContent = error instanceof Error ? error.message : String(error);
-
-  container.append(title, details);
+  container.createEl("strong", { text: "Mermaid rendering failed" });
+  container.createEl("pre", { text: error instanceof Error ? error.message : String(error) });
 }

@@ -1,3 +1,5 @@
+import { requestUrl } from "obsidian";
+
 /**
  * Simple Icons come from Iconify's JSON package of the set, which follows each
  * Simple Icons release. It is data, so loading it never runs remote code.
@@ -27,9 +29,9 @@ interface IconifyIcon {
 }
 
 /**
- * Loads the newest set from jsDelivr. The versioned file is cached by the
- * browser, so `cachedLatest`, the version `latest` last resolved to, usually
- * still loads when the version lookup itself fails offline.
+ * Loads the newest set from jsDelivr, using the last resolved package version
+ * if only the latest-version lookup fails. Icons already in use are saved by
+ * the caller and remain available without a network request.
  */
 export async function loadSimpleIcons(
   cachedLatest: string | undefined,
@@ -76,22 +78,27 @@ export function parseIconifySet(json: unknown, version: string, packageVersion: 
 }
 
 async function resolveLatestVersion(): Promise<string> {
-  const { version } = (await fetchJson(PACKAGE_API_URL)) as { version?: unknown };
-  if (typeof version !== "string") throw new Error("jsDelivr did not resolve the latest Simple Icons version");
-  return version;
+  const response = await fetchJson(PACKAGE_API_URL);
+  if (!isRecord(response) || typeof response.version !== "string" || !/^\d+\.\d+\.\d+$/.test(response.version)) {
+    throw new Error("jsDelivr did not resolve the latest Simple Icons version");
+  }
+  return response.version;
 }
 
 async function fetchJson(url: string): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), LOAD_TIMEOUT_MS);
+  let timer: number | undefined;
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`${response.status} ${response.statusText} for ${url}`);
-    return await response.json();
-  } catch (error) {
-    throw controller.signal.aborted ? new Error(`Timed out after ${LOAD_TIMEOUT_MS / 1000} seconds`) : error;
+    // requestUrl cannot be aborted; bound the wait and ignore a late response.
+    const response = await Promise.race([
+      requestUrl({ url, throw: false }),
+      new Promise<never>((_, reject) => {
+        timer = window.setTimeout(() => reject(new Error(`Timed out after ${LOAD_TIMEOUT_MS / 1000} seconds`)), LOAD_TIMEOUT_MS);
+      }),
+    ]);
+    if (response.status < 200 || response.status >= 300) throw new Error(`${response.status} for ${url}`);
+    return JSON.parse(response.text) as unknown;
   } finally {
-    window.clearTimeout(timer);
+    if (timer !== undefined) window.clearTimeout(timer);
   }
 }
 

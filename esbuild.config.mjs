@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
-import { gzipSync } from "node:zlib";
+import { compressBuildData } from "./scripts/lib/build-compression.mjs";
 import { BUILD_TARGETS, RELEASE_FILES, fileHash, sourceHashes, validateMermaidInputs, validateReleaseMetadata } from "./scripts/lib/release-validation.mjs";
 
 const production = process.argv[2] === "production";
@@ -31,7 +31,7 @@ const gzipModules = {
     }));
 
     build.onLoad({ filter: /.*/, namespace: "gzip" }, async (args) => {
-      const compressed = gzipSync(await readFile(args.path), { level: 9 });
+      const compressed = compressBuildData(await readFile(args.path));
       return {
         contents: `export default ${JSON.stringify(compressed.toString("base64"))};`,
         loader: "js",

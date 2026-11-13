@@ -13,6 +13,10 @@ Use Node.js 22 or later and install dependencies with `npm ci`.
 
 Each output directory contains `main.js`, `manifest.json`, and `styles.css`, plus `metafile.json` and `build-info.json` for validation. Install or publish only the first three files.
 
+Embedded icon packs use the exact build-only dependency `fflate@0.8.3` with compression level 9 and a zero gzip timestamp. This produces gzip bytes without depending on native zlib or the operating system; the compressor is not included in the plugin runtime, and the complete icon data is preserved. Use the same source and `npm ci` lockfile when comparing builds. Release validation records the compression helper's hash so changing it requires a rebuild.
+
+The published `0.3.0` build mismatch was reproduced on macOS using the same source and locked dependencies with Node 22.23.5 and Node 26.0.0: their native zlib versions produced different compressed icon bytes. The Node 26 build matched the published asset, and substituting only those compressed bytes into the Node 22 build reproduced that asset exactly. The new compressor removes that measured source of variation. The review service's Linux environment has not been reproduced locally, and local checks do not establish that a new release has passed its build verification.
+
 The community build excludes the remote Mermaid and ELK loader at build time. It also turns old Latest or Custom settings into Bundled. The full build retains remote loading from jsDelivr and falls back to bundled Mermaid when a remote version cannot be loaded. Both builds may download Simple Icons data; see the README for network use.
 
 Because both builds use the same ID, installing one replaces the other and keeps the same settings and command hotkeys. A subsequent Community Directory update replaces a manually installed full build with the community build. To continue using the full build, build and install it again from source.
@@ -72,15 +76,31 @@ npm run build:full
 npm run check:release -- --build=full
 ```
 
-Before tagging a release, include its exact version in the check, for example `npm run check:release -- --tag=0.3.0`. This also checks the tag version and changelog entry; it will fail while that release is still under `Unreleased`.
+Before tagging a release, include its exact version in the check, for example `npm run check:release -- --tag=0.3.1`. This also checks the tag version and changelog entry; it will fail while that release is still under `Unreleased`.
 
 Install the candidate files in the development vault and verify the affected features. Follow [Integration testing](integration-testing.md) for suites that deploy files and create fixtures. Record the actual tested revision, Obsidian version, platform, results, and skipped checks; earlier verification records are not evidence that the candidate passed.
 
-Commit the release preparation and tag that tested commit with the exact manifest version, such as `0.3.0`, without a `v` prefix. Keep published tags unchanged. In particular, the published `0.2.0` preview used the old `obsidian-patch` ID and reported `0.1.0` in its attached manifest; any corrective release needs a new version rather than reusing its tag.
+Commit the release preparation and tag that tested commit with the exact manifest version, such as `0.3.1`, without a `v` prefix. Keep published tags unchanged. In particular, the published `0.2.0` preview used the old `obsidian-patch` ID and reported `0.1.0` in its attached manifest; any corrective release needs a new version rather than reusing its tag.
 
 ## Publishing to GitHub
 
-Create a draft release for the prepared tag. Upload `main.js`, `manifest.json`, and `styles.css` from `dist/community/` as three separate attachments. Keep validation metadata, vault settings, and `node_modules` out of the release attachments. GitHub's generated source archives are not installable plugin packages.
+Use the manually dispatched **Prepare release** workflow in `.github/workflows/release.yml` to build and attest the release files before creating a draft. Commit the workflow to the default branch, finalize the version and changelog, then push the tested release commit and its exact version tag. The tag must contain the workflow. Dispatch from that same tag so the attestation identifies the source that was actually built; for example, after preparing a new `0.3.1` tag:
+
+```sh
+gh workflow run release.yml --repo yaroxy/obsidian-patch --ref 0.3.1 -f tag=0.3.1
+```
+
+The workflow checks that the tag exists, matches the dispatched source commit, and has no existing Release or draft. It installs locked dependencies, builds both variants, runs unit tests, and checks both packages against the tag and finalized changelog. It then creates GitHub artifact attestations for the three Community files and uploads those exact files to an unpublished draft, verifying the uploaded checksums. Release notes come from that version's changelog entry. The workflow never publishes automatically and refuses to overwrite an existing Release, draft, or its attachments. If an upload fails after the draft is created, inspect that draft before deciding how to recover; rerunning the workflow will refuse it.
+
+Attestations exist only after a successful attestation step in an actual GitHub Actions run. Adding this workflow does not attest earlier local builds or published releases. After downloading an asset from a release built by this workflow, verify it with:
+
+```sh
+gh attestation verify main.js --repo yaroxy/obsidian-patch
+```
+
+Use the same command with `manifest.json` or `styles.css` to verify the other assets. See [GitHub's artifact attestation guide](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds).
+
+The installable package consists of `main.js`, `manifest.json`, and `styles.css` from `dist/community/` as three separate attachments. Keep validation metadata, vault settings, and `node_modules` out of the release attachments. GitHub's generated source archives are not installable plugin packages.
 
 Review the title, installation instructions, supported Obsidian version, tested platforms, and attachment versions before publishing. Use the pre-release option when distributing a preview. Publish a regular release when it is ready for the intended release channel, then update the README download instructions to point to it.
 

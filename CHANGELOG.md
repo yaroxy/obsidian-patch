@@ -6,9 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-13
+
+### Added
+
+- A manual GitHub release workflow that builds and checks both variants, attests the three Community installation files, and prepares a release draft from an existing version tag.
+
 ### Changed
 
 - Updated installation instructions for the published 0.3.0 release, clarified Community and Full builds, and documented when to remove the old plugin after migration.
+- Settings now use the declarative API so individual controls appear in settings search, while retaining alphabetical groups, immediate updates, and reset buttons.
+- Simple Icons requests use the host network API with the existing timeout and offline fallback behavior.
+- Full builds use native dynamic imports for remote Mermaid modules instead of constructing a function from a string. Community builds still exclude that loader.
+- Explicit CodeMirror dependencies match the host API's existing peer versions and remain external to both bundles.
+- Build-time icon compression uses a pinned JavaScript implementation with a fixed timestamp so native zlib versions do not change release bytes; the complete icon data remains bundled.
+
+### Fixed
+
+- Removed the redundant product name from the plugin description and added a release check to catch it before publishing.
+- Sanitize generated Mermaid SVG before inserting DOM nodes, preserving diagram styles, HTML labels, safe local shape references, and note links while removing scripts, event handlers, and unsafe URLs.
+- Preserve each note's document when creating banner, heading, table-conversion, and icon elements, and retain the receiver when invoking banner actions.
 
 ## [0.3.0] - 2026-11-13
 

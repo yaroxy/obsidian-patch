@@ -182,6 +182,8 @@ patch-banner: "[[assets/kyoto-cover.jpg]]"
 ---
 ```
 
+The cover picker lists vault file paths locally to find images and videos. These paths are not sent to a remote service.
+
 Covers appear above the title and Properties in Reading View and Live Preview, at their original aspect ratio. Hover to add, change, or remove a cover; removing it clears only the property, keeping the media file.
 
 ![Choosing an autumn cover for a Kyoto weekend note](docs/images/banner.gif)
@@ -240,7 +242,9 @@ Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagra
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Mermaid version | **Community:** the bundled version is shown. **Full:** choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
-| Security level  | **Strict** (default) sanitizes SVG and currently hides treeView icons. **Loose** preserves them but inserts unsanitized output; use it only with diagrams you fully trust.    |
+| Security level  | **Strict** (default) restricts diagram content and currently hides treeView icons. **Loose** allows additional content and interactions; use it only with diagrams you fully trust. Both modes sanitize the generated SVG before display. |
+
+Some bundled icons, including `material-icon-theme:folder-css` and `logos:chrome-web-store`, currently render incompletely because of Mermaid's own icon filtering, even in Loose mode.
 
 In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build excludes this remote loader and uses the code shipped with the plugin, even if old settings selected Latest or Custom. Simple Icons may still download icon data as described above.
 

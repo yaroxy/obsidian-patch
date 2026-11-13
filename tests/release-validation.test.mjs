@@ -13,13 +13,13 @@ function fixture(t, target = "community") {
     mkdirSync(join(file, ".."), { recursive: true });
     writeFileSync(file, typeof value === "string" ? value : JSON.stringify(value));
   };
-  const manifest = { id: "patches", name: "Patches", version: "0.3.0", minAppVersion: "1.15.0" };
+  const manifest = { id: "patches", name: "Patches", version: "0.3.0", minAppVersion: "1.15.0", description: "Edit notes with visual tools and newer diagrams." };
   write("manifest.json", manifest);
   write("package.json", { version: "0.3.0" });
   write("package-lock.json", { version: "0.3.0", packages: { "": { version: "0.3.0" } } });
   write("versions.json", { "0.3.0": "1.15.0" });
   write("CHANGELOG.md", "## [Unreleased]\n\n## [0.3.0] - 2026-11-13\n");
-  for (const file of ["styles.css", "esbuild.config.mjs", "scripts/lib/release-validation.mjs", "src/main.ts"]) write(file, "original");
+  for (const file of ["styles.css", "esbuild.config.mjs", "scripts/lib/release-validation.mjs", "scripts/lib/build-compression.mjs", "src/main.ts"]) write(file, "original");
   const metafile = { inputs: { "src/main.ts": {} } };
   if (target === "full") {
     write("src/features/mermaid-runtime/remote.ts", "remote");
@@ -41,6 +41,14 @@ test("a package-only version bump is rejected before building", t => {
   const f = fixture(t);
   f.write("manifest.json", { ...f.manifest, version: "0.1.0" });
   assert.throws(() => validateReleaseMetadata(f.root), /package.json version 0.3.0 does not match manifest 0.1.0/);
+});
+
+test("directory metadata rejects a redundant product name in the description", t => {
+  const f = fixture(t);
+  for (const description of ["Focused enhancements for Obsidian.", "Improve OBSIDIAN notes."]) {
+    f.write("manifest.json", { ...f.manifest, description });
+    assert.throws(() => validateReleaseMetadata(f.root), /description must not include Obsidian/);
+  }
 });
 
 test("lockfile root and compatibility mapping must match the manifest", t => {
@@ -70,6 +78,12 @@ test("modified artifacts and stale source files cannot be released", t => {
   assert.throws(() => validateReleaseBuild(f.root), /Build file changed: main.js/);
   f.seal();
   f.write("src/main.ts", "changed after build");
+  assert.throws(() => validateReleaseBuild(f.root), /Build sources changed/);
+});
+
+test("changing the build compressor invalidates previously built release files", t => {
+  const f = fixture(t);
+  f.write("scripts/lib/build-compression.mjs", "different compression");
   assert.throws(() => validateReleaseBuild(f.root), /Build sources changed/);
 });
 

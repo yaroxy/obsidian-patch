@@ -37,8 +37,8 @@ export class BannerMedia {
     this.stage = element.createDiv({ cls: "obsidian-patch-banner-stage" });
     this.message = this.stage.createDiv({ cls: "obsidian-patch-banner-message" });
     const toolbar = element.createDiv({ cls: "obsidian-patch-banner-toolbar" });
-    this.button(toolbar, "Change cover", actions.select);
-    this.button(toolbar, "Remove cover", actions.remove);
+    this.button(toolbar, "Change cover", () => actions.select());
+    this.button(toolbar, "Remove cover", () => actions.remove());
     this.toggle = this.button(toolbar, "Show media", () => this.toggleMedia());
     const win = element.ownerDocument.defaultView!;
     this.motion = win.matchMedia("(prefers-reduced-motion: reduce)");
@@ -116,8 +116,10 @@ export class BannerMedia {
     }
     if (!this.media && !this.failed) {
       const doc = this.element.ownerDocument;
-      const media = banner.kind === "video" ? doc.createElement("video") : doc.createElement("img");
-      media.className = "obsidian-patch-banner-media";
+      const fragment = doc.createDocumentFragment();
+      const media = banner.kind === "video"
+        ? fragment.createEl("video", { cls: "obsidian-patch-banner-media" })
+        : fragment.createEl("img", { cls: "obsidian-patch-banner-media" });
       this.media = media;
       this.message.textContent = "Loading banner…";
       this.message.hidden = false;

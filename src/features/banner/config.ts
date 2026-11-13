@@ -53,7 +53,7 @@ export function parseBannerConfig(frontmatter: unknown): BannerConfigResult {
   if (typeof value !== "string") {
     return { status: "error", message: "patch-banner must be a quoted wikilink." };
   }
-  const match = /^\[\[([^\[\]#|\r\n]+)\]\]$/.exec(value.trim());
+  const match = /^\[\[([^[\]#|\r\n]+)\]\]$/.exec(value.trim());
   const linkpath = match?.[1]?.trim();
   if (!linkpath || /^(?:[a-z][a-z\d+.-]*:|\/|\\)/i.test(linkpath)) {
     return { status: "error", message: "Use a vault wikilink, such as [[assets/banner.png]]." };

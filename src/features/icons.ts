@@ -72,9 +72,7 @@ export function registerIcons(
 
   const addSheet = (doc: Document): void => {
     if (sheets.has(doc)) return;
-    const sheet = doc.createElement("style");
-    sheet.id = "obsidian-patch-icons";
-    doc.head.appendChild(sheet);
+    const sheet = doc.head.createEl("style", { attr: { id: "obsidian-patch-icons" } });
     sheets.set(doc, sheet);
     render();
   };

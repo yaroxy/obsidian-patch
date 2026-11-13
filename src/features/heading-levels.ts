@@ -11,11 +11,9 @@ class HeadingLevel extends WidgetType {
   constructor(private readonly level: number) { super(); }
   override eq(other: HeadingLevel): boolean { return this.level === other.level; }
   override toDOM(view: EditorView): HTMLElement {
-    const el = view.dom.ownerDocument.createElement("span");
-    el.className = "obsidian-patch-heading-level";
-    el.textContent = `H${this.level}`;
-    el.setAttribute("aria-hidden", "true");
-    return el;
+    return view.dom.ownerDocument.createDocumentFragment().createSpan({
+      cls: "obsidian-patch-heading-level", text: `H${this.level}`, attr: { "aria-hidden": "true" },
+    });
   }
   override ignoreEvent(): boolean { return true; }
 }

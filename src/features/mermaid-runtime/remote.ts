@@ -10,10 +10,8 @@ const LOAD_TIMEOUT_MS = 15_000;
 /** Each layout-elk major line declares a peer dependency on one Mermaid major. */
 const ELK_RANGE_BY_MERMAID_MAJOR: Record<number, string> = { 11: "0.2", 12: "1" };
 
-/** Keep native URL imports: esbuild's CommonJS output otherwise uses require(). */
-const importModule = new Function("url", "return import(url)") as (
-  url: string,
-) => Promise<{ default: unknown }>;
+/** The ES2021 build preserves native URL imports, including in CommonJS output. */
+const importModule = (url: string): Promise<{ default: unknown }> => import(url);
 
 export async function resolveLatestVersion(): Promise<string> {
   const response = await withTimeout(requestUrl(`${PACKAGE_API_URL}/resolved?specifier=latest`));

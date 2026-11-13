@@ -27,7 +27,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     private readonly media: BannerMedia;
     private readonly observer: MutationObserver;
     private readonly boundsObserver: ResizeObserver;
-    private readonly win: Window & typeof globalThis;
+    private readonly win: Window & typeof window;
     private viewport?: HTMLElement;
     private host?: HTMLElement;
     private header?: HTMLElement;
@@ -40,8 +40,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     constructor(private readonly view: MarkdownView) {
       const doc = view.contentEl.ownerDocument;
       this.win = doc.defaultView!;
-      this.element = doc.createElement("div");
-      this.element.className = "obsidian-patch-banner-cover";
+      this.element = doc.createDocumentFragment().createDiv({ cls: "obsidian-patch-banner-cover" });
       const select = (): void => { if (view.file) bannerActions(plugin.app, view.file).select(); };
       this.add = this.element.createEl("button", {
         text: "Add cover", cls: "obsidian-patch-banner-add", attr: { type: "button" },
@@ -57,7 +56,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
           if (this.element.contains(record.target)) return false;
           if (Array.from(record.removedNodes).includes(this.element)) return true;
           return [...Array.from(record.addedNodes), ...Array.from(record.removedNodes)].some(node => {
-            if (!(node instanceof this.win.HTMLElement) || node === this.element) return false;
+            if (!node.instanceOf(this.win.HTMLElement) || node === this.element) return false;
             return node.matches(".cm-sizer, .mod-header, .inline-title, .metadata-container") ||
               node.querySelector(".cm-sizer, .mod-header") !== null;
           });
