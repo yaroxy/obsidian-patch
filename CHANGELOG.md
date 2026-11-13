@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Replace deprecated table text insertion commands with selection-aware plain-text and line-break insertion, retaining the editor's undo/redo history.
+- Bind native PDF instance methods to their export modal and restore the complete temporary open-method descriptor, including when export throws.
+
 - Render explorer icons using static CSS and per-row image masks instead of attaching style elements, while preserving lazy rendering, path changes, window ownership, and unload cleanup.
 - Create detached banner, heading, and table-conversion elements with supported host helpers directly instead of native document fragments.
 

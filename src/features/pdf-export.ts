@@ -25,29 +25,34 @@ export function registerPdfExport(plugin: Plugin, settings: () => PdfExportSetti
   const prepare = (modal: PdfModal): void => {
     if (prepared.has(modal)) return;
     prepared.add(modal);
-    const print = modal.print;
-    const desktop = modal.printToPdfDesktop;
+    const print = modal.print.bind(modal);
+    const desktop = modal.printToPdfDesktop.bind(modal);
     modal.print = async function (...args) {
-      const root = await print.apply(this, args);
-      if (!disposed && settings().headingLinks) addPdfHeadingLinks(root, plugin.app, this.file);
+      const root = await print(...args);
+      if (!disposed && settings().headingLinks) addPdfHeadingLinks(root, plugin.app, modal.file);
       return root;
     };
     modal.printToPdfDesktop = function (options) {
-      if (disposed || !settings().outline) return desktop.call(this, options);
-      return desktop.call(this, { ...options, generateDocumentOutline: true, generateTaggedPDF: true });
+      if (disposed || !settings().outline) return desktop(options);
+      return desktop({ ...options, generateDocumentOutline: true, generateTaggedPDF: true });
     };
   };
   function enhanced(this: ExportView): void {
     if (disposed || (!settings().outline && !settings().headingLinks)) return original!.call(this);
     const file = this.file;
-    const open = Modal.prototype.open;
+    // Restore the complete property descriptor, including the original function
+    // identity. Unsupported host shapes keep the native export path.
+    const descriptor = Object.getOwnPropertyDescriptor(Modal.prototype, "open");
+    const value: unknown = descriptor?.value;
+    if (!descriptor || typeof value !== "function" || !descriptor.writable) return original!.call(this);
+    const open = value as Modal["open"];
     // The native constructor opens synchronously. Restore the shared method before returning.
     Modal.prototype.open = function () {
       const modal = this as Partial<PdfModal>;
       if (modal.file === file && typeof modal.print === "function" && typeof modal.printToPdfDesktop === "function") prepare(this as PdfModal);
       return open.call(this);
     };
-    try { original!.call(this); } finally { Modal.prototype.open = open; }
+    try { original!.call(this); } finally { Object.defineProperty(Modal.prototype, "open", descriptor); }
   }
   prototype.printToPdf = enhanced;
   plugin.register(() => {

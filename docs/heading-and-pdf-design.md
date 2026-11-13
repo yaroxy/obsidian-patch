@@ -23,7 +23,7 @@ H1～H6 标签固定在标题区域最右侧；标题正文预留 2.75rem，换�
 
 ### 宿主方法的适配
 
-`src/features/pdf-export.ts` 集中处理未公开的 `MarkdownView.printToPdf()`、导出弹窗的 `print()` 与 `printToPdfDesktop()`。捕获弹窗只在同步调用原生入口期间临时包装 `Modal.open()`，并在 finally 中恢复；没有修改 IPC 或全局 Electron 导出方法。
+`src/features/pdf-export.ts` 集中处理未公开的 `MarkdownView.printToPdf()`、导出弹窗的 `print()` 与 `printToPdfDesktop()`。弹窗的 `print()` 与 `printToPdfDesktop()` 绑定到对应实例，避免方法脱离对象后丢失接收者。捕获弹窗只在同步调用原生入口期间临时包装 `Modal.open()`，其调用仍使用当前弹窗作为接收者；通过属性描述符保存原函数及属性标志，并在 finally 中完整恢复，包括原生导出抛错的情况。宿主 `open` 不是可写的自有函数属性时退回原生导出。没有修改 IPC 或全局 Electron 导出方法。
 
 大纲使用 `generateDocumentOutline` 和 `generateTaggedPDF`；前者在 [Electron 文档](https://www.electronjs.org/docs/latest/api/web-contents#contentsprinttopdfoptions)中仍标为实验性参数。打印参数的其余字段原样传递。功能仅在桌面端注册；宿主入口不存在时保留原生行为。卸载时恢复自己持有的入口；已经打开的弹窗通过 disposed 标志回到原生行为，避免重载后叠加包装。
 

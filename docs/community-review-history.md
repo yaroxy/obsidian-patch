@@ -46,7 +46,7 @@ Source: the maintainer's automated report for [release 0.3.1](https://github.com
 
 The large-file warning and vault-enumeration recommendation remain accepted. `main.js` and `styles.css` attestations, vault reads, and the dependency scan explicitly passed. No new manifest error was included.
 
-The follow-up changes are local candidates until committed, reviewed, and released under a new version. Neither 0.3.0 nor 0.3.1 assets or tags should be replaced. Record the new report here after scanning; do not infer approval from a successful build or an absent section.
+At the time of the 0.3.1 report, the follow-up changes were local candidates awaiting commit, review, and a new release. Neither 0.3.0 nor 0.3.1 assets or tags should be replaced. Record the new report here after scanning; do not infer approval from a successful build or an absent section.
 
 ## Local follow-up checks — not a directory review
 
@@ -60,7 +60,32 @@ The official `eslint-plugin-obsidianmd` recommended configuration was run agains
 | `prefer-active-doc` | 6 warnings | Additional local findings in `active-line.ts:11,17`, `callout-code.ts:11,17`, and `patch-mermaid.ts:207,208`. Broader popout behavior is follow-up work; these were not included in the supplied 0.3.1 report. |
 | Table `execCommand` deprecation | 3 warnings | Existing editing/undo behavior is retained. |
 
-Local reports and the exact lint configuration are under ignored `dist/validation/community-review-followup/`. Source isolation and local lint results still need confirmation by a preview scan of the actual Community commit.
+Local reports and the exact lint configuration are under ignored `dist/validation/community-review-followup/`. At the time of these local checks, source isolation still awaited a service preview; its subsequent result is recorded below.
+
+## Community preview — completed without reported errors, 2026-11-13
+
+Source: the maintainer's completed **Review branch** screenshot and accompanying report. The exact ref and commit are `fc5c2f556dcfefab9aefd96ab5c0ff5b0af4a505` on Community `main`. The screenshot labels this run **Preview**, with status **Completed**; the supplied report contains no Error findings.
+
+| Result | Reported scope | Disposition |
+| --- | --- | --- |
+| No reported source errors | The dynamic `style` element and variable remote import errors are absent. The four detached-DOM helper warnings are also absent. | The source changes are supported by this service preview, not only local tests. |
+| **Warning:** unbound methods | `src/features/pdf-export.ts:28,29,43` | Retain the explicit `.call`/`.apply` receivers in the native PDF adapter; no behavior change solely to silence this warning. |
+| **Recommendation:** deprecated `execCommand` | `src/features/table/editor.ts:374,385,386` | Retain the existing table editing and undo behavior pending a separately tested replacement. |
+| **Pass:** dependency scan | No vulnerable dependencies found. | Confirmed for this preview's reviewed inputs. |
+
+The additional six `prefer-active-doc` warnings found by local ESLint were not included in this service report; their absence does not establish that the underlying popout concerns were fixed. Local lint severity and service severity remain distinct.
+
+This result applies to the Community commit above, not to `codex/full` or the previously published 0.3.1 assets. The supplied preview report contains no release-asset or build-verification results, so it does not establish acceptance of future 0.3.2 assets, their attestations, reproducibility, or public directory availability. Next, prepare a new version and publish the Community package through the release workflow, then record its release review here. Keep the published 0.3.1 tag and assets unchanged.
+
+## Remaining warning fixes — local verification, 2026-11-13
+
+After the Community preview, the maintainer requested fixes for both remaining source findings. The PDF adapter now binds `print` and `printToPdfDesktop` to their modal. The shared `Modal.open` hook retains its dynamic receiver and saves/restores the complete property descriptor, preserving original function identity and flags even when native export throws; an unsupported non-writable host method stays on the native path. No receiver-dependent method is marked `this: void` and no lint rule is suppressed.
+
+The table editor no longer calls `execCommand`. `Selection`/`Range` insertion accepts only a selection within one editable cell or caption, inserts plain text and `<br>` nodes, normalizes line endings, and retains a trailing caret placeholder when needed. It updates the existing table model/history directly; cancellable `beforeinput` undo/redo requests use the same history. The existing native test harness still uses `execCommand` to simulate ordinary typing; production code does not.
+
+Official local recommended lint now reports zero errors and only the six previously recorded `prefer-active-doc` warnings. The PDF unbound-method and table deprecation findings are absent. Community passed 127 unit tests and Full passed 132, with both production builds and package checks passing. On Community, native Table passed 30 checks, Markdown conversion 16, Navigation 16, and all six actual PDF checks passed. Details and limitations are in [Integration testing](integration-testing.md).
+
+These changes have been synchronized to both working trees but have not received a new service preview. The earlier preview of `fc5c2f5` does not cover this later implementation. Recheck the next committed Community revision with **Review branch** before publishing. Local results are retained under ignored `dist/validation/remaining-warnings/`.
 
 ## Before the next review
 

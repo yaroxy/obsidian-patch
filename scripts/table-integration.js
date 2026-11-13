@@ -94,6 +94,66 @@
     assert(file().stat.mtime === mtime && (await app.vault.read(file())) === original, "Untouched table was rewritten");
     checks.push("an untouched table is not written");
 
+    // Exercise production paste/Enter handlers, not the browser's execCommand.
+    const select = (el, start, end = start) => {
+      el.focus();
+      const range = doc.createRange();
+      if (start === undefined) { range.selectNodeContents(el); range.collapse(false); }
+      else { range.setStart(el.firstChild, start); range.setEnd(el.firstChild, end); }
+      doc.getSelection().removeAllRanges(); doc.getSelection().addRange(range);
+    };
+    const paste = (el, text) => {
+      const data = new win.DataTransfer();
+      data.setData("text/plain", text); data.setData("text/html", '<img src=x onerror="throw 1">');
+      el.dispatchEvent(new win.ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: data }));
+    };
+    await openFromReading();
+    let editingCell = cell("si");
+    select(editingCell, 1, 2);
+    paste(editingCell, "A\r\nB\rC");
+    assert(editingCell.innerHTML === "sA<br>B<br>C", `Multiline paste changed markup: ${editingCell.innerHTML}`);
+    paste(editingCell, "<literal>&");
+    assert(editingCell.innerHTML === "sA<br>B<br>C&lt;literal&gt;&amp;" && !editingCell.querySelector("img"), "Paste was not plain text at the new caret");
+    checks.push("plain-text paste replaces a selection, normalizes CRLF/CR, and preserves the caret without inserting clipboard HTML");
+    select(editingCell);
+    key(editingCell, { key: "Enter" });
+    assert(editingCell.innerHTML.endsWith("<br><br>"), "A final Enter lacks its caret placeholder");
+    paste(editingCell, "终");
+    assert(editingCell.innerHTML.endsWith("<br>终<br>"), "Text after Enter was inserted on the wrong line");
+    const composedHtml = editingCell.innerHTML;
+    const compositionEnter = new win.KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true, cancelable: true });
+    editingCell.dispatchEvent(compositionEnter);
+    assert(!compositionEnter.defaultPrevented && editingCell.innerHTML === composedHtml, "IME Enter was intercepted");
+    checks.push("Enter creates a usable final line and composition Enter remains untouched");
+    key(win, { key: "z", ...mod });
+    assert(cell("si"), "Undo did not restore the original cell after Range edits");
+    key(win, { key: "z", shiftKey: true, ...mod });
+    editingCell = cell("sABC<literal>&终");
+    assert(editingCell, "Redo did not restore Range edits");
+    const history = type => editingCell.dispatchEvent(new win.InputEvent("beforeinput", { inputType: type, bubbles: true, cancelable: true }));
+    history("historyUndo");
+    assert(cell("si"), "Native history request bypassed the table history");
+    editingCell = cell("si"); history("historyRedo");
+    assert(cell("sABC<literal>&终"), "Native redo request failed");
+    checks.push("keyboard and beforeinput undo/redo preserve the table model after paste and Enter");
+    const caption = grid().querySelector("caption");
+    select(caption, 0, caption.firstChild.length);
+    paste(caption, "Release\nnotes");
+    assert(caption.innerHTML === "Release<br>notes", "Caption paste did not update safely");
+    const cross = doc.createRange();
+    const first = cell("shi"), last = cell("su");
+    first.focus(); cross.setStart(first.firstChild, 0); cross.setEnd(last.firstChild, 1);
+    doc.getSelection().removeAllRanges(); doc.getSelection().addRange(cross);
+    const beforeCross = grid().innerHTML;
+    paste(first, "must not replace multiple cells");
+    assert(grid().innerHTML === beforeCross, "A cross-cell selection damaged the table");
+    checks.push("caption paste works and cross-cell selections cannot delete table structure");
+    button("Save").click();
+    await until(async () => (await app.vault.read(file())) === original.replace(">si<", ">sA<br>B<br>C&lt;literal&gt;&amp;<br>终<").replace(">五十音<", ">Release<br>notes<"),
+      "Range edits save exactly once without caret placeholder breaks");
+    await app.vault.modify(file(), original);
+    await until(() => [...leaf.view.previewMode.containerEl.querySelectorAll("td")].some(el => el.textContent === "si"), "original table restored after text-input checks");
+
     await openFromReading();
     type(cell("す ス"), "す ス!");
     button("Save").click();
