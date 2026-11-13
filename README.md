@@ -4,7 +4,7 @@
 
 Focused fixes and enhancements for Obsidian
 
-[![Obsidian](https://img.shields.io/badge/Obsidian-1.13.7%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **[Install](#installation) · [Features](#features) · [Development](#development) · [Changelog](CHANGELOG.md)**
 
@@ -30,7 +30,7 @@ Configure the plugin under **Settings → Obsidian Patch**.
 
 ## Installation
 
-Requires Obsidian **1.13.7 or later**. Build with Node.js **22 or later**:
+Requires Obsidian **1.15.0 or later**. Build with Node.js **22 or later**:
 
 ```bash
 npm install

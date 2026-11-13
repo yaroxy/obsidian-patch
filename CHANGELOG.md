@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-13
+
+### Fixed
+
+- Aligned the plugin manifest, npm package, lockfile, and compatibility map with the release version. The 0.2.0 release shipped a manifest that still reported 0.1.0.
+
+### Changed
+
+- Set the minimum Obsidian version to the tested baseline, 1.15.0.
+
+## [0.2.0] - 2026-11-13
+
 ### Added
 
 - Markdown-to-HTML table conversion from the cursor or a selection of complete tables, available through a command and the editor context menu. Tables open as editable previews with batch navigation; confirmation writes the whole batch in one isolated undo step. Alignment, inline formatting and links survive, and stale notes or unsupported content cannot cause a partial conversion.
