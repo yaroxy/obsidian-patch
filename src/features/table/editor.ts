@@ -1,5 +1,6 @@
 import { Menu, Modal, Scope, sanitizeHTMLToDom, setIcon, type App, type IconName } from "obsidian";
 import { makeResizable } from "../../ui/resizable-modal";
+import { insertPlainText } from "./text-input";
 import {
   CAPTION_STYLE, deleteColumns, deleteRows, expand, headRows, inside, insertColumn, insertRow, layout, merge,
   setAlign, setCaption, setHeader, split, toHtml, type Align, type Attrs, type Cell, type Layout, type Rect, type Table,
@@ -319,6 +320,19 @@ export class TableEditor extends Modal {
     this.host.removeClass("is-selecting");
   };
 
+  private recordInput(el: HTMLElement): void {
+    if (el.tagName === "CAPTION") {
+      if (this.typing !== "caption") { this.remember(); this.typing = "caption"; }
+      this.table = setCaption(this.table, clean(el));
+      return;
+    }
+    const at = this.cells.get(el);
+    if (!at) return;
+    if (this.typing !== at.cell) { this.remember(); this.typing = at.cell; }
+    at.cell.html = clean(el);
+    this.highlight();
+  }
+
   private listen(): void {
     const host = this.host;
     host.addEventListener("mousedown", (evt) => {
@@ -354,24 +368,21 @@ export class TableEditor extends Modal {
       this.menu([ROW_ACTIONS, COLUMN_ACTIONS, CELL_ACTIONS, ALIGN_ACTIONS]).showAtMouseEvent(evt);
     });
     host.addEventListener("input", (evt) => {
-      const el = evt.target as HTMLElement;
-      if (el.tagName === "CAPTION") {
-        if (this.typing !== "caption") { this.remember(); this.typing = "caption"; }
-        this.table = setCaption(this.table, clean(el));
-        return;
-      }
-      const at = this.cells.get(el);
-      if (!at) return;
-      if (this.typing !== at.cell) { this.remember(); this.typing = at.cell; }
-      at.cell.html = clean(el);
-      this.highlight();
+      this.recordInput(evt.target as HTMLElement);
+    });
+    host.addEventListener("beforeinput", (evt) => {
+      if (evt.inputType !== "historyUndo" && evt.inputType !== "historyRedo") return;
+      if (!evt.cancelable) return;
+      evt.preventDefault();
+      if (evt.inputType === "historyUndo") this.step(this.undoStack, this.redoStack);
+      else this.step(this.redoStack, this.undoStack);
     });
     host.addEventListener("keydown", (evt) => {
       if (evt.isComposing || evt.key === "Process") return;
       const el = evt.target as HTMLElement;
       if (evt.key === "Enter" && !evt.metaKey && !evt.ctrlKey) {
         evt.preventDefault();
-        if (this.cells.has(el)) el.ownerDocument.execCommand("insertLineBreak");
+        if (this.cells.has(el) && insertPlainText(el, "\n")) this.recordInput(el);
       } else if (evt.key === "Tab" && this.cells.has(el)) {
         evt.preventDefault();
         this.move(el, evt.shiftKey ? -1 : 1);
@@ -380,11 +391,9 @@ export class TableEditor extends Modal {
     // Keep cells to text and line breaks rather than whatever markup was copied.
     host.addEventListener("paste", (evt) => {
       evt.preventDefault();
-      const doc = host.ownerDocument;
-      (evt.clipboardData?.getData("text/plain") ?? "").split(/\r?\n/).forEach((line, index) => {
-        if (index > 0) doc.execCommand("insertLineBreak");
-        doc.execCommand("insertText", false, line);
-      });
+      const el = evt.target as HTMLElement;
+      if (!this.cells.has(el) && el.tagName !== "CAPTION") return;
+      if (insertPlainText(el, evt.clipboardData?.getData("text/plain") ?? "")) this.recordInput(el);
     });
   }
 }

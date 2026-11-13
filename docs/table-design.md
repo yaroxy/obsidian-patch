@@ -46,7 +46,7 @@ src/features/
 ## 决策
 
 - **自建模型，不用 Tiptap/ProseMirror。** ProseMirror 按 schema 解析，单元格中 schema 之外的行内 HTML（如 `<small>`、`<ruby>`）会丢失；而本功能要求未改动的内容原样保留，并输出固定格式。网格布局遵循 HTML 表格算法。插入和删除行列沿用 prosemirror-tables 的行为：跨过插入点的单元格延长，新单元格为 1×1，且只有两侧都是表头时才是表头。
-- **单元格直接 `contenteditable`。** 回车插入 `<br>`；粘贴只取纯文本；输入法组合期间不拦截 Enter 和 Escape。
+- **单元格直接 `contenteditable`。** 回车和纯文本粘贴通过 `Selection` / `Range` 插入文本节点与 `<br>`，仅接受同一个单元格或表名内的选区，跨单元格选区不改动 DOM。末尾换行保留光标占位 `<br>`，写回时由 `clean()` 去除。CRLF、CR 和 LF 统一处理，粘贴不插入剪贴板 HTML；输入法组合期间不拦截 Enter 和 Escape。输入后直接同步模型，并沿用编辑器自己的撤销栈；可取消的 `beforeinput` 历史请求也路由到同一撤销/重做实现，不再调用 `execCommand`。
 - **写回前核对源码。** 表格源码与打开时不一致时只提示重新打开，不覆盖并发修改。阅读视图按 section 行号经 `vault.process` 写回；Live Preview 用 CodeMirror 事务；命令用 `Editor.replaceRange`。
 - **按键。** 弹窗使用以原 scope 为父级的子 `Scope`。单元格内 Escape 只退出单元格，单元格外 Escape 关闭并放弃修改；Mod+Enter 保存；Mod+Z 与 Mod+Shift+Z 撤销和重做，结构操作与每个单元格的一次输入各为一步。
 - **菜单**使用 Obsidian 的 `Menu`，遵循用户的原生菜单设置。

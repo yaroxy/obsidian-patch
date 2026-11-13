@@ -51,6 +51,16 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## Remaining warning fixes — unreleased, 2026-11-13
+
+The working trees based on Community `fc5c2f5` and Full `5d4f0c0` replace deprecated table text insertion and make PDF host-method receivers/restoration explicit. Community passed 127 unit tests and Full passed 132; both production builds and release-file checks passed. Three new PDF adapter unit cases cover bound instance receivers, exact shared-descriptor restoration after an exception, and a non-writable host-method fallback.
+
+On macOS / Obsidian 1.15.1, the Community native suites passed Table 30, Markdown conversion 16, and Navigation 16, plus six PDF verifications. Table coverage now includes partial-selection replacement, CRLF/CR normalization, literal HTML text, continued insertion at the resulting caret, final-line placeholders, composition Enter pass-through, keyboard and cancellable beforeinput history requests, caption paste, cross-cell selection refusal, and exact saved HTML without placeholder breaks. Existing merge, untouched-markup, Live Preview, and batch-undo checks remain covered. All settings/tab/throttling restoration checks passed; the final captured error log was empty and no test/modal remained active. The development vault retains the Community candidate; the personal vault was not modified.
+
+Official recommended lint in the isolated TypeScript 6 toolchain reports zero errors and six existing `prefer-active-doc` warnings across 39 source files. Neither of the two targeted warning types remains. Evidence is under ignored `dist/validation/remaining-warnings/`. These are local results, not a new Community preview result.
+
+The composition test synthesizes the browser's composing-key event; actual OS input-method candidate selection was not automated. Mobile, other desktop platforms/themes, table editing in popouts, non-cancellable native history events, unrelated features, and Full native UI were not rerun. Full contains identical shared implementations and passed its own unit/build/package checks. PDF verification retains the existing explicitly paginated two-page fixture.
+
 ## Review follow-up verification — unreleased, 2026-11-13
 
 These checks cover the uncommitted Community and Full working trees based on `f85579534c9b8d3c6c585d03b17686db86d7c46f`, after source separation and the icon/DOM fixes. Their manifests still report 0.3.1; these modified packages are not the published 0.3.1 assets and need a new version before release. Community passed 124 unit tests and Full passed 129; both production builds, installation-file checks, and diff whitespace checks passed.
@@ -61,7 +71,7 @@ The new Icons runner verifies actual Lucide and cached Simple Icons masks, enabl
 
 The two known upstream Mermaid icon-reference limitations remain. Banner playback was explicitly skipped. Other platforms/themes, live Simple Icons downloads, the native icon-picker menu, natural PDF overflow, and unrelated feature suites were not rerun. These are targeted regression results, not complete platform or feature coverage.
 
-The full official ESLint recommended configuration was also run in isolated compatible tooling against 38 Community source files. The targeted DOM/style findings are absent, but the complete result still has three PDF method-capture errors and nine warnings. [Community review history](community-review-history.md#local-follow-up-checks--not-a-directory-review) records their exact scope and the distinction from service results. Local evidence, screenshots, lint configuration and artifact hashes are under ignored `dist/validation/community-review-followup/`; no Community preview scan has run against this candidate.
+The full official ESLint recommended configuration was also run in isolated compatible tooling against 38 Community source files. The targeted DOM/style findings are absent, but the complete result still has three PDF method-capture errors and nine warnings. [Community review history](community-review-history.md#local-follow-up-checks--not-a-directory-review) records their exact scope and the distinction from service results. Local evidence, screenshots, lint configuration and artifact hashes are under ignored `dist/validation/community-review-followup/`; the subsequent Community preview of `fc5c2f556dcfefab9aefd96ab5c0ff5b0af4a505` completed without reported errors, as recorded in the review history. That preview does not validate a new release's assets.
 
 ## Historical verified scope — 0.3.1, 2026-11-13
 
