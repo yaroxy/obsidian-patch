@@ -35,7 +35,7 @@
 .patches-actions { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; font-size: 14px; }
 .patches-primary { display: inline-flex; gap: 25px; border-radius: 8px; padding: 12px 19px; color: white; background: #6847c6; font-weight: 600; }
 .patches-primary:hover { background: #5836b6; }
-.patches-secondary { font-weight: 550; text-decoration: underline; text-underline-offset: 5px; text-decoration-color: var(--vp-c-divider); }
+.patches-secondary { font-weight: 550; border-bottom: 1px solid var(--vp-c-divider); padding-bottom: 2px; }
 .patches-requirement { color: var(--vp-c-text-2); font-size: 12px; margin: 20px 0 0; }
 .patches-requirement span { margin: 0 7px; }
 .patches-demo { margin: 0; border: 1px solid var(--vp-c-divider); border-radius: 13px; overflow: hidden; background: var(--vp-c-bg); box-shadow: 0 15px 45px #302b4510; }
@@ -74,7 +74,7 @@
 .patches-code > div { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1px; color: var(--vp-c-text-2); }
 .patches-code pre { font-size: 15px; line-height: 1.8; margin: 16px 0; }
 .patches-code code > span { color: var(--vp-c-brand-1); }
-.patches-code p { border-top: 1px solid var(--vp-c-divider); padding-top: 12px; font-size: 11px !important; margin-bottom: 0 !important; }
+.patches-start .patches-code p { border-top: 1px solid var(--vp-c-divider); padding-top: 12px; font-size: 11px; margin-bottom: 0; }
 .patches-home a:focus-visible, .patches-home button:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 5px; }
 @media (max-width: 960px) {
   .patches-home { padding: 45px 32px 64px; }

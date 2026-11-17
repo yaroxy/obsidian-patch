@@ -8,19 +8,19 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 [![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**[Install](#installation) · [User guide](site/getting-started.md) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/yaroxy/obsidian-patch/issues)**
+**[Install](#installation) · [Website](https://yaroxy.github.io/obsidian-patch/) · [User guide](https://yaroxy.github.io/obsidian-patch/getting-started.html) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/yaroxy/obsidian-patch/issues)**
 
 </div>
 
 ![A Kyoto travel note combining an autumn banner, a merged itinerary table, and a callout with tinted code backgrounds and syntax highlighting](docs/images/home-overview.png)
 
-One note, a few improvements: a [vault-image banner](site/features/banner.md), a [grouped itinerary](site/features/tables.md), and [code that fits its callout](site/features/callouts.md).
+One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
 ## In the next release
 
-- **[Icon colors](site/features/icons.md):** choose an icon and its color together, with brand colors, eight presets, and custom colors.
-- **[Exact line width](site/features/line-width.md):** type a global width in pixels and keep it synchronized with the slider.
-- **[Callout code backgrounds](site/features/callouts.md#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
+- **[Icon colors](https://yaroxy.github.io/obsidian-patch/features/icons.html):** choose an icon and its color together, with brand colors, eight presets, and custom colors.
+- **[Exact line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html):** type a global width in pixels and keep it synchronized with the slider.
+- **[Callout code backgrounds](https://yaroxy.github.io/obsidian-patch/features/callouts.html#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
 
 These changes are implemented in the development build and are being prepared for release. The current public version is **0.3.2**; see [Unreleased](CHANGELOG.md#unreleased) for the complete changes and the linked guides for recorded demos.
 
@@ -30,16 +30,16 @@ Configure Patches under **Settings → Patches**. Each guide includes examples, 
 
 | Feature | What it adds |
 | --- | --- |
-| [HTML tables](site/features/tables.md) | Visual editing, merged cells, grouped headers, captions, and Markdown conversion. |
-| [Callouts](site/features/callouts.md) | Editing, preview, conversion, GitHub compatibility, and matching code backgrounds. |
-| [Math formatting](site/features/math-format.md) | Indentation and alignment for display math, preserving formulas. |
-| [Banners](site/features/banner.md) | Vault images, animations, and videos as note covers. |
-| [File and folder icons](site/features/icons.md) | Lucide icons and Simple Icons brand marks, with colors you choose. |
-| [Line width](site/features/line-width.md) | Exact global width and per-note overrides for readable columns. |
-| [Active line](site/features/active-line.md) | A margin marker and highlighted line number for the cursor’s line. |
-| [Heading levels](site/features/heading-levels.md) | H1–H6 labels beside headings in reading and editing views. |
-| [Mermaid diagrams](site/features/mermaid.md) | Newer diagram types and syntax that follow Obsidian’s theme. |
-| [PDF navigation](site/features/pdf-export.md) | Heading bookmarks and same-note heading links in desktop PDF exports. |
+| [HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html) | Visual editing, merged cells, grouped headers, captions, and Markdown conversion. |
+| [Callouts](https://yaroxy.github.io/obsidian-patch/features/callouts.html) | Editing, preview, conversion, GitHub compatibility, and matching code backgrounds. |
+| [Math formatting](https://yaroxy.github.io/obsidian-patch/features/math-format.html) | Indentation and alignment for display math, preserving formulas. |
+| [Banners](https://yaroxy.github.io/obsidian-patch/features/banner.html) | Vault images, animations, and videos as note covers. |
+| [File and folder icons](https://yaroxy.github.io/obsidian-patch/features/icons.html) | Lucide icons and Simple Icons brand marks, with colors you choose. |
+| [Line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html) | Exact global width and per-note overrides for readable columns. |
+| [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) | A margin marker and highlighted line number for the cursor’s line. |
+| [Heading levels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) | H1–H6 labels beside headings in reading and editing views. |
+| [Mermaid diagrams](https://yaroxy.github.io/obsidian-patch/features/mermaid.html) | Newer diagram types and syntax that follow Obsidian’s theme. |
+| [PDF navigation](https://yaroxy.github.io/obsidian-patch/features/pdf-export.html) | Heading bookmarks and same-note heading links in desktop PDF exports. |
 
 ## Installation
 
@@ -63,17 +63,17 @@ patch-line-width: 1100
 ---
 ```
 
-Other notes keep their global width. See [note properties](site/reference/properties.md), [commands](site/reference/commands.md), and [views and platforms](site/reference/compatibility.md) for more examples and scope.
+Other notes keep their global width. See [note properties](https://yaroxy.github.io/obsidian-patch/reference/properties.html), [commands](https://yaroxy.github.io/obsidian-patch/reference/commands.html), and [views and platforms](https://yaroxy.github.io/obsidian-patch/reference/compatibility.html) for more examples and scope.
 
 ## Network and privacy
 
 The Community build runs its bundled Mermaid code locally. The icon picker may contact **jsDelivr** to resolve and download Simple Icons graphic data and matching brand-color JSON. Already-used graphics and available brand colors are cached locally. Missing cached graphics can trigger a download. Icon search text, note contents, and vault file names are not sent in these requests.
 
-The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](site/privacy.md) for details.
+The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 
 ## Help
 
-Start with [troubleshooting](site/troubleshooting.md). When [reporting a bug](https://github.com/yaroxy/obsidian-patch/issues), include Obsidian/Patches versions, OS, theme, view mode, reproduction steps, and a small example or recording.
+Start with [troubleshooting](https://yaroxy.github.io/obsidian-patch/troubleshooting.html). When [reporting a bug](https://github.com/yaroxy/obsidian-patch/issues), include Obsidian/Patches versions, OS, theme, view mode, reproduction steps, and a small example or recording.
 
 ## Development
 

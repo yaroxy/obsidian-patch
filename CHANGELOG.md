@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Use a border for the documentation homepage's secondary-link decoration and selector specificity for its code-card text, addressing the Directory preview's documentation CSS warnings.
 - Preserve each file's existing color when changing icons for a selection with mixed colors; **Keep colors** restores that choice before applying.
 - Let Enter activate the focused icon-picker buttons while retaining icon selection from the search field.
 - Keep the icon picker centered with at least 24 px above and below it, scroll the results within the available height, and keep color controls and Apply/Cancel visible when the interface is zoomed.

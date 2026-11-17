@@ -99,6 +99,12 @@ The Community candidate based on `9cf765e2b04381a3cc68e331b664e36964e58346` adds
 
 The Community source still excludes the Full remote Mermaid loader. Simple Icons uses the host network API to retrieve graphic and color JSON, with jsDelivr use and caching disclosed in the README. This is local verification, not a new Directory approval: no service preview report has been received for this candidate. Version metadata remains 0.3.2 and the changes remain under Unreleased; request **Review branch** for the pushed candidate's exact commit before preparing a new version/tag. The documentation workflow only builds a review artifact and does not deploy Pages.
 
+## Community preview — documentation CSS findings, 2026-11-17
+
+The maintainer supplied a completed preview screenshot for `10f4291107f6989c08e73f7145cc434be83d9ff6`. The visible results report two CSS warnings in `site/.vitepress/theme/style.css`: partial `text-decoration` support against the scanner's Obsidian 1.11.4 baseline at line 38, and two `!important` declarations at line 77. The dependency scan passed. This screenshot does not establish the results of other review sections or release-asset checks.
+
+Both reported rules belong to the documentation website, not the plugin stylesheet. The follow-up replaces the secondary link's decorative underline with a bottom border and gives the code-card paragraph a more specific selector, retaining its intended 11 px text and zero bottom margin without `!important`. The reported declarations are removed from the source rather than hidden from scanning. Recheck the pushed follow-up with **Review branch** to confirm service-side resolution; no new preview result is implied by the local CSS and website checks.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.
