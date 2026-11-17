@@ -53,6 +53,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.4.0 release preparation — 2026-11-17
+
+After the maintainer confirmed the Community preview for `3f62957d52dc96103dc3f5855cfede9f780e01eb` passed, version metadata and the compatibility map were updated to 0.4.0 / Obsidian 1.15.0. Fresh Community verification passed 132 unit tests, the production build, tag-specific package validation, and documentation build/link checks. The implementation and plugin stylesheet are unchanged from the reviewed commit; rebuilt `main.js` and `styles.css` hashes exactly match the previously native-tested candidate below. Native suites were not repeated for this metadata-only release preparation, and their recorded platform/feature limits still apply.
+
+Full was synchronized in an isolated checkout with identical shared feature files, while preserving its separate remote Mermaid runtime and build rules. It passed a fresh dependency installation, 137 unit tests, the Full production build, and 0.4.0 package validation. Full native UI and remote-runtime checks were not rerun. Official release artifacts are Community only; successful local checks do not establish release-asset acceptance by the Community Directory.
+
 ## Next-release candidate — 2026-11-17
 
 Before committing the Community candidate based on `9cf765e2b04381a3cc68e331b664e36964e58346`, a fresh run passed 132 unit tests, the production build, release-package validation, documentation build, 21 generated pages / 810 local links and assets plus README links, and whitespace checks. The plugin's three installation files match the already-tested and deployed build byte-for-byte: `main.js` SHA-256 `da28a18488765d8712375bb76d66dcbe7adf7d30b40dd0aa23c56eb2f13985b5`, `manifest.json` `f8affdbe921c8930cddd8659cc932403ae7a3ea40870c1878297bbed3651ad27`, and `styles.css` `f14d16a0f8c0ee0d7828bdb493e0e4e144adebf435957e13db03265a923bed05`. The manifest still reports 0.3.2; these are unreleased development assets, not replacements for published 0.3.2 attachments.

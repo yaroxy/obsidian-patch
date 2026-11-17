@@ -105,6 +105,12 @@ The maintainer supplied a completed preview screenshot for `10f4291107f6989c08e7
 
 Both reported rules belong to the documentation website, not the plugin stylesheet. The follow-up replaces the secondary link's decorative underline with a bottom border and gives the code-card paragraph a more specific selector, retaining its intended 11 px text and zero bottom margin without `!important`. The reported declarations are removed from the source rather than hidden from scanning. Recheck the pushed follow-up with **Review branch** to confirm service-side resolution; no new preview result is implied by the local CSS and website checks.
 
+## Community preview — maintainer-confirmed pass, 2026-11-17
+
+The maintainer confirmed that the preview for `3f62957d52dc96103dc3f5855cfede9f780e01eb` passed. The supplied screenshot shows Completed, a passing dependency scan, and no remaining CSS findings. This resolves the two documentation CSS warnings reported for `10f4291` in the previous screenshot. The confirmation applies to this source preview; no 0.4.0 release-asset or build-verification report has been supplied.
+
+Prepare 0.4.0 from this reviewed implementation, with version metadata, changelog, and release documentation updated. The plugin implementation stays unchanged. Official assets will be built and attested by the existing tag-bound release workflow; record that workflow's verification separately from any subsequent Community Directory release review.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

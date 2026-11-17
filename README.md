@@ -22,7 +22,7 @@ One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/ob
 - **[Exact line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html):** type a global width in pixels and keep it synchronized with the slider.
 - **[Callout code backgrounds](https://yaroxy.github.io/obsidian-patch/features/callouts.html#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
 
-These changes are implemented in the development build and are being prepared for release. The current public version is **0.3.2**; see [Unreleased](CHANGELOG.md#unreleased) for the complete changes and the linked guides for recorded demos.
+These changes are implemented in the development build and are being prepared for release. The current public version is **0.3.2**; see [the changelog](CHANGELOG.md) for the complete changes and the linked guides for recorded demos.
 
 ## Features
 
