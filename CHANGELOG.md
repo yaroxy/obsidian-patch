@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Add a locally previewable documentation website with feature guides, examples, reference pages, troubleshooting, and local search.
+- Automatically build, check, and deploy the documentation to GitHub Pages on pushes to `main`; pull requests retain build-only review previews.
 - Set an exact global Line Width with a numeric input alongside the slider; both line-width sliders now adjust in 1 px steps.
 - Choose explorer icons and colors together in **Change icon**, with a preview, Apply/Cancel, text color, eight theme-aware presets, custom colors, and cached Simple Icons brand colors. Batch color changes preserve different existing icons, and settings explain the two icon sources.
 
