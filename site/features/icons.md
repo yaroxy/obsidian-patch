@@ -1,7 +1,7 @@
 # File & folder icons
 
 ::: info Version availability
-Color controls are implemented for the next release. Public version 0.3.2 supports icon selection without color controls.
+Color controls are available in **0.4.0 and later**. Earlier versions support icon selection without color controls.
 :::
 
 Right-click files or folders in the explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon or [Simple Icons](https://simpleicons.org/) brand logo. Preview the icon and color together, then choose **Apply**. Colors include **Follow text**, **Brand color** when available, eight theme-aware presets, and a custom color. Existing icons keep their appearance; new brand selections use their brand color when available. **Cancel** discards the selection. **Remove icon** clears the icon and its color; both actions support multiple selections. For a selection with different icons, choosing only a color keeps each existing icon.

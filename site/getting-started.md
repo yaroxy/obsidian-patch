@@ -13,8 +13,8 @@ Requires **Obsidian 1.15.0 or later**.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: info Preparing the next release
-These guides cover the implemented icon color controls, exact global width input, and callout code-block tinting. The current public version is **0.3.2**; version notes identify the additions that will ship next. See the [changelog](changelog.md) for the complete changes.
+::: tip New in 0.4.0
+Version **0.4.0** adds icon color controls, exact global width input, and callout code-block tinting. See the [changelog](changelog.md) for the complete changes.
 :::
 
 ## Try one improvement

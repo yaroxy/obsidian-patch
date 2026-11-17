@@ -7,7 +7,7 @@
 3. Check for a `patch-line-width` property on the note. A valid note property takes precedence over the global setting.
 4. Make the pane wide enough to show a difference; a narrow window still limits the visible column.
 
-In the numeric field, use a whole number from **500 to 2000**, then press Enter or leave the field. Empty, fractional, and out-of-range entries are not saved. The numeric field is new in the next release; see the [Line Width guide](features/line-width.md).
+In the numeric field, use a whole number from **500 to 2000**, then press Enter or leave the field. Empty, fractional, and out-of-range entries are not saved. The numeric field requires **0.4.0 or later**; see the [Line Width guide](features/line-width.md).
 
 ## My banner does not appear
 

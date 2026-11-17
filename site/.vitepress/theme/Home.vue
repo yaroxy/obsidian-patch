@@ -38,9 +38,9 @@ const groups = [
         <figcaption>A cover, a clearer itinerary, and code that fits its callout. <a :href="withBase('/features/banner.html')">Start with a banner →</a></figcaption>
       </figure>
     </section>
-    <div class="patches-preview"><span>Next release preview</span> These additions are implemented and being prepared for release. The current public version is 0.3.2. <a :href="withBase('/changelog.html')">Read the changes →</a></div>
+    <div class="patches-preview"><span>Patches 0.4.0</span> Icon colors, exact global width, and callout code backgrounds are now available. <a :href="withBase('/changelog.html')">Read the changes →</a></div>
     <section class="patches-updates" aria-labelledby="updates-title">
-      <div class="patches-section-heading"><p class="patches-eyebrow">IN THE NEXT RELEASE</p><h2 id="updates-title">A few more personal touches.</h2></div>
+      <div class="patches-section-heading"><p class="patches-eyebrow">NEW IN 0.4.0</p><h2 id="updates-title">A few more personal touches.</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">
         <button v-for="item in demos" :key="item.id" type="button" :aria-pressed="selectedDemo === item.id" aria-controls="feature-demo" @click="selectedDemo = item.id">{{ item.label }}</button>
       </div>

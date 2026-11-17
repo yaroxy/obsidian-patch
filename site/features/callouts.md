@@ -32,7 +32,7 @@ The GitHub panel explains remaining differences, including Obsidian-only syntax.
 ## Code backgrounds
 
 ::: info Version availability
-Code-block background tinting and the renamed **Code background** toggle are implemented for the next release. Public version 0.3.2 tints inline code.
+Code-block background tinting and the renamed **Code background** toggle are available in **0.4.0 and later**. Earlier versions tint inline code.
 :::
 
 Inline code and code block backgrounds take their callout's color in Reading View and Live Preview, including nested callouts. Syntax highlighting keeps the theme's colors, and inline code in a title follows the title's text color. Toggle **Callouts → Code background**; it is on by default.

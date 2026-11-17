@@ -111,6 +111,14 @@ The maintainer confirmed that the preview for `3f62957d52dc96103dc3f5855cfede9f7
 
 Prepare 0.4.0 from this reviewed implementation, with version metadata, changelog, and release documentation updated. The plugin implementation stays unchanged. Official assets will be built and attested by the existing tag-bound release workflow; record that workflow's verification separately from any subsequent Community Directory release review.
 
+## 0.4.0 — published assets verified, 2026-11-17
+
+[Release 0.4.0](https://github.com/yaroxy/obsidian-patch/releases/tag/0.4.0) was published as the latest regular release from tag commit `556ab7b18da76acab52be07dfe7c8f2920a382c6`, following the maintainer-confirmed source preview above. The [Prepare release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/44048875564) built Community on GitHub-hosted Node.js 22, passed tests/package checks, generated attestations, and verified its uploaded draft. Community Build, documentation deployment, and Full's separate Build also passed.
+
+Before publication, the draft target, version, three attachment names, sizes, and SHA-256 digests were checked against the locally verified Community build. `gh attestation verify` passed for each file with the source ref fixed to `refs/tags/0.4.0`, source digest fixed to the tag commit, signer workflow fixed to `.github/workflows/release.yml`, and self-hosted runners disallowed. The public latest-release response subsequently confirmed `draft: false`, `prerelease: false`, version 0.4.0, and unchanged attachment digests.
+
+The verified hashes are `main.js` `da28a18488765d8712375bb76d66dcbe7adf7d30b40dd0aa23c56eb2f13985b5`, `manifest.json` `83423bb25dfe53e487c1053188e9d6529bba85226eb5b40c55da1f1def44e0dc`, and `styles.css` `f14d16a0f8c0ee0d7828bdb493e0e4e144adebf435957e13db03265a923bed05`. These workflow/asset checks do not constitute a Community Directory release-review result; append that report when available. Full 0.4.0 source is at `a18cfa87012bae4ba773cf53308f4f97fb7530cd` and is not an official release attachment.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

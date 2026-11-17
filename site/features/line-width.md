@@ -1,7 +1,7 @@
 # Line width
 
 ::: info Version availability
-The numeric input and 1 px slider steps are implemented for the next release. Public version 0.3.2 already supports exact per-note widths.
+The numeric input and 1 px slider steps are available in **0.4.0 and later**. Exact per-note widths are also supported in earlier versions.
 :::
 
 Adjust the reading column in Reading View, Live Preview, and Source mode. Enable Obsidian's **Settings → Editor → Readable line length**, then use **Line Width** in the plugin settings or the desktop status bar slider. In settings, type an exact whole number and press Enter or leave the field to apply it; the input and slider stay in sync. Both sliders adjust in 1 px steps. The default is **900 px**, with a range of **500–2000 px**; use the settings reset button or click the status bar value to reset it.

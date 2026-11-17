@@ -27,4 +27,4 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 | [Mermaid diagrams](mermaid.md) | Newer diagram types and syntax with light/dark theme support. |
 | [PDF navigation](pdf-export.md) | Heading bookmarks and same-note heading links in native desktop PDF exports. |
 
-See [views and platforms](../reference/compatibility.md) for where each feature applies. Each guide notes features that require the next release.
+See [views and platforms](../reference/compatibility.md) for where each feature applies. Each guide notes version requirements for recently added features.

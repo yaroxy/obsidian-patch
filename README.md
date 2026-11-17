@@ -16,13 +16,13 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## In the next release
+## New in 0.4.0
 
 - **[Icon colors](https://yaroxy.github.io/obsidian-patch/features/icons.html):** choose an icon and its color together, with brand colors, eight presets, and custom colors.
 - **[Exact line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html):** type a global width in pixels and keep it synchronized with the slider.
 - **[Callout code backgrounds](https://yaroxy.github.io/obsidian-patch/features/callouts.html#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
 
-These changes are implemented in the development build and are being prepared for release. The current public version is **0.3.2**; see [the changelog](CHANGELOG.md) for the complete changes and the linked guides for recorded demos.
+[Patches 0.4.0](https://github.com/yaroxy/obsidian-patch/releases/tag/0.4.0) adds these improvements. See [the changelog](CHANGELOG.md) for the complete changes and the linked guides for recorded demos.
 
 ## Features
 
