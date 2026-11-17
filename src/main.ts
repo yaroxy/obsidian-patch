@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, type Setting, type SettingDefinition, type SettingDefinitionGroup, type SliderComponent } from "obsidian";
+import { Plugin, PluginSettingTab, type Setting, type SettingDefinition, type SettingDefinitionGroup, type SliderComponent, type TextComponent } from "obsidian";
 import {
   registerPatchMermaid,
   type PatchMermaidController,
@@ -293,7 +293,7 @@ class PatchesSettingTab extends PluginSettingTab {
   private calloutDefinitions(): SettingDefinition[] {
     const settings = (): CalloutSettings => this.plugin.settings.callouts;
     return [
-      this.toggle("Inline code", "Tints inline code with the callout's own color instead of the page's gray, and code in a callout title takes the title's color. Applies to Reading View and Live Preview; fenced code blocks keep the theme's colors.",
+      this.toggle("Code background", "Tints inline code and code block backgrounds with the callout's own color, preserving syntax highlighting. Code in a callout title takes the title's color. Applies to Reading View and Live Preview.",
         () => this.plugin.settings.calloutCode, (value) => this.plugin.setCalloutCode(value)),
       this.toggle("GitHub compatibility", "Shows in the callout editor whether GitHub renders the callout as an alert, with a button that makes it one. Edit a callout from its hover button, the editor menu, or Edit callout in the command palette.",
         () => settings().github, (github) => this.plugin.setCallouts({ ...settings(), github })),
@@ -347,6 +347,16 @@ class PatchesSettingTab extends PluginSettingTab {
     return [
       this.toggle("Enabled", "Show icons before file and folder names in the file explorer. Right-click a file or folder to change or remove its icon.",
         () => this.plugin.settings.icons.enabled, async (enabled) => { await this.plugin.icons?.setEnabled(enabled); }),
+      {
+        name: "Icon sources",
+        desc: "Lucide provides general-purpose outline icons built into Obsidian, matching the app and working offline. Simple Icons adds recognizable brand logos and their brand colors.",
+        render: (setting) => {
+          setting.descEl.createEl("br");
+          setting.descEl.createEl("a", { text: "Lucide", href: "https://lucide.dev/" });
+          setting.descEl.appendText(" · ");
+          setting.descEl.createEl("a", { text: "Simple Icons", href: "https://simpleicons.org/" });
+        },
+      },
       {
         name: "Simple Icons",
         desc: "The newest release is downloaded from jsDelivr when you choose an icon. Icons in use are saved with these settings, so they display offline.",
@@ -411,9 +421,57 @@ class PatchesSettingTab extends PluginSettingTab {
     return [
       this.toggle("Enabled", `Sets the width of notes in Reading View, Live Preview and Source mode. Requires Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
         () => settings().enabled, (enabled) => this.plugin.setLineWidth({ ...settings(), enabled })),
-      this.slider("Line width (px)", `${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Default: ${DEFAULT_LINE_WIDTH} px; Obsidian's own width is 700 px.`,
-        () => settings().width, MIN_LINE_WIDTH, MAX_LINE_WIDTH, LINE_WIDTH_STEP, DEFAULT_LINE_WIDTH, `${DEFAULT_LINE_WIDTH} px`,
-        (width) => this.plugin.setLineWidth({ ...settings(), width })),
+      {
+        name: "Line width (px)",
+        desc: `${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Type an exact value and press Enter or leave the field to apply, or drag the slider. Default: ${DEFAULT_LINE_WIDTH} px; Obsidian's own width is 700 px.`,
+        render: (setting) => {
+          let input: TextComponent;
+          let slider: SliderComponent;
+          const sync = (width: number): void => {
+            input.setValue(String(width));
+            input.inputEl.removeAttribute("aria-invalid");
+            slider.setValue(width);
+          };
+          const save = async (width: number): Promise<void> => {
+            sync(width);
+            if (width !== settings().width) await this.plugin.setLineWidth({ ...settings(), width });
+          };
+          setting.addText((text) => {
+            input = text;
+            text.setValue(String(settings().width));
+            const el = text.inputEl;
+            el.type = "number";
+            el.min = String(MIN_LINE_WIDTH);
+            el.max = String(MAX_LINE_WIDTH);
+            el.step = "1";
+            el.required = true;
+            el.title = `Use a whole number from ${MIN_LINE_WIDTH} to ${MAX_LINE_WIDTH}.`;
+            el.addClass("obsidian-patch-line-width-input");
+            el.setAttribute("aria-label", "Line width in pixels");
+            el.addEventListener("input", () => el.removeAttribute("aria-invalid"));
+            const commit = (report = false): void => {
+              if (!el.checkValidity()) {
+                el.setAttribute("aria-invalid", "true");
+                if (report) el.reportValidity();
+                return;
+              }
+              void save(el.valueAsNumber);
+            };
+            el.addEventListener("blur", () => commit());
+            el.addEventListener("keydown", (event) => {
+              if (event.key === "Enter" && !event.isComposing) {
+                event.preventDefault();
+                commit(true);
+              }
+            });
+          }).addSlider((control) => {
+            slider = control;
+            control.setLimits(MIN_LINE_WIDTH, MAX_LINE_WIDTH, LINE_WIDTH_STEP)
+              .setValue(settings().width).setDisplayFormat(() => "").onChange(save);
+          }).addExtraButton((button) => button.setIcon("rotate-ccw")
+            .setTooltip(`Reset to ${DEFAULT_LINE_WIDTH} px`).onClick(() => save(DEFAULT_LINE_WIDTH)));
+        },
+      },
       this.toggle("Show in status bar", "A slider in the status bar changes the line width as you read. Click its value to reset it. Desktop only.",
         () => settings().statusBar, (statusBar) => this.plugin.setLineWidth({ ...settings(), statusBar })),
     ];

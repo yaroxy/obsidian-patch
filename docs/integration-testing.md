@@ -32,6 +32,7 @@ Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled v
 - `OBSIDIAN_CLI` overrides the executable. On macOS the runner prefers `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`, avoiding a PATH entry that launches the GUI executable. Other installations fall back to `obsidian` on PATH.
 - Banner needs `ffmpeg` and `gif2webp` on PATH. Its image, portrait, GIF, animated WebP, MP4 and WebM samples are generated inside its fixture directory; a vault-root `banner.png` is no longer needed.
 - Navigation needs `python3` with `pypdf` and `pdfplumber`. Set `PDF_PYTHON` to a Python environment with those packages. PDF verification is required and is not silently skipped.
+- Icons verifies the combined icon/color picker using cached fixtures. Add `PATCHES_TEST_ICONS_REMOTE=1` to require a live Simple Icons download, matching upstream brand-color metadata, and cached-color rendering after reload. The native OS context menu itself is not automated; registered menu handlers open the real picker.
 - The optional second positional argument chooses an output directory. Otherwise each run gets a unique temporary directory, printed as `Results: …`.
 - A per-vault lock prevents concurrent suites from overwriting one another's fixtures and settings. Run suites sequentially.
 
@@ -51,6 +52,14 @@ Each output directory contains:
 CLI errors are checked even when Obsidian exits with status zero. Assertion failures and cleanup failures both make the command fail; a cleanup error does not overwrite the original assertion. `SIGINT` and `SIGTERM` request cancellation and wait for the same cleanup path. The in-app timeout interrupts the suite's next cancellable wait or checkpoint.
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
+
+## Next-release candidate — 2026-11-17
+
+Before committing the Community candidate based on `9cf765e2b04381a3cc68e331b664e36964e58346`, a fresh run passed 132 unit tests, the production build, release-package validation, documentation build, 21 generated pages / 810 local links and assets plus README links, and whitespace checks. The plugin's three installation files match the already-tested and deployed build byte-for-byte: `main.js` SHA-256 `da28a18488765d8712375bb76d66dcbe7adf7d30b40dd0aa23c56eb2f13985b5`, `manifest.json` `f8affdbe921c8930cddd8659cc932403ae7a3ea40870c1878297bbed3651ad27`, and `styles.css` `f14d16a0f8c0ee0d7828bdb493e0e4e144adebf435957e13db03265a923bed05`. The manifest still reports 0.3.2; these are unreleased development assets, not replacements for published 0.3.2 attachments.
+
+Earlier in this candidate's development on macOS / Obsidian 1.15.1, Icons passed 17 checks with live graphic and brand-color downloads, followed by 18 checks after the mixed-color and keyboard fixes with additional network coverage disabled. Callout code backgrounds passed 43 targeted assertions across light/dark, Reading View/Live Preview, nested callouts, syntax highlighting, and disabled/outside-callout cases. The feature capture passed three targeted checks, including an exact 1137 px global width, and the combined homepage capture verified the original banner proportions and merged table. Settings, active tabs, display preferences, and temporary capture fixtures were restored. See [icon verification](icons-design.md) and [callout verification](callout-design.md) for the detailed boundaries; these native suites were not rerun during the final pre-push check.
+
+Browser checks covered the new homepage on desktop and a 390 px viewport, light/dark presentation, mouse and keyboard demo switching, image loading, and absence of horizontal overflow or captured browser errors. Mobile Obsidian, other operating systems, third-party themes, the native OS context menu itself, and the full unrelated feature suites remain outside this candidate's fresh verification. Full was not updated or tested in this preparation. No Directory preview, new release, or Pages deployment is established by these local results.
 
 ## 0.3.2 release preparation — 2026-11-13
 

@@ -93,6 +93,12 @@ The maintainer confirmed that the follow-up preview passed and both the PDF unbo
 
 Prepare 0.3.2 from that reviewed Community implementation, with version metadata and release documentation updated. Full remains a separate manual distribution and receives the same feature version. Preview success does not establish that 0.3.2 release assets have passed attestation/build verification or that the directory listing is publicly available; append the release review separately after publication.
 
+## Next-release candidate — local verification, 2026-11-17
+
+The Community candidate based on `9cf765e2b04381a3cc68e331b664e36964e58346` adds combined icon/color selection, exact global line-width input, callout code-block backgrounds, and local documentation with refreshed demos. A fresh pre-push run passed 132 unit tests, the production build, release-package validation, and documentation build/link checks. The three plugin installation files exactly match the previously verified build deployed to `dev-vault` and `spacetime`; affected native coverage and its limitations are recorded in [Integration testing](integration-testing.md#next-release-candidate--2026-11-17).
+
+The Community source still excludes the Full remote Mermaid loader. Simple Icons uses the host network API to retrieve graphic and color JSON, with jsDelivr use and caching disclosed in the README. This is local verification, not a new Directory approval: no service preview report has been received for this candidate. Version metadata remains 0.3.2 and the changes remain under Unreleased; request **Review branch** for the pushed candidate's exact commit before preparing a new version/tag. The documentation workflow only builds a review artifact and does not deploy Pages.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

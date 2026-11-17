@@ -1,3 +1,5 @@
+import { parseIconColor, type IconColor } from "./color";
+
 /** `lucide:<name>` for Obsidian's built-in Lucide icons, or `simple-icons:<slug>`. */
 export type IconId = string;
 export type IconSource = "lucide" | "simple-icons";
@@ -6,6 +8,10 @@ export interface IconSettings {
   enabled: boolean;
   /** The icon of each file or folder, by vault path. */
   paths: Record<string, IconId>;
+  /** Per-path choices; missing entries retain the existing text color. */
+  colors: Record<string, IconColor>;
+  /** Brand colors of icons in use, retained for offline rendering. */
+  brandColors: Record<IconId, string>;
   /** SVG of each Simple Icons icon in use, so it displays offline and without loading the set. */
   svgs: Record<IconId, string>;
   /** The @iconify-json/simple-icons version that `latest` last resolved to. */
@@ -18,13 +24,21 @@ export interface IconizeImport {
   skipped: Array<{ path: string; icon: string }>;
 }
 
-export const DEFAULT_ICON_SETTINGS: IconSettings = { enabled: true, paths: {}, svgs: {} };
+export const DEFAULT_ICON_SETTINGS: IconSettings = { enabled: true, paths: {}, colors: {}, brandColors: {}, svgs: {} };
 
 export function parseIconSettings(data: unknown): IconSettings {
   const value = isRecord(data) ? data : {};
+  const paths = stringEntries(value.paths, (path, id) => path !== "" && parseIconId(id) !== undefined);
+  const colors: Record<string, IconColor> = {};
+  for (const [path, color] of Object.entries(isRecord(value.colors) ? value.colors : {})) {
+    const parsed = parseIconColor(color);
+    if (paths[path] && parsed && (parsed !== "brand" || parseIconId(paths[path])?.source === "simple-icons")) colors[path] = parsed;
+  }
   return {
     enabled: typeof value.enabled === "boolean" ? value.enabled : DEFAULT_ICON_SETTINGS.enabled,
-    paths: stringEntries(value.paths, (path, id) => path !== "" && parseIconId(id) !== undefined),
+    paths,
+    colors,
+    brandColors: stringEntries(value.brandColors, (id, hex) => parseIconId(id)?.source === "simple-icons" && /^#[0-9a-f]{6}$/i.test(hex)),
     svgs: stringEntries(value.svgs, (id, svg) => parseIconId(id)?.source === "simple-icons" && svg.startsWith("<svg")),
     cachedLatest: typeof value.cachedLatest === "string" ? value.cachedLatest : undefined,
   };
@@ -60,13 +74,13 @@ export function convertIconize(data: unknown, lucideNames: ReadonlyMap<string, s
 }
 
 /** Moves the icons of a renamed file or folder, including a folder's descendants. */
-export function renameIconPaths(
-  paths: Readonly<Record<string, IconId>>,
+export function renameIconPaths<T>(
+  paths: Readonly<Record<string, T>>,
   oldPath: string,
   newPath: string,
-): Record<string, IconId> | undefined {
-  const kept: Record<string, IconId> = {};
-  const moved: Record<string, IconId> = {};
+): Record<string, T> | undefined {
+  const kept: Record<string, T> = {};
+  const moved: Record<string, T> = {};
   for (const [path, id] of Object.entries(paths)) {
     if (path === oldPath) moved[newPath] = id;
     else if (path.startsWith(`${oldPath}/`)) moved[newPath + path.slice(oldPath.length)] = id;

@@ -31,6 +31,12 @@ callout 是每一行都要带 `>` 的引用块，手工调整结构很繁琐：�
 - **转成引用块。** 只去掉 callout 标记，标题变成粗体首行。
 - **编辑器中的正文。** 显示时去掉这一层标记，保存时由编辑器重新加上，用户不需要手写 `>`。
 
+## 代码配色
+
+**Callouts → Code background** 默认开启，沿用 `calloutCode` 设置，同时处理阅读视图和 Live Preview 中已渲染 callout 的行内代码与代码块。代码背景使用所在 callout 的 `--callout-color` 和 `--obsidian-patch-callout-code-tint`（默认 12%）混合透明色，嵌套 callout 使用自己的颜色。代码块只在 `pre` 上设置 `--code-background`，不改语法高亮 token 的颜色、字体或布局，不给 `pre > code` 重复叠加底色。标题内的行内代码仍跟随标题文字颜色；关闭开关恢复主题背景，callout 外的代码不受影响。
+
+此前仅对 `:not(pre) > code` 设置背景，并明确排除代码块；2026-11-17 按用户要求扩展到代码块。源码模式以及 Live Preview 中正在编辑的 callout 源码不属于此渲染规则。
+
 ## GitHub 规则
 
 2026-11-11 用 `gh api markdown`（gfm 模式）实测了 27 种写法。注意 `markdown` 模式完全不渲染 alert。
@@ -97,6 +103,8 @@ src/features/
 - 弹窗：依赖 `.modal` 为纵向 flex 并在 `.modal-container` 中居中；记住尺寸用 `app.loadLocalStorage` 和 `saveLocalStorage`（1.8.7 起）。
 
 ## 验证
+
+2026-11-17，macOS / Obsidian 1.15.1 默认主题，代码背景扩展：生产构建通过；在 dev-vault 使用临时定向检查先复现旧版代码块保持灰色，再验证修改后的 43 项断言通过，覆盖浅色／深色、阅读视图／Live Preview、warning 内嵌 tip、带语法高亮和无语言标记的代码块、标题行内代码、开关恢复以及 callout 外代码不变。检查了阅读浅色和 Live Preview 深色截图；主题、设置、活跃标签和后台节流恢复，临时笔记已删除，错误日志为空。未重跑完整编辑器集成套件和单元测试，未验证移动端、其他主题和平台。
 
 2026-11-11，macOS。
 

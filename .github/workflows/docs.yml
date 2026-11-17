@@ -1,0 +1,36 @@
+name: Documentation preview
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'docs/images/**'
+      - 'docs/examples/**'
+      - 'scripts/prepare-site.mjs'
+      - 'scripts/check-site.mjs'
+      - 'package*.json'
+      - 'CHANGELOG.md'
+      - 'README.md'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run docs:build
+      - run: npm run docs:check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: patches-docs-preview
+          path: site/.vitepress/dist/
+          retention-days: 7

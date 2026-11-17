@@ -17,6 +17,7 @@ export interface SimpleIconSet {
   /** Slugs offered in the picker, without deprecated icons and aliases. */
   names: string[];
   svg(name: string): string | undefined;
+  color(name: string): string | undefined;
 }
 
 interface IconifyIcon {
@@ -47,16 +48,28 @@ export async function loadSimpleIcons(
     fetchJson(`${CDN_URL}@${packageVersion}/info.json`).catch(() => undefined),
   ]);
   const version = isRecord(info) && typeof info.version === "string" ? info.version : packageVersion;
-  return parseIconifySet(icons, version, packageVersion);
+  // Color metadata is data from the same upstream release, never a remote JS import.
+  const metadata = isRecord(info) && typeof info.version === "string" && /^\d+\.\d+\.\d+$/.test(info.version)
+    ? await fetchJson(`https://cdn.jsdelivr.net/npm/simple-icons@${info.version}/data/simple-icons.json`).catch(() => undefined)
+    : undefined;
+  return parseIconifySet(icons, version, packageVersion, metadata);
 }
 
-export function parseIconifySet(json: unknown, version: string, packageVersion: string): SimpleIconSet {
+export function parseIconifySet(json: unknown, version: string, packageVersion: string, metadata?: unknown): SimpleIconSet {
   if (!isRecord(json) || !isRecord(json.icons)) throw new Error("jsDelivr returned an invalid icon set");
   const icons = new Map<string, IconifyIcon>();
   for (const [name, icon] of Object.entries(json.icons)) {
     if (isRecord(icon) && typeof icon.body === "string") icons.set(name, icon as unknown as IconifyIcon);
   }
   const aliases = new Map<string, string>();
+  const colors = new Map<string, string>();
+  if (Array.isArray(metadata)) {
+    for (const item of metadata) {
+      if (!isRecord(item) || typeof item.title !== "string" || typeof item.hex !== "string" || !/^[0-9a-f]{6}$/i.test(item.hex)) continue;
+      const slug = typeof item.slug === "string" ? item.slug : brandSlug(item.title);
+      colors.set(slug, `#${item.hex.toUpperCase()}`);
+    }
+  }
   for (const [name, alias] of Object.entries(isRecord(json.aliases) ? json.aliases : {})) {
     if (isRecord(alias) && typeof alias.parent === "string") aliases.set(name, alias.parent);
   }
@@ -68,6 +81,7 @@ export function parseIconifySet(json: unknown, version: string, packageVersion: 
     version,
     packageVersion,
     names: [...icons].filter(([, icon]) => icon.hidden !== true).map(([name]) => name).sort(),
+    color: name => colors.get(aliases.get(name) ?? name),
     svg(name) {
       const icon = icons.get(name) ?? icons.get(aliases.get(name) ?? "");
       if (icon === undefined) return undefined;
@@ -75,6 +89,13 @@ export function parseIconifySet(json: unknown, version: string, packageVersion: 
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox.join(" ")}">${icon.body}</svg>`;
     },
   };
+}
+
+// Simple Icons' title-to-slug convention (CC0): explicit slugs take precedence.
+// https://github.com/simple-icons/simple-icons/blob/develop/sdk.mjs
+function brandSlug(title: string): string {
+  const replacements: Record<string, string> = { "+": "plus", ".": "dot", "&": "and", "đ": "d", "ħ": "h", "ı": "i", "ĸ": "k", "ŀ": "l", "ł": "l", "ß": "ss", "ŧ": "t", "ø": "o" };
+  return title.toLowerCase().replace(/[+.&đħıĸŀłßŧø]/g, char => replacements[char]!).normalize("NFD").replace(/[^a-z\d]/g, "");
 }
 
 async function resolveLatestVersion(): Promise<string> {

@@ -27,11 +27,46 @@ async function load(entryPoint) {
 const { convertIconize, iconizeName, svgUrl, parseIconId, parseIconSettings, renameIconPaths } =
   await load("src/features/icons/config.ts");
 const { parseIconifySet, loadSimpleIcons } = await load("src/features/icons/simple-icons.ts");
+const { parseIconColor, iconColorCss } = await load("src/features/icons/color.ts");
 
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>';
 
+test("old assignments retain text color; invalid and orphaned color assignments are discarded", () => {
+  const s = parseIconSettings({ paths: { A: "lucide:atom", B: "simple-icons:python", C: "lucide:atom" },
+    colors: { A: "brand", B: "brand", C: "#abc", Missing: "red" },
+    brandColors: { "simple-icons:python": "#3776AB", "simple-icons:bad": "red; color: blue", "lucide:atom": "#123456" } });
+  assert.deepEqual(s.colors, { B: "brand", C: "#AABBCC" });
+  assert.deepEqual(s.brandColors, { "simple-icons:python": "#3776AB" });
+  assert.equal(iconColorCss(undefined), undefined);
+  assert.equal(iconColorCss("text"), undefined);
+  assert.equal(iconColorCss("brand", s.brandColors["simple-icons:python"]), "#3776AB");
+  assert.equal(iconColorCss("brand"), undefined);
+  assert.equal(iconColorCss("blue"), "var(--color-blue)");
+  for (const bad of ["red;display:none", "var(--anything)", "#12345g", "#12345678", 5]) assert.equal(parseIconColor(bad), undefined);
+});
+
+test("brand metadata uses explicit slugs, upstream title normalization and aliases", () => {
+  const set = parseIconifySet({ icons: { cplusplus: { body: "<path/>" }, special: { body: "<path/>" } }, aliases: { cpp: { parent: "cplusplus" } } }, "16.36.0", "1.2.101",
+    [{ title: "C++", hex: "00599c" }, { title: "Unrelated title", slug: "special", hex: "123456" }, { title: "bad", hex: "not-a-color" }]);
+  assert.equal(set.color("cplusplus"), "#00599C");
+  assert.equal(set.color("cpp"), "#00599C");
+  assert.equal(set.color("special"), "#123456");
+  assert.equal(set.color("bad"), undefined);
+});
+
+test("a color metadata outage leaves the icon set usable", async () => {
+  network.request = async ({ url }) => {
+    if (url.endsWith("data/simple-icons.json")) throw new Error("Metadata unavailable");
+    const data = url.includes("/resolved?") ? { version: "1.2.101" } : url.endsWith("info.json") ? { version: "16.36.0" } : { icons: { python: { body: "<path/>" } } };
+    return { status: 200, text: JSON.stringify(data) };
+  };
+  const set = await loadSimpleIcons(undefined, () => {});
+  assert.ok(set.svg("python"));
+  assert.equal(set.color("python"), undefined);
+});
+
 test("settings keep valid icons and drop malformed entries", () => {
-  assert.deepEqual(parseIconSettings(undefined), { enabled: true, paths: {}, svgs: {}, cachedLatest: undefined });
+  assert.deepEqual(parseIconSettings(undefined), { enabled: true, paths: {}, colors: {}, brandColors: {}, svgs: {}, cachedLatest: undefined });
   const settings = parseIconSettings({
     enabled: false,
     paths: { Notes: "lucide:atom", "Notes/Python": "simple-icons:python", "": "lucide:atom", Bad: "LiAtom", Num: 3 },
@@ -41,6 +76,7 @@ test("settings keep valid icons and drop malformed entries", () => {
   assert.deepEqual(settings, {
     enabled: false,
     paths: { Notes: "lucide:atom", "Notes/Python": "simple-icons:python" },
+    colors: {}, brandColors: {},
     svgs: { "simple-icons:python": SVG },
     cachedLatest: "1.2.101",
   });
@@ -136,16 +172,18 @@ test("Simple Icons loads JSON through requestUrl and reports the resolved packag
     requests.push(options);
     const data = options.url.includes("/resolved?") ? { version: "1.2.101" }
       : options.url.endsWith("info.json") ? { version: "16.36.0" }
-        : { icons: { python: { body: "<path/>" } } };
+        : options.url.endsWith("data/simple-icons.json") ? [{ title: "Python", hex: "3776AB" }] : { icons: { python: { body: "<path/>" } } };
     return { status: 200, text: JSON.stringify(data) };
   };
   const set = await loadSimpleIcons(undefined, (version) => resolved.push(version));
   assert.equal(set.version, "16.36.0");
   assert.deepEqual(set.names, ["python"]);
   assert.deepEqual(resolved, ["1.2.101"]);
-  assert.equal(requests.length, 3);
+  assert.equal(requests.length, 4);
+  assert.equal(set.color("python"), "#3776AB");
+  assert.match(requests[3].url, /simple-icons@16\.36\.0\/data\/simple-icons\.json$/);
   assert.equal(requests.every(({ throw: shouldThrow }) => shouldThrow === false), true);
-  assert.equal(requests.slice(1).every(({ url }) => url.includes("@1.2.101/")), true);
+  assert.equal(requests.slice(1, 3).every(({ url }) => url.includes("@1.2.101/")), true);
 });
 
 test("Simple Icons uses its cached version when the latest lookup fails and tolerates missing info", async () => {

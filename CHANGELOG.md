@@ -6,9 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Add a locally previewable documentation website with feature guides, examples, reference pages, troubleshooting, and local search.
+- Set an exact global Line Width with a numeric input alongside the slider; both line-width sliders now adjust in 1 px steps.
+- Choose explorer icons and colors together in **Change icon**, with a preview, Apply/Cancel, text color, eight theme-aware presets, custom colors, and cached Simple Icons brand colors. Batch color changes preserve different existing icons, and settings explain the two icon sources.
+
 ### Changed
 
-- Update installation instructions for the published Community Directory listing, retaining manual installation and migration guidance.
+- Combine the original autumn banner, merged itinerary table, and tinted callout code in the README and homepage demonstration; add switchable homepage demos for the next release's three main improvements.
+- Refresh the user-guide demos for the combined icon/color picker, exact global width input, and nested callout code-block backgrounds in light and dark themes.
+- Tint code block backgrounds inside callouts alongside inline code, preserving syntax highlighting and using each nested callout's own color. Rename the existing Callouts toggle to **Code background**.
+- Shorten the README to installation, a feature overview, and support; move detailed usage and examples into the documentation site and omit old-plugin migration guidance from the getting-started flow.
+
+### Fixed
+
+- Preserve each file's existing color when changing icons for a selection with mixed colors; **Keep colors** restores that choice before applying.
+- Let Enter activate the focused icon-picker buttons while retaining icon selection from the search field.
+- Keep the icon picker centered with at least 24 px above and below it, scroll the results within the available height, and keep color controls and Apply/Cancel visible when the interface is zoomed.
 
 ## [0.3.2] - 2026-11-13
 

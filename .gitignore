@@ -4,3 +4,6 @@ main.js
 *.map
 .DS_Store
 
+site/.vitepress/cache/
+site/.vitepress/dist/
+site/public/examples/

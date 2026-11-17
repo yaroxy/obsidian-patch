@@ -2,317 +2,94 @@
 
 # Patches
 
-Focused fixes and enhancements for Obsidian
+Focused fixes and enhancements for everyday Obsidian work.
+
+Edit tables and callouts, shape your reading space, and make diagrams and exported PDFs more useful.
 
 [![Obsidian](https://img.shields.io/badge/Obsidian-1.15.0%2B-7C3AED?logo=obsidian&logoColor=white)](https://obsidian.md/) [![Build](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml/badge.svg)](https://github.com/yaroxy/obsidian-patch/actions/workflows/build.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**[Install](#installation) · [Features](#features) · [Development](#development) · [Changelog](CHANGELOG.md)**
+**[Install](#installation) · [User guide](site/getting-started.md) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/yaroxy/obsidian-patch/issues)**
 
 </div>
 
+![A Kyoto travel note combining an autumn banner, a merged itinerary table, and a callout with tinted code backgrounds and syntax highlighting](docs/images/home-overview.png)
+
+One note, a few improvements: a [vault-image banner](site/features/banner.md), a [grouped itinerary](site/features/tables.md), and [code that fits its callout](site/features/callouts.md).
+
+## In the next release
+
+- **[Icon colors](site/features/icons.md):** choose an icon and its color together, with brand colors, eight presets, and custom colors.
+- **[Exact line width](site/features/line-width.md):** type a global width in pixels and keep it synchronized with the slider.
+- **[Callout code backgrounds](site/features/callouts.md#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
+
+These changes are implemented in the development build and are being prepared for release. The current public version is **0.3.2**; see [Unreleased](CHANGELOG.md#unreleased) for the complete changes and the linked guides for recorded demos.
+
 ## Features
 
-Configure the plugin under **Settings → Patches**.
+Configure Patches under **Settings → Patches**. Each guide includes examples, settings, and limitations.
 
-| Feature                           | What it does                                                                                        |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Active Line](#active-line)       | Marks the cursor's line in the editor margin and highlights its line number.                        |
-| [Callout Code](#callout-code)     | Tints inline code to match its surrounding callout.                                                 |
-| [Callout Editor](#callout-editor) | Inserts, edits, previews, and unwraps callouts, with GitHub compatibility checks and conversion.    |
-| [Heading Levels](#heading-levels) | Shows H1–H6 labels beside headings in reading and editing views.                                    |
-| [HTML Tables](#html-tables)       | Converts Markdown tables to HTML and visually edits cells, merged headers, alignment, and captions. |
-| [Line Width](#line-width)         | Adjusts readable line width through settings, a status bar slider, or a per-note property.          |
-| [Math Format](#math-format)       | Indents and aligns display-math blocks while preserving formulas.                                   |
-| [Patch Banner](#patch-banner)     | Adds vault images, animations, or videos as note covers.                                            |
-| [Patch Icons](#patch-icons)       | Adds Lucide icons or Simple Icons logos to files and folders in the explorer.                       |
-| [Patch Mermaid](#patch-mermaid)   | Brings newer Mermaid diagram types and syntax to notes, with theme support. |
-| [PDF Export](#pdf-export)         | Adds heading bookmarks and same-note heading links to exported PDFs.                                |
+| Feature | What it adds |
+| --- | --- |
+| [HTML tables](site/features/tables.md) | Visual editing, merged cells, grouped headers, captions, and Markdown conversion. |
+| [Callouts](site/features/callouts.md) | Editing, preview, conversion, GitHub compatibility, and matching code backgrounds. |
+| [Math formatting](site/features/math-format.md) | Indentation and alignment for display math, preserving formulas. |
+| [Banners](site/features/banner.md) | Vault images, animations, and videos as note covers. |
+| [File and folder icons](site/features/icons.md) | Lucide icons and Simple Icons brand marks, with colors you choose. |
+| [Line width](site/features/line-width.md) | Exact global width and per-note overrides for readable columns. |
+| [Active line](site/features/active-line.md) | A margin marker and highlighted line number for the cursor’s line. |
+| [Heading levels](site/features/heading-levels.md) | H1–H6 labels beside headings in reading and editing views. |
+| [Mermaid diagrams](site/features/mermaid.md) | Newer diagram types and syntax that follow Obsidian’s theme. |
+| [PDF navigation](site/features/pdf-export.md) | Heading bookmarks and same-note heading links in desktop PDF exports. |
 
 ## Installation
 
-Requires Obsidian **1.15.0 or later**. [Patches is available in the Community Directory](https://community.obsidian.md/plugins/patches).
+Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Directory](https://community.obsidian.md/plugins/patches).
 
-**Upgrading from Obsidian Patch?** Follow the [migration instructions](docs/releases.md#migrating-from-obsidian-patch) before installing Patches to preserve settings and command hotkeys. Existing `patch-mermaid` blocks and `patch-*` note properties keep working.
+1. Open **Settings → Community plugins → Browse**.
+2. Search for **Patches**, then select **Install** and **Enable**.
+3. Open **Settings → Patches** to choose your settings.
 
-For a **new installation**:
+For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 
-1. Open **Settings → Community plugins** and enable community plugins if prompted.
-2. Select **Browse**, search for **Patches**, and open its listing.
-3. Select **Install**, then **Enable**.
+Official releases contain the **Community** build with bundled Mermaid. The optional [Full branch](https://github.com/yaroxy/obsidian-patch/tree/codex/full) adds remote Mermaid versions for manual source builds. Both use the same plugin ID; installing one replaces the other.
 
-For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub release](https://github.com/yaroxy/obsidian-patch/releases/latest), place them in `<vault>/.obsidian/plugins/patches/`, then reload Obsidian and enable **Patches** under **Settings → Community plugins**.
+## Try it
 
-The Community Directory and GitHub releases provide the **Community** build. Both distributions provide the same note features; they differ in how Mermaid versions are loaded:
-
-| Build | How to get it | Mermaid versions |
-| --- | --- | --- |
-| Community | Community Directory, GitHub release, or `main`: `npm run build` → `dist/community/` | Bundled only; no remote Mermaid or ELK code loader |
-| Full | `codex/full` branch: `npm run build` → `dist/full/` | Bundled, Latest, or Custom; remote versions load from jsDelivr |
-
-Both builds use the same plugin ID and settings, so installing one replaces the other. Updating through Community plugins replaces a manually installed Full build with Community. See [Development](#development) for source builds and [Patch Mermaid](#patch-mermaid) for remote-loading details.
-
-## Active Line
-
-A margin bar marks the cursor's line in Live Preview and Source mode, with a highlighted line number when line numbers are shown. It follows the caret color and fades in unfocused panes. Toggle **Editor → Active line** in the plugin settings; it is on by default.
-
-![Following the cursor through a release checklist with a margin marker and highlighted line number](docs/images/active-line.gif)
-
-## Callout Code
-
-Inline code takes its callout's color in Reading View and Live Preview, including nested callouts and titles. Fenced code blocks keep the theme's colors. Toggle **Callouts → Inline code**; it is on by default.
-
-![Callout code tint off on the left and on on the right, in light and dark themes](docs/images/callout-code.png)
-
-## Callout Editor
-
-Edit a callout's type, title, fold state, metadata, and content with a live preview.
-
-![Editing a travel reminder and checking its live preview before saving](docs/images/callout-editor.gif)
-
-- **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**.
-- **Insert:** run **Patches: Insert callout** to add one at the cursor or wrap selected lines.
-- **Unwrap:** choose **Convert to text** or **Convert to blockquote** in the editor.
-
-The command palette and editor context menu also offer editing and conversion when the cursor is in the callout's source. Header-only edits preserve the body, and saving checks for conflicting changes.
-
-**Make GitHub-compatible** maps the type to a supported alert, moves the title into the content, and removes the fold sign and metadata:
-
-```markdown
-> [!warning|wide]- Before the morning train
-> Download the tickets for offline access.
-```
-
-becomes:
-
-```markdown
-> [!WARNING]
-> **Before the morning train**
-> Download the tickets for offline access.
-```
-
-The GitHub panel explains remaining differences, including Obsidian-only syntax. Nested callouts must be moved to the top level manually. Set `github: true` on a note or choose **Callouts → GitHub folders** to enable the status bar count; click it or run **Check callouts for GitHub** for details.
-
-## Heading Levels
-
-H1–H6 labels appear beside headings in Reading View, Live Preview, and Source mode. Wrapped headings leave room for the label, and Setext headings are supported. Toggle **Editor → Heading levels**; it is on by default. Labels do not change note source or appear in exported PDFs.
-
-![Heading levels at the right edge of the reading column](docs/images/heading-levels.png)
-
-## HTML Tables
-
-Create tables with merged cells, grouped headers, and captions through a visual editor.
-
-- **New table:** run **Patches: Insert HTML table**.
-- **Existing HTML table:** hover it and choose **Edit table**, or run **Edit HTML table** with the cursor in its source.
-- **Markdown table:** place the cursor inside it, then run **Convert Markdown tables to HTML** from the command palette or editor context menu.
-
-Try converting this table:
-
-```markdown
-| Day      | Plan                      | Area        |
-| :------- | :------------------------ | :---------- |
-| Saturday | Walk the canal and sketch | Higashiyama |
-| Saturday | Tea break and bookshop    | Gion        |
-| Sunday   | Morning market and lunch  | Downtown    |
-| Sunday   | Riverside walk            | Kamogawa    |
-```
-
-Review the preview, drag across cells or Shift-click to select a range, then use **Merge cells**, **Split cell**, the row and column menus, or alignment controls. Edit the caption above the table. Choose **Convert to HTML** to apply the result; **Cancel** leaves the note unchanged.
-
-![Grouping a Kyoto weekend itinerary by day and adding a table caption](docs/images/table-conversion.gif)
-
-Select several complete Markdown tables to convert them together. **Previous table** and **Next table** switch between drafts; **Convert all N tables** writes the batch in one undo step. Conversion preserves headers, alignment, common inline formatting, and links. Tables in code blocks, lists, or callouts are excluded; formulas, images, embeds, footnotes, and excess cells are rejected before anything is written.
-
-In the editor, Tab moves between cells, Enter adds a line within a cell, and Escape leaves the cell. Pasting inserts plain text with its line breaks; Mod+Z and Mod+Shift+Z undo and redo edits. **Save** or Mod+Enter applies HTML-table edits. Untouched cell markup is preserved, and conflicting source changes prevent saving. Tables inside callouts and blockquotes are not detected for editing.
-
-Both table and callout editors resize from their bottom-right corner and remember the size. Double-click the corner to reset.
-
-## Line Width
-
-Adjust the reading column in Reading View, Live Preview, and Source mode. Enable Obsidian's **Settings → Editor → Readable line length**, then use **Line Width** in the plugin settings or the desktop status bar slider. The default is **900 px**, with a range of **500–2000 px**; click the status bar value to reset it.
-
-![Adjusting a reading note's column width with the status bar slider](docs/images/line-width.gif)
-
-Override the width for one note:
+Enable Obsidian’s **Settings → Editor → Readable line length**, then give one note a wider column:
 
 ```yaml
 ---
-patch-line-width: 1200
+patch-line-width: 1100
 ---
 ```
 
-A quoted value such as `"1200px"` also works. Each pane uses its note's width. The status bar disables the slider for a note with an override; an invalid value is ignored and shown in red, with a tooltip explaining the range.
+Other notes keep their global width. See [note properties](site/reference/properties.md), [commands](site/reference/commands.md), and [views and platforms](site/reference/compatibility.md) for more examples and scope.
 
-## Math Format
+## Network and privacy
 
-Run **Patches: Format math block** with the cursor inside a `$$` block, or **Format all math blocks in note**.
+The Community build runs its bundled Mermaid code locally. The icon picker may contact **jsDelivr** to resolve and download Simple Icons graphic data and matching brand-color JSON. Already-used graphics and available brand colors are cached locally. Missing cached graphics can trigger a download. Icon search text, note contents, and vault file names are not sent in these requests.
 
-**Before**
+The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](site/privacy.md) for details.
 
-```latex
-$$
-\begin{aligned}\hat{y}_i&=\beta_0+\beta_1x_i\\
-r_i &= y_i-\hat{y}_i\\J(\beta_0,\beta_1)&=\frac{1}{n}\sum_{i=1}^{n}r_i^2\end{aligned}
-$$
-```
+## Help
 
-**After**
-
-```latex
-$$
-\begin{aligned}
-  \hat{y}_i          &=\beta_0+\beta_1x_i \\
-  r_i                &= y_i-\hat{y}_i \\
-  J(\beta_0,\beta_1) &=\frac{1}{n}\sum_{i=1}^{n}r_i^2
-\end{aligned}
-$$
-```
-
-The formatter changes whitespace while preserving formulas. It indents environments and aligns rows in `aligned`, `align`, `alignat`, `split`, `cases`, matrices, `array`, and `gathered`. Callout and list markers are preserved; unsupported or malformed blocks are left unchanged.
-
-![Formatting a least-squares regression block and viewing the rendered equations](docs/images/math-format.gif)
-
-Under **Math Format**, choose 2 or 4 spaces of indentation and whether to align `&` and row endings. To format on lint, add **Format all math blocks in note** to Linter's custom commands.
-
-## Patch Banner
-
-Run **Patches: Select cover**, or add a quoted link to an image or video in your vault:
-
-```yaml
----
-patch-banner: "[[assets/kyoto-cover.jpg]]"
----
-```
-
-The cover picker lists vault file paths locally to find images and videos. These paths are not sent to a remote service.
-
-Covers appear above the title and Properties in Reading View and Live Preview, at their original aspect ratio. Hover to add, change, or remove a cover; removing it clears only the property, keeping the media file.
-
-![Choosing an autumn cover for a Kyoto weekend note](docs/images/banner.gif)
-
-Save the [Kyoto cover illustration](docs/images/kyoto-cover.jpg) to `assets/kyoto-cover.jpg` in your vault to try this example.
-
-Under **Patch Banner**, adjust **Cover width (%)** from 10–100% of the pane, with a default of 90%, and toggle **Autoplay videos**. Videos are muted, loop, and pause when hidden. Reduced-motion preferences defer playback and animated images until you choose to show them.
-
-Local images and videos are supported where the platform can decode them. Covers do not appear in Source mode, embedded notes, hover previews, Canvas, or PDF exports. Updating the property uses Obsidian's YAML serializer, which may reformat frontmatter and remove comments.
-
-## Patch Icons
-
-Right-click files or folders in the explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon or [Simple Icons](https://simpleicons.org/) brand logo. **Remove icon** clears it; both actions support multiple selections. Icons follow the adjacent text color.
-
-![Choosing folder and file icons for courses and research tools](docs/images/icons.gif)
-
-The picker downloads the latest Simple Icons from jsDelivr on first use in a session. Icons already in use are saved locally and display offline; **Patch Icons → Update** refreshes the pack. Icons follow renames and moves made inside Obsidian; changes made outside it leave the old assignment behind.
-
-**Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped; disable Iconize afterwards to avoid duplicate icons. **Icons of missing files** lets you clear unused assignments. Icons appear only in the file explorer.
-
-## Patch Mermaid
-
-Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. The community build uses the Mermaid version bundled with Patches, updated through plugin releases; the full build also offers remote versions.
-
-For example, organize incident response with a [Cynefin diagram](https://mermaid.js.org/syntax/cynefin.html), introduced in Mermaid 11.16.0. This works with the default **Bundled** version and **Strict** security level:
-
-````markdown
-```patch-mermaid
-cynefin-beta
-  title Incident Response
-
-  complex
-    "Investigate root cause"
-    "Run chaos experiment"
-
-  complicated
-    "Analyze performance data"
-    "Expert review needed"
-
-  clear
-    "Restart service"
-    "Apply known fix"
-
-  chaotic
-    "Page on-call immediately"
-
-  confusion
-    "Unknown failure mode"
-```
-````
-
-![A Cynefin incident response diagram following Obsidian's light and dark themes](docs/images/mermaid-theme.gif)
-
-Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks continue to use Obsidian's renderer.
-
-| Setting         | Choices                                                                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mermaid version | **Community:** the bundled version is shown. **Full:** choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
-| Security level  | **Strict** (default) restricts diagram content and currently hides treeView icons. **Loose** allows additional content and interactions; use it only with diagrams you fully trust. Both modes sanitize the generated SVG before display. |
-
-Some bundled icons, including `material-icon-theme:folder-css` and `logos:chrome-web-store`, currently render incompletely because of Mermaid's own icon filtering, even in Loose mode.
-
-In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build excludes this remote loader and uses the code shipped with the plugin, even if old settings selected Latest or Custom. Simple Icons may still download icon data as described above.
-
-Show the plugin's project structure with [treeView](https://mermaid.js.org/syntax/treeView.html). With **Bundled** selected, switch to **Loose** for this trusted example to display icons from the included `material-icon-theme` and `logos` packs:
-
-````markdown
-```patch-mermaid
-treeView-beta
-    obsidian-patch/ icon(material-icon-theme:folder-project)
-        src/ icon(material-icon-theme:folder-src)
-            features/ icon(material-icon-theme:folder-plugin)
-            main.ts icon(material-icon-theme:typescript)
-        manifest.json icon(material-icon-theme:json)
-        styles.css icon(material-icon-theme:css)
-        package.json icon(logos:nodejs-icon)
-```
-````
-
-## PDF Export
-
-Use Obsidian's **Export to PDF** on desktop. Under **PDF Export**, **Document outline** adds heading bookmarks and **Heading links** enables jumps within the note; both are on by default.
-
-![Navigating an exported research plan using heading bookmarks and links](docs/images/pdf-export.gif)
-
-Open the [example research plan](docs/examples/library-search-study.pdf) to try the bookmarks and heading links in your PDF reader.
-
-Links such as `[[#Session plan]]` and `[Success criteria](#success-criteria)` work, including Unicode headings and common Markdown fragments such as `#session-plan-1` for repeated headings. Wikilinks follow Obsidian's native heading matching. Links to other notes, block references, and embedded-note links retain native export behavior.
-
-Export uses the native dialog's paper size, margins, orientation, and title options.
-
-## Customization
-
-<details>
-<summary>Appearance tweaks with CSS snippets</summary>
-
-Add any of these overrides to an Obsidian CSS snippet:
-
-```css
-body {
-  --font-mermaid: "Inter", sans-serif;
-  --obsidian-patch-active-line-color: var(--color-accent);
-  --obsidian-patch-callout-code-tint: 8%;
-  --obsidian-patch-icon-size: 16px;
-  --obsidian-patch-icon-gap: 4px;
-  --obsidian-patch-icon-offset: -0.2em;
-  --obsidian-patch-icon-color: var(--text-accent);
-}
-```
-
-</details>
+Start with [troubleshooting](site/troubleshooting.md). When [reporting a bug](https://github.com/yaroxy/obsidian-patch/issues), include Obsidian/Patches versions, OS, theme, view mode, reproduction steps, and a small example or recording.
 
 ## Development
 
-Use Node.js **22 or later** and run `npm ci` after checking out the source. The `main` branch and official release tags contain the Community distribution.
+Use Node.js **22 or later**:
 
 ```bash
-npm run dev    # watch the community build
-npm test       # unit tests
-npm run build  # type-check and build dist/community/
+npm ci
+npm test
+npm run build       # community plugin → dist/community/
+npm run docs:dev    # local documentation preview
+npm run docs:build  # static site → site/.vitepress/dist/
 ```
 
-Install `main.js`, `manifest.json`, and `styles.css` from `dist/community/` into `<vault>/.obsidian/plugins/patches/`, then reload Obsidian.
+Install the three plugin files from `dist/community/` into the vault’s `patches` directory and reload the plugin. Integration checks deploy to `dev-vault` and create temporary fixtures; read [integration testing](docs/integration-testing.md) first.
 
-For Full, check out the separate `codex/full` branch in a clean working directory, run `npm ci` and `npm run build`, and install the three files from `dist/full/`. That branch retains Latest/Custom and is for manual installation outside the Community Directory. Its own README describes its build and test commands; official release attachments always contain Community.
-
-See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Releases and migration](docs/releases.md) for build variants, version checks, and publishing. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, restoration behavior, and dated verification records. Integration suites deploy the build into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards.
+See [AGENTS.md](AGENTS.md) for feature design references, [release documentation](docs/releases.md) for the plugin workflow, and [documentation maintenance](docs/site-design.md) for the website.
 
 ## Acknowledgments
 

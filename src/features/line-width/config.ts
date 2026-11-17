@@ -2,7 +2,7 @@
 export const DEFAULT_LINE_WIDTH = 900;
 export const MIN_LINE_WIDTH = 500;
 export const MAX_LINE_WIDTH = 2000;
-export const LINE_WIDTH_STEP = 10;
+export const LINE_WIDTH_STEP = 1;
 export const LINE_WIDTH_PROPERTY = "patch-line-width";
 
 export interface LineWidthSettings {
