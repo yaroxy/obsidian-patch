@@ -109,7 +109,7 @@ function fixture({ documents = [document()], ready = true } = {}) {
   const plugin = { app: { workspace, vault }, registerEvent(fn) { cleanups.push(fn); }, register(fn) { cleanups.push(fn); } };
   globalThis.document = documents[0];
   return { documents, leaves, workspace, vault, saved,
-    start(paths, svgs = { "simple-icons:fixture": CACHED_SVG }) { return registerIcons(plugin, { enabled: true, paths, svgs }, async settings => { saved.push(settings); }); },
+    start(paths, svgs = { "simple-icons:fixture": CACHED_SVG }, extra = {}) { return registerIcons(plugin, { enabled: true, paths, svgs, ...extra }, async settings => { saved.push(settings); }); },
     unload() { for (const cleanup of cleanups) cleanup(); },
   };
 }
@@ -134,6 +134,36 @@ test("explorer rows receive image masks without creating stylesheets or inline S
   await controller.removeIcons([unusual.getAttribute("data-path")]); painted(folder, true); painted(unusual, false);
   assert.deepEqual(f.saved.at(-1).svgs, {});
   f.unload(); painted(folder, false); assert.equal(doc.observers.size, 0);
+});
+
+test("colors survive rename and reload data, and clear on recycled rows, removal and unload", async () => {
+  const f = fixture(), [doc] = f.documents, root = f.leaves[0].view.containerEl;
+  const folder = row(doc, "Notes", true), brand = row(doc, "Notes/Brand.md"), plain = row(doc, "Plain.md");
+  root.append(folder, brand, plain);
+  const property = "--obsidian-patch-icon-color";
+  const controller = f.start({ Notes: "lucide:book-open", "Notes/Brand.md": "simple-icons:fixture", "Plain.md": "lucide:book-open" }, undefined,
+    { colors: { Notes: "blue", "Notes/Brand.md": "brand" }, brandColors: { "simple-icons:fixture": "#123456" } });
+  assert.equal(folder.style.getPropertyValue(property), "var(--color-blue)");
+  assert.equal(brand.style.getPropertyValue(property), "#123456");
+  assert.equal(plain.style.getPropertyValue(property), "");
+  folder.setAttribute("data-path", "Moved"); brand.setAttribute("data-path", "Moved/Brand.md");
+  f.vault.emit("rename", { path: "Moved" }, "Notes"); await flush();
+  assert.deepEqual(f.saved.at(-1).colors, { Moved: "blue", "Moved/Brand.md": "brand" });
+  assert.equal(brand.style.getPropertyValue(property), "#123456");
+  brand.setAttribute("data-path", "Plain.md"); await flush();
+  assert.equal(brand.style.getPropertyValue(property), "");
+  await controller.removeIcons(["Moved/Brand.md"]);
+  assert.deepEqual(f.saved.at(-1).brandColors, {});
+  assert.deepEqual(f.saved.at(-1).colors, { Moved: "blue" });
+  f.unload(); assert.equal(folder.style.getPropertyValue(property), "");
+});
+
+test("moving an uncolored icon replaces a missing destination's old color", async () => {
+  const f = fixture();
+  f.start({ A: "lucide:book-open", B: "lucide:book-open" }, {}, { colors: { B: "red" } });
+  f.vault.emit("rename", { path: "B" }, "A"); await flush();
+  assert.deepEqual(f.saved.at(-1).colors, {});
+  f.unload();
 });
 
 test("lazy folders, rebuilt rows and recycled data-path values reconcile without stale icons", async () => {

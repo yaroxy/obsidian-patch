@@ -1,15 +1,18 @@
 const TITLE_SELECTOR = ".nav-folder-title[data-path], .nav-file-title[data-path]";
 const ICON_CLASS = "obsidian-patch-icons-has-icon";
 const ICON_PROPERTY = "--obsidian-patch-icon";
+const COLOR_PROPERTY = "--obsidian-patch-icon-color";
 const paintedBy = new WeakMap<HTMLElement, Set<HTMLElement>>();
 
+export interface IconAppearance { image: string; color?: string; }
+
 export interface ExplorerIcons {
-  update(icons: ReadonlyMap<string, string>): void;
+  update(icons: ReadonlyMap<string, IconAppearance>): void;
   dispose(): void;
 }
 
 /** Applies image masks to rendered explorer rows; no stylesheet or SVG DOM is created. */
-export function watchExplorerIcons(root: HTMLElement, initial: ReadonlyMap<string, string>): ExplorerIcons {
+export function watchExplorerIcons(root: HTMLElement, initial: ReadonlyMap<string, IconAppearance>): ExplorerIcons {
   const ownerWindow = root.ownerDocument.defaultView;
   if (!ownerWindow) throw new Error("The file explorer window is unavailable");
   let icons = initial;
@@ -23,18 +26,21 @@ export function watchExplorerIcons(root: HTMLElement, initial: ReadonlyMap<strin
     if (!owner || owner === painted) {
       title.classList.remove(ICON_CLASS);
       title.style.removeProperty(ICON_PROPERTY);
+      title.style.removeProperty(COLOR_PROPERTY);
       paintedBy.delete(title);
     }
     painted.delete(title);
   };
 
   const updateTitle = (title: HTMLElement): void => {
-    const image = root.contains(title) ? icons.get(title.getAttribute("data-path") ?? "") : undefined;
-    if (image === undefined) {
+    const appearance = root.contains(title) ? icons.get(title.getAttribute("data-path") ?? "") : undefined;
+    if (appearance === undefined) {
       clear(title);
       return;
     }
-    if (title.style.getPropertyValue(ICON_PROPERTY) !== image) title.style.setProperty(ICON_PROPERTY, image);
+    if (title.style.getPropertyValue(ICON_PROPERTY) !== appearance.image) title.style.setProperty(ICON_PROPERTY, appearance.image);
+    if (appearance.color === undefined) title.style.removeProperty(COLOR_PROPERTY);
+    else if (title.style.getPropertyValue(COLOR_PROPERTY) !== appearance.color) title.style.setProperty(COLOR_PROPERTY, appearance.color);
     title.classList.add(ICON_CLASS);
     painted.add(title);
     paintedBy.set(title, painted);

@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-17
+
+### Added
+
+- Choose icons and colors together in **Change icon**, with brand colors, eight theme-aware presets, custom colors, and batch controls.
+- Set exact global line widths with a numeric input; both sliders now use 1 px steps.
+
+### Changed
+
+- Tint code-block backgrounds to match their callout while preserving syntax highlighting, including nested callouts.
+- Refresh the three affected feature demos and guides, retaining Full's manual installation and remote Mermaid options.
+
+### Fixed
+
+- Preserve individual colors for mixed-color batch selections, route Enter to focused picker buttons, and keep the picker inside the viewport with its controls visible.
+
 ## [0.3.2] - 2026-11-13
 
 ### Changed

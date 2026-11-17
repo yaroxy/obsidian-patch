@@ -1,5 +1,11 @@
 # Obsidian integration tests
 
+## Full 0.4.0 preparation — 2026-11-17
+
+The Full candidate based on `80675bf` synchronizes the icon/color picker, precise global line width, and callout code-block backgrounds from Community's reviewed `3f62957` implementation. Shared feature files and the plugin stylesheet match Community exactly; Full retains its own Mermaid runtime/remote loader, build defaults, validation rules, and manual installation instructions. Fresh locked-dependency installation, 137 unit tests, the production Full build, and tag-specific package validation for 0.4.0 passed.
+
+No Full native integration suite, live remote Mermaid request, or personal-vault deployment was run for this synchronization. The copied feature design documents' macOS/Obsidian 1.15.1 native results describe the Community implementation, not a fresh Full run. Full remains a manual source distribution and is not included in the official Community release assets.
+
 On `codex/full`, these suites deploy the Full Patches build into a development vault and mutate dedicated `Patch … Tests/` fixtures. Build first with `npm run build`; install and enable `patches` in an open vault named `dev-vault`. They verify the live vault's resolved path before creating fixtures, so another vault with the same name is rejected. Use the [migration instructions](releases.md#migrating-from-obsidian-patch) before testing a vault that still uses the old plugin ID.
 
 ## Running

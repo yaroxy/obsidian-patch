@@ -19,7 +19,7 @@ Configure the plugin under **Settings → Patches**.
 | Feature                           | What it does                                                                                        |
 | --------------------------------- | --------------------------------------------------------------------------------------------------- |
 | [Active Line](#active-line)       | Marks the cursor's line in the editor margin and highlights its line number.                        |
-| [Callout Code](#callout-code)     | Tints inline code to match its surrounding callout.                                                 |
+| [Callout Code](#callout-code)     | Tints inline code and code blocks to match their callout.                                                 |
 | [Callout Editor](#callout-editor) | Inserts, edits, previews, and unwraps callouts, with GitHub compatibility checks and conversion.    |
 | [Heading Levels](#heading-levels) | Shows H1–H6 labels beside headings in reading and editing views.                                    |
 | [HTML Tables](#html-tables)       | Converts Markdown tables to HTML and visually edits cells, merged headers, alignment, and captions. |
@@ -61,9 +61,9 @@ A margin bar marks the cursor's line in Live Preview and Source mode, with a hig
 
 ## Callout Code
 
-Inline code takes its callout's color in Reading View and Live Preview, including nested callouts and titles. Fenced code blocks keep the theme's colors. Toggle **Callouts → Inline code**; it is on by default.
+Inline code and code-block backgrounds take their callout's color in Reading View and Live Preview, including nested callouts. Syntax highlighting keeps the theme's colors, and title inline code follows the title text. Toggle **Callouts → Code background**; it is on by default.
 
-![Callout code tint off on the left and on on the right, in light and dark themes](docs/images/callout-code.png)
+![Code-block backgrounds off and on in light and dark themes, including a nested callout](docs/images/callout-code-blocks.gif)
 
 ## Callout Editor
 
@@ -131,9 +131,9 @@ Both table and callout editors resize from their bottom-right corner and remembe
 
 ## Line Width
 
-Adjust the reading column in Reading View, Live Preview, and Source mode. Enable Obsidian's **Settings → Editor → Readable line length**, then use **Line Width** in the plugin settings or the desktop status bar slider. The default is **900 px**, with a range of **500–2000 px**; click the status bar value to reset it.
+Adjust the reading column in Reading View, Live Preview, and Source mode. Enable Obsidian's **Settings → Editor → Readable line length**, then use **Line Width** in the plugin settings or the desktop status bar slider. Type an exact whole-number width in settings, then press Enter or leave the field to apply it; the numeric input and slider stay in sync. Both sliders use 1 px steps. The default is **900 px**, with a range of **500–2000 px**; use the settings reset button or click the status bar value to reset it.
 
-![Adjusting a reading note's column width with the status bar slider](docs/images/line-width.gif)
+![Entering an exact global width of 1137 px in settings](docs/images/line-width-settings.gif)
 
 Override the width for one note:
 
@@ -200,11 +200,13 @@ Local images and videos are supported where the platform can decode them. Covers
 
 ## Patch Icons
 
-Right-click files or folders in the explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon or [Simple Icons](https://simpleicons.org/) brand logo. **Remove icon** clears it; both actions support multiple selections. Icons follow the adjacent text color.
+Right-click files or folders in the explorer and choose **Change icon** to pick a [Lucide](https://lucide.dev/) icon or [Simple Icons](https://simpleicons.org/) brand logo. Preview the icon and color together, then choose **Apply**. Colors include **Follow text**, **Brand color** when available, eight theme-aware presets, and a custom color. Existing icons keep their appearance; new brand selections use their brand color when available. **Cancel** discards the selection. **Remove icon** clears the icon and its color; both actions support multiple selections. For a selection with different icons, choosing only a color keeps each existing icon.
 
-![Choosing folder and file icons for courses and research tools](docs/images/icons.gif)
+![Choosing brand, preset, and custom colors in the combined icon picker](docs/images/icons-colors.gif)
 
-The picker downloads the latest Simple Icons from jsDelivr on first use in a session. Icons already in use are saved locally and display offline; **Patch Icons → Update** refreshes the pack. Icons follow renames and moves made inside Obsidian; changes made outside it leave the old assignment behind.
+For files with different colors, **Keep colors** preserves each one while changing icons. Search results scroll while the color controls and Apply/Cancel remain visible; Enter selects an icon from search or activates the focused footer button.
+
+The picker downloads the latest Simple Icons graphic data from jsDelivr on first use in a session, plus brand-color JSON from the corresponding upstream Simple Icons version. These are image and color data, not executable modules. Icons and brand colors already in use are saved locally and display offline; **Patch Icons → Update** refreshes the pack. If color metadata is unavailable, cached brand colors remain usable and other icons can still use text, preset, or custom colors. Simple Icons provides single-color brand marks, so **Brand color** does not recreate multicolor logos. Icons and colors follow renames and moves made inside Obsidian; changes made outside it leave the old assignment behind.
 
 **Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped; disable Iconize afterwards to avoid duplicate icons. **Icons of missing files** lets you clear unused assignments. Icons appear only in the file explorer.
 

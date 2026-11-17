@@ -30,7 +30,7 @@ async function loadTab(remote) {
           export const REMOTE_MERMAID_ENABLED = ${remote};
           export const isMermaidVersionChoice = value => value === 'bundled' || value === 'latest' || /^\\d+\\.\\d+\\.\\d+$/.test(value);
           export const DEFAULT_CALLOUT_CODE_ENABLED = true, DEFAULT_ACTIVE_LINE_ENABLED = true, DEFAULT_HEADING_LEVELS_ENABLED = true;
-          export const DEFAULT_BANNER_WIDTH_PERCENT = 90, DEFAULT_LINE_WIDTH = 900, MIN_LINE_WIDTH = 500, MAX_LINE_WIDTH = 2000, LINE_WIDTH_STEP = 10;
+          export const DEFAULT_BANNER_WIDTH_PERCENT = 90, DEFAULT_LINE_WIDTH = 900, MIN_LINE_WIDTH = 500, MAX_LINE_WIDTH = 2000, LINE_WIDTH_STEP = 1;
           export const LINE_WIDTH_PROPERTY = 'patch-line-width', GITHUB_PROPERTY = 'github', MATH_INDENTS = [2,4];
           export const parseMermaidSettings = x => ${remote}
             ? { mermaidVersion: x.mermaidVersion ?? 'bundled', mermaidCachedLatest: x.mermaidCachedLatest }
@@ -120,7 +120,7 @@ test("settings registration exposes every community row for search without DOM o
   const tab = new CommunityTab(p);
   const groups = tab.getSettingDefinitions();
   assert.deepEqual(groups.map(x => x.heading), ["Callouts", "Editor", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]);
-  assert.equal(groups.flatMap(x => x.items).length, 22);
+  assert.equal(groups.flatMap(x => x.items).length, 23);
   assert.equal(groups.flatMap(x => x.items).every(x => typeof x.name === "string" && x.name.length > 0 && typeof x.desc === "string"), true);
   assert.deepEqual(p.calls, []);
   assert.equal(groups.find(x => x.heading === "Patch Mermaid").items.some(x => x.name === "Custom Mermaid version"), false);

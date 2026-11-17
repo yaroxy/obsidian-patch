@@ -32,19 +32,20 @@
 /* Callout code */
 
 /*
- * Inline code is painted with --code-background, an opaque page-level gray
+ * Code is painted with --code-background, an opaque page-level gray
  * that reads as a hole in a callout's tinted background. Inside a callout the
- * chip takes the callout's own color instead, mixed the way Obsidian mixes the
+ * background takes the callout's own color instead, mixed the way Obsidian mixes the
  * callout background, so nested callouts follow their own color, and code in a
- * callout title takes the title's color. :not(pre) > code keeps fenced code
- * blocks on the theme's own background.
+ * callout title takes the title's color. Set the block background on pre;
+ * its code child stays transparent and syntax tokens keep their theme colors.
  */
 
 body {
   --obsidian-patch-callout-code-tint: 12%;
 }
 
-.obsidian-patch-callout-code .markdown-rendered .callout :not(pre) > code {
+.obsidian-patch-callout-code .markdown-rendered .callout :not(pre) > code,
+.obsidian-patch-callout-code .markdown-rendered .callout pre {
   --code-background: color-mix(
     in oklch,
     var(--callout-color) var(--obsidian-patch-callout-code-tint),
@@ -430,7 +431,7 @@ body {
   flex-shrink: 0;
   width: var(--icon-m);
   height: var(--icon-m);
-  background-color: currentColor;
+  background-color: var(--obsidian-patch-icon-color, currentColor);
   -webkit-mask: var(--obsidian-patch-icon) center / contain no-repeat;
   mask: var(--obsidian-patch-icon) center / contain no-repeat;
 }
@@ -453,6 +454,15 @@ body {
 }
 
 /* Line Width */
+
+.setting-item-control input.obsidian-patch-line-width-input {
+  width: 6em;
+  font-variant-numeric: tabular-nums;
+}
+
+.obsidian-patch-line-width-input[aria-invalid="true"] {
+  border-color: var(--text-error);
+}
 
 .obsidian-patch-line-width {
   gap: var(--size-4-2);
@@ -535,6 +545,38 @@ body {
   font-weight: var(--font-semibold);
   color: var(--text-muted);
 }
+
+.prompt.obsidian-patch-icon-picker {
+  display: flex;
+  flex-direction: column;
+  /* SuggestModal's 15vh top offset would push a tall picker to the bottom edge. */
+  top: auto;
+  width: 680px;
+  max-width: calc(100vw - 32px);
+  max-height: min(760px, calc(100dvh - 48px));
+}
+
+.obsidian-patch-icon-picker > :not(.obsidian-patch-icon-results) { flex-shrink: 0; }
+.obsidian-patch-icon-results { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.obsidian-patch-icon-controls { flex-shrink: 0; padding: var(--size-4-3); border-top: 1px solid var(--background-modifier-border); }
+.obsidian-patch-icon-selection, .obsidian-patch-icon-colors, .obsidian-patch-icon-custom {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  margin-bottom: var(--size-4-3);
+}
+.obsidian-patch-icon-colors { flex-wrap: wrap; }
+.obsidian-patch-icon-colors button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--interactive-accent); }
+.obsidian-patch-icon-swatch { padding: 0; width: 26px; height: 26px; }
+.obsidian-patch-icon-swatch::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--obsidian-patch-icon-swatch);
+}
+.obsidian-patch-icon-custom input[type="color"] { width: 40px; height: 28px; padding: 2px; }
+.obsidian-patch-icon-controls .modal-button-container { margin-top: 0; }
 
 .obsidian-patch-callout-types {
   display: flex;

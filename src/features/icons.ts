@@ -3,6 +3,7 @@ import {
   convertIconize,
   iconizeName,
   parseIconId,
+  parseIconSettings,
   renameIconPaths,
   svgUrl,
   type IconId,
@@ -11,7 +12,8 @@ import {
 } from "./icons/config";
 import { IconPicker, type IconChoice } from "./icons/picker";
 import { loadSimpleIcons, type SimpleIconSet } from "./icons/simple-icons";
-import { watchExplorerIcons, type ExplorerIcons } from "./icons/explorer";
+import { watchExplorerIcons, type ExplorerIcons, type IconAppearance } from "./icons/explorer";
+import { iconColorCss } from "./icons/color";
 
 export { parseIconSettings, type IconSettings } from "./icons/config";
 
@@ -47,11 +49,11 @@ export function registerIcons(
   save: (settings: IconSettings) => Promise<void>,
 ): PatchIconsController {
   const { app } = plugin;
-  let settings = initial;
+  let settings = parseIconSettings(initial);
   let simpleIcons: Promise<SimpleIconSet> | undefined;
   let status: SimpleIconsStatus = { status: "idle" };
   let active = true;
-  let iconImages = new Map<string, string>();
+  let iconImages = new Map<string, IconAppearance>();
   const explorers = new Map<HTMLElement, { document: Document; icons: ExplorerIcons }>();
 
   const svgFor = (id: IconId): string | undefined => {
@@ -63,7 +65,7 @@ export function registerIcons(
     const icons = settings.enabled
       ? Object.entries(settings.paths).flatMap(([path, id]) => {
         const svg = svgFor(id);
-        return svg === undefined ? [] : [[path, svgUrl(svg)] as const];
+        return svg === undefined ? [] : [[path, { image: svgUrl(svg), color: iconColorCss(settings.colors[path], settings.brandColors[id]) }] as const];
       })
       : [];
     iconImages = new Map(icons);
@@ -85,6 +87,7 @@ export function registerIcons(
   };
 
   const update = async (next: IconSettings): Promise<void> => {
+    if (!active) return;
     settings = next;
     render();
     await save(next);
@@ -105,20 +108,34 @@ export function registerIcons(
   const lacksSvgs = (): boolean => Object.values(settings.paths)
     .some((id) => parseIconId(id)?.source === "simple-icons" && settings.svgs[id] === undefined);
 
+  const usedBrandColors = (paths: Record<string, IconId>, set?: SimpleIconSet): Record<IconId, string> => {
+    const colors: Record<IconId, string> = {};
+    for (const id of new Set(Object.values(paths))) {
+      const icon = parseIconId(id);
+      if (icon?.source !== "simple-icons") continue;
+      const color = set?.color(icon.name) ?? settings.brandColors[id];
+      if (color) colors[id] = color;
+    }
+    return colors;
+  };
+
   const loadSet = (force = false): Promise<SimpleIconSet> => {
     if (simpleIcons !== undefined && !force) return simpleIcons;
     status = { status: "loading" };
     const loading = loadSimpleIcons(settings.cachedLatest, (cachedLatest) => {
-      if (settings.cachedLatest !== cachedLatest) void update({ ...settings, cachedLatest });
+      if (active && settings.cachedLatest !== cachedLatest) void update({ ...settings, cachedLatest });
     });
     simpleIcons = loading;
     loading.then(
       (set) => {
+        if (!active) return;
         status = { status: "ready", version: set.version };
         const svgs = usedSvgs(settings.paths, set);
-        if (!sameEntries(svgs, settings.svgs)) void update({ ...settings, svgs });
+        const brandColors = usedBrandColors(settings.paths, set);
+        if (!sameEntries(svgs, settings.svgs) || !sameEntries(brandColors, settings.brandColors)) void update({ ...settings, svgs, brandColors });
       },
       (error: unknown) => {
+        if (!active) return;
         status = { status: "error", message: describeError(error) };
         console.warn("Patches: could not load Simple Icons from jsDelivr", error);
         // A later picker or update retries instead of reusing the failure.
@@ -146,19 +163,35 @@ export function registerIcons(
       if (icon === undefined) return [];
       return icon.source === "lucide"
         ? [lucideChoice(icon.name)]
-        : [{ id, source: icon.source, name: icon.name, svg: () => settings.svgs[id] }];
+        : [{ id, source: icon.source, name: icon.name, brandColor: settings.brandColors[id], svg: () => settings.svgs[id] }];
     });
-    new IconPicker(app, lucideNames().map(lucideChoice), recent, loadSet(), (choice) => {
-      const next = { ...settings.paths };
-      for (const path of paths) next[path] = choice.id;
-      void update({ ...settings, paths: next, svgs: usedSvgs(next, undefined, choice) });
+    const ids = new Set(paths.map(path => settings.paths[path]));
+    const colors = new Set(paths.map(path => settings.colors[path]));
+    new IconPicker(app, lucideNames().map(lucideChoice), recent, loadSet(), {
+      current: ids.size === 1 ? recent.find(choice => choice.id === settings.paths[paths[0]!]) : undefined,
+      color: colors.size === 1 ? settings.colors[paths[0]!] : undefined,
+      mixedColors: colors.size > 1,
+      count: paths.length,
+      allHaveIcons: paths.every(path => settings.paths[path] !== undefined),
+      onApply: async (choice, color) => {
+        const next = { ...settings.paths }, nextColors = { ...settings.colors };
+        for (const path of paths) {
+          if (choice) next[path] = choice.id;
+          if (color !== undefined) nextColors[path] = color;
+          if (nextColors[path] === "brand" && parseIconId(next[path] ?? "")?.source !== "simple-icons") nextColors[path] = "text";
+        }
+        const brandColors = usedBrandColors(next);
+        if (choice?.brandColor) brandColors[choice.id] = choice.brandColor;
+        await update({ ...settings, paths: next, colors: nextColors, brandColors, svgs: usedSvgs(next, undefined, choice) });
+      },
     }).open();
   };
 
   const removeIcons = async (paths: string[]): Promise<void> => {
     const next = { ...settings.paths };
-    for (const path of paths) delete next[path];
-    await update({ ...settings, paths: next, svgs: usedSvgs(next) });
+    const colors = { ...settings.colors };
+    for (const path of paths) { delete next[path]; delete colors[path]; }
+    await update({ ...settings, paths: next, colors, brandColors: usedBrandColors(next), svgs: usedSvgs(next) });
   };
 
   const addMenuItems = (menu: Menu, files: TAbstractFile[]): void => {
@@ -188,7 +221,15 @@ export function registerIcons(
   plugin.registerEvent(app.workspace.on("files-menu", (menu, files) => addMenuItems(menu, files)));
   plugin.registerEvent(app.vault.on("rename", (file, oldPath) => {
     const paths = renameIconPaths(settings.paths, oldPath, file.path);
-    if (paths !== undefined) void update({ ...settings, paths });
+    if (paths === undefined) return;
+    const colors = { ...(renameIconPaths(settings.colors, oldPath, file.path) ?? settings.colors) };
+    // An uncolored moved icon must also replace an orphaned destination color.
+    for (const path of Object.keys(settings.paths)) {
+      if ((path === oldPath || path.startsWith(`${oldPath}/`)) && settings.colors[path] === undefined) {
+        delete colors[file.path + path.slice(oldPath.length)];
+      }
+    }
+    void update({ ...settings, paths, colors });
   }));
   plugin.registerEvent(app.workspace.on("layout-change", syncExplorers));
   plugin.registerEvent(app.workspace.on("window-open", syncExplorers));
@@ -241,7 +282,9 @@ export function registerIcons(
         return;
       }
       const next = { ...settings.paths, ...paths };
-      await update({ ...settings, paths: next, svgs: usedSvgs(next) });
+      const colors = { ...settings.colors };
+      for (const path of Object.keys(paths)) delete colors[path];
+      await update({ ...settings, paths: next, colors, brandColors: usedBrandColors(next), svgs: usedSvgs(next) });
       const skippedText = skipped.length === 0 ? "" :
         ` Skipped ${skipped.length}: ${skipped.map(({ path, icon }) => `${icon} (${path})`).join(", ")}.`;
       new Notice(`Imported ${count} icons from Iconize.${skippedText} Disable Iconize so icons are not shown twice.`, 10_000);
