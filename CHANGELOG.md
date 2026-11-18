@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Show Mermaid 12.3.0’s numbered flowchart steps in the diagram guide and the Community Directory screenshot set.
 - **Callouts on GitHub** shows each callout’s line and whether GitHub renders it as an alert or a plain blockquote. **Details** expands the reasons for one row. **Jump** goes to the callout in the current view. Long lists scroll below the summary.
 - **Icons of missing files** lists the full vault paths before cleanup. Clicking **Remove** rechecks each displayed path so a restored file keeps its icon and color.
 - Personal builds print the bundled Mermaid version and a reminder to test a custom pin. The README documents how to select an exact version.

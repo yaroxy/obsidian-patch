@@ -26,9 +26,13 @@ The gallery shows five features available in 0.4.0. Each upload is a 1200 × 800
 | 2 | [Icon colors](images/community/02-icon-colors.png) | The Python icon preview, its brand color, and the color controls in one picker. |
 | 3 | [HTML table editor](images/community/03-table-editor.png) | A kana chart with grouped cells, a selected row segment, and the editing toolbar. |
 | 4 | [Callout code](images/community/04-callout-code.png) | Syntax-highlighted code in a dark-theme warning and its nested tip. |
-| 5 | [Mermaid diagram](images/community/05-mermaid-diagram.png) | A Cynefin diagram for classifying incidents, with labels visible in all four domains. |
+| 5 | [From draft to publication](images/community/05-mermaid-diagram.png) | Two numbered handoffs in Patches 0.4.0 above the same source in Obsidian 1.15.1’s native Mermaid block. |
 
 ## Feature demo captures
+
+The fifth screenshot and the [three-second flowchart loop](images/mermaid-flow-steps.gif) come from the published Community 0.4.0 files in Obsidian 1.15.1. Use the English publishing workflow in the [Mermaid guide](../site/features/mermaid.md#number-the-steps-in-a-flowchart) with Bundled and Strict. Set `layout: dagre` within the diagram. In this example, the bundled default ELK layout plays the steps but omits both badges. Obsidian’s native block draws the same nodes and arrows without step numbering or playback.
+
+For the Directory comparison, show the same source in `patch-mermaid` and `mermaid` fences in one Reading view. The site loop samples that rendered SVG at 20 frames per second for one complete cycle. A still from the loop is displayed when the browser requests reduced motion.
 
 The icon-color, exact-width, and callout-code demos were refreshed from the working Community build on 2026-11-17, using macOS / Obsidian 1.15.1 and the default theme. They are stepped animations of real captured interface states. The source frames are only scaled and palette-encoded; controls and rendered output are not reconstructed or painted over. The callout note labels the active background option and theme so the before/after states remain clear.
 

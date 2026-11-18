@@ -56,7 +56,7 @@ A frozen Obsidian process or a non-returning native operation cannot be forcibly
 
 ## Development checks — 2026-11-18
 
-The Community candidate passed 138 unit tests, and the Full candidate passed 143. Each passed its own production build and release-package validation. The Community site built 21 pages with 847 local links and assets. Desktop (1280 px) and mobile-width (390 px) browser checks covered the demo buttons, images, layout, and the Unreleased link. The native suites below ran sequentially in `dev-vault` on macOS with Obsidian 1.15.1.
+The Community candidate passed 138 unit tests, and the Full candidate passed 143. Each passed its own production build and release-package validation. The initial Community site build covered 21 pages and 847 local links and assets. Desktop (1280 px) and mobile-width (390 px) browser checks covered the demo buttons, images, layout, and the Unreleased link. The native suites below ran sequentially in `dev-vault` on macOS with Obsidian 1.15.1.
 
 | Native suite | Community | Full | What was verified |
 | --- | ---: | ---: | --- |
@@ -66,6 +66,10 @@ The Community candidate passed 138 unit tests, and the Full candidate passed 143
 | Mermaid | 32 | 31 | Both checked unsaved edits, nested fences, stale results, undo, and a Reading-view jump that preserved CRLF file bytes. The bundled version was 12.3.0. Full also rendered with custom 12.1.0 from jsDelivr and displayed that engine’s version in the whole-note check. [Checker design](code-block-lint-and-bilingual-translation.md#code-block-linting) |
 
 Both reports kept the final actions reachable with 32 entries at 100%, 150%, and 200% desktop zoom and in a 340 CSS pixel container. In the GitHub report, Space expanded only the focused row. Supported alerts with an advisory kept their explanation, and fully compatible alerts showed only **Jump**. All completed suites restored settings, the previous tab, editor sizes, and background throttling. The final Icons run restored the Community plugin files to the development vault. Native mobile, Windows, and Linux checks were outside this round.
+
+### Numbered flowchart example
+
+On Obsidian 1.15.1, the published 0.4.0 Community build and both development builds rendered steps 1 and 2 with Bundled 12.3.0, Strict, and the diagram’s explicit Dagre layout. Both arrows took turns highlighting and the dot moved along each one. The same source drew a static three-node flowchart in native Pele and in Full with upstream Mermaid 12.1.0 selected. The gallery and the 60-frame site loop were captured from the published build. The updated site passed checks for 21 pages and 850 links and assets. At both 390 and 1280 px, Chrome loaded the GIF with standard motion and the PNG when reduced motion was requested. All three sessions restored the original settings and tab. After the final session, the development vault’s three plugin files matched the original Community candidate byte for byte. [Diagram source](../site/features/mermaid.md#number-the-steps-in-a-flowchart) · [Gallery comparison](images/community/05-mermaid-diagram.png)
 
 ### Earlier Mermaid checks
 

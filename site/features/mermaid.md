@@ -1,6 +1,41 @@
 # Mermaid diagrams
 
-Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. The community build uses the Mermaid version bundled with Patches, updated through plugin releases; the full build also offers remote versions.
+Use a `patch-mermaid` block to render a diagram with the Mermaid engine bundled with Patches. A standard `mermaid` block uses Obsidian’s own renderer.
+
+## Number the steps in a flowchart
+
+Follow a note from its first draft to publication. The numbers show the order at a glance. During playback, a dot and a thicker line mark the active handoff.
+
+<figure>
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="../../docs/images/mermaid-flow-steps.png">
+    <img src="../../docs/images/mermaid-flow-steps.gif" alt="From draft to publication. Arrow 1 connects Write draft to Review changes. Arrow 2 connects Review changes to Publish note.">
+  </picture>
+  <figcaption>Each arrow takes a turn for 1.5 seconds. Both numbers stay visible throughout the loop.</figcaption>
+</figure>
+
+````markdown
+```patch-mermaid
+---
+title: From draft to publication
+config:
+  layout: dagre
+  flowchart:
+    stepNumbers: true
+    stepDuration: 1.5
+    rankSpacing: 110
+---
+flowchart LR
+  A[Write draft] review@--> B[Review changes]
+  B publish@--> C[Publish note]
+  review@{ step: 1 }
+  publish@{ step: 2 }
+```
+````
+
+Patches 0.4.0 bundles Mermaid 12.3.0, which introduced numbered flowchart steps. Keep `layout: dagre` in this example to show the badges. In Obsidian 1.15.1, the same source in a native block draws the three nodes and two static arrows. Obsidian documents Mermaid 12.1.0 syntax support in its Pele renderer. [Mermaid flowchart steps](https://mermaid.js.org/syntax/flowchart.html#step-by-step-flow-animation-v12-3-0) · [Obsidian’s diagram release notes](https://obsidian.md/changelog/2026-11-02-desktop-v1.15.0/)
+
+## Match the note’s theme
 
 ![A Cynefin incident response diagram following Obsidian's light and dark themes](../../docs/images/mermaid-theme.gif)
 
@@ -31,7 +66,7 @@ cynefin-beta
 ```
 ````
 
-Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks use Obsidian’s renderer. Obsidian 1.15 introduced Pele with a documented Mermaid 12.1.0 syntax baseline. Patches 0.4.0 bundles the upstream Mermaid 12.3.0 engine for `patch-mermaid`. [Obsidian’s diagram release notes](https://obsidian.md/changelog/2026-11-02-desktop-v1.15.0/)
+Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically.
 
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
