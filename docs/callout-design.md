@@ -12,9 +12,12 @@ callout 是每一行都要带 `>` 的引用块，手工调整结构很繁琐：�
 - 命令 **Edit callout**：光标位于 callout 内时可用，编辑最内层的那个 callout。
 - 编辑器底部的 **Convert to text** 和 **Convert to blockquote** 按钮，按编辑器中当前的内容转换。同样的转换也有命令 **Convert callout to text** 和 **Convert callout to blockquote**。
 - 命令 **Check callouts for GitHub**：列出整篇笔记中每个 callout 在 GitHub 上的问题，并可跳转到对应行。
+- **Callouts on GitHub** 报告与 Mermaid 检查共用居中布局。顶部统计 alert 与普通引用的数量，每项默认一行，列出笔记行号、callout 表头和渲染结果。只有附带解释的条目显示 **Details** 和条数，包括可以显示为 alert 但有语法或配色差异的条目。详情独立展开，长列表在摘要下方滚动，窄窗口允许操作按钮换行。**Jump** 在编辑器中定位光标，在阅读视图中滚动到相应的 callout。
 - 编辑器右键菜单：光标在 callout 内时提供编辑和两种转换；有选区时提供 **Wrap in callout**。
 - 阅读视图和 Live Preview 中，悬停 callout 时出现 **Edit callout** 按钮。Live Preview 中它位于原生 **Edit this block** 旁边。
 - 状态栏：笔记的 `github` 属性为 `true`，或位于设置的 **GitHub folders** 中时，显示 GitHub 不会渲染成 alert 的 callout 个数。
+- 阅读视图的命令与状态栏读取已保存的笔记，编辑器检查当前缓冲区。跳转前重新核对笔记与内容，检测到其他窗格或同步修改后提示重新检查。未加入 GitHub 文件夹的笔记也可通过命令面板检查。
+- **GitHub folders** 使用 Obsidian 原生补全列表，按光标所在的逗号分段匹配当前库的文件夹路径。选择时只替换该段，并立即刷新笔记的状态栏。已填入其他位置的目录从候选中排除。仍可手输尚未建立的路径，含逗号的目录受现有分隔格式限制。
 
 ## 文本规则
 

@@ -25,7 +25,7 @@ const result = await build({
       builder.onLoad({ filter: /.*/, namespace: "rendering-test" }, ({ path }) => {
         const prefix = "const state = globalThis.__patchesMermaidRenderingTest;";
         if (path.startsWith("gzip:")) return { contents: 'export default "";' };
-        if (path === "obsidian") return { contents: "export class MarkdownRenderChild { register() {} }" };
+        if (path === "obsidian") return { contents: "export class MarkdownRenderChild { register() {} } export class Modal {} export class MarkdownView {} export class Notice {} export function getFrontMatterInfo() {}" };
         if (path === "dompurify") return { contents: `${prefix}
           export default function createDOMPurify() { return {
             isSupported: state.supported,
@@ -69,7 +69,7 @@ async function render(securityLevel) {
   };
   const plugin = {
     app: { workspace: { on() {} } },
-    registerEvent() {},
+    registerEvent() {}, register() {}, addCommand() {},
     registerMarkdownCodeBlockProcessor(_language, callback) { processor = callback; },
   };
   registerPatchMermaid(plugin, {

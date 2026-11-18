@@ -9,8 +9,8 @@ import {
   type MermaidRuntime,
   type MermaidVersionChoice,
 } from "./mermaid-runtime";
-
-const CODE_BLOCK_LANGUAGE = "patch-mermaid";
+import { registerMermaidCheck } from "./mermaid-check";
+import { DIAGRAM_LANGUAGE } from "./mermaid-check/model";
 
 /**
  * Obsidian's own Mermaid renderer reads its font from this property, which
@@ -71,6 +71,7 @@ export function registerPatchMermaid(
     });
 
   let runtime = load(options.version);
+  registerMermaidCheck(plugin, () => runtime);
 
   const render = async (diagram: Diagram): Promise<void> => {
     const generation = ++diagram.generation;
@@ -116,7 +117,7 @@ export function registerPatchMermaid(
   };
 
   plugin.registerMarkdownCodeBlockProcessor(
-    CODE_BLOCK_LANGUAGE,
+    DIAGRAM_LANGUAGE,
     async (source, element, context) => {
       const container = element.createDiv({ cls: "obsidian-patch-mermaid" });
       const diagram: Diagram = { container, source, generation: 0 };

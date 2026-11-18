@@ -25,6 +25,12 @@ Full and Community use the same plugin ID, settings and command hotkeys. Install
 
 ## Reproducible builds
 
+### Choose a bundled Mermaid version
+
+For a personal build, use a separate checkout and run `npm install --save-exact mermaid@12.1.0`, substituting your desired exact version. Run `npm test`, `npm run build`, and `npm run check:release`. Test the build and your usual diagrams in a development vault before installing it in your main vault. Custom pins may change syntax, layout, or ELK compatibility. Full also offers its separate Latest and Custom settings at runtime. [Native test instructions](integration-testing.md)
+
+### Verify the package
+
 Use `npm ci` and the same source revision. Embedded icon packs use the exact build-only dependency `fflate@0.8.3`, compression level 9 and a zero gzip timestamp. This avoids native zlib differences while retaining complete icon data; the compressor is not included in the runtime. Validation records its source hash so changing it requires a rebuild.
 
 The build and validation commands check version consistency across `package.json`, `package-lock.json`, `manifest.json`, and `versions.json`, require the remote Mermaid loader in the Full dependency graph, and reject modified artifacts or stale source inputs. Run the affected development-vault suites before installing a changed build in a personal vault. See [Integration testing](integration-testing.md); historical verification is not a fresh test of a new revision.

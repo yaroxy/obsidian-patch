@@ -27,6 +27,7 @@
     "@iconify-json/material-icon-theme": "^1.2.77",
     "@mermaid-js/layout-elk": "^1.0.2",
     "dompurify": "3.4.17",
+    "markdown-it": "15.0.3",
     "mermaid": "12.3.0"
   },
   "devDependencies": {

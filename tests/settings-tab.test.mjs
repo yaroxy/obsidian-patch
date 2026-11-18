@@ -39,6 +39,7 @@ async function loadTab(remote) {
           export const parseMathFormatSettings = x => x, parseCalloutSettings = x => x, parseIconSettings = x => x, parseLineWidthSettings = x => x;
           export const registerPatchMermaid = () => {}, registerCalloutCode = () => {}, registerActiveLine = () => {}, registerHeadingLevels = () => {};
           export const registerPdfExport = () => {}, registerBanner = () => {}, registerTables = () => {}, registerMathFormat = () => {};
+          export class GitHubFolderSuggest {}
           export const registerCallouts = () => {}, registerIcons = () => {}, registerLineWidth = () => {};` };
       });
     } }],

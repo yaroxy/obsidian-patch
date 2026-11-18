@@ -27,9 +27,9 @@ async function mermaidIntegration(app, context) {
     const element = svg(), box = element?.getBoundingClientRect();
     throw new Error(`Timed out: ${label}; ${JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode?.(), svg: element && { width: box.width, height: box.height, viewBox: element.getAttribute("viewBox") }, hidden: doc.hidden })}`);
   };
-  const capture = async name => {
+  const capture = async (name, element = leaf.view.contentEl) => {
     const wc = require("electron").remote.getCurrentWebContents();
-    const rect = leaf.view.contentEl.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const x = Math.max(0, Math.floor(rect.left)), y = Math.max(0, Math.floor(rect.top));
     const width = Math.floor(Math.min(rect.right, window.innerWidth) - x);
     const height = Math.floor(Math.min(rect.bottom, window.innerHeight) - y);
@@ -256,9 +256,146 @@ async function mermaidIntegration(app, context) {
       else window[marker] = originalMarker;
     }
 
+    // Check the command against the real note buffer, native Markdown, parser
+    // and modal. Source mode avoids rendering the intentionally invalid samples.
+    const diagnosticPath = `Patch Mermaid Tests/Check diagrams ${context.runId}.md`;
+    const baseline = [
+      "---", "example: |", "  ```patch-mermaid", "  ignored", "  ```", "---", "",
+      "```mermaid", "flowchart LR", "A[Native diagram] --> B[Second step]", "```", "",
+      "````markdown", "```patch-mermaid", "literal example", "```", "````", "",
+      "> %% hidden comment", "> ```patch-mermaid", "> literal in comment", "> ```", "",
+      "> $$", "> ```patch-mermaid", "> literal in math", "> ```", "",
+    ].join("\n");
+    const sample = baseline + [
+      "~~~patch-mermaid", "flowchart LR", "A --> B", "~~~", "",
+      "> [!note] Example", "> - Item", ">", ">   ~~~patch-mermaid", ">   pie", '>     "Yes" : hello', ">   ~~~", "",
+      "```patch-mermaid", "unknown diagram type", "```", "",
+    ].join("\n");
+    const errorLine = sample.split("\n").findIndex(line => line.includes('"Yes"'));
+    const lastFence = sample.split("\n").lastIndexOf("```patch-mermaid");
+    const file = await app.vault.create(diagnosticPath, baseline);
+    const reportModal = () => doc.querySelector(".obsidian-patch-mermaid-report");
+    const issues = () => [...reportModal().querySelectorAll(".obsidian-patch-report-item")];
+    const command = "patches:check-diagrams-in-note";
+    const runCheck = () => assert(app.commands.executeCommandById(command), "Diagram check unavailable in this view");
+    const waitFor = async (check, label) => {
+      for (let attempt = 0; attempt < 120; attempt++) { if (check()) return; await wait(50); }
+      throw new Error(`Timed out: ${label}. Report: ${reportModal()?.textContent ?? "closed"}`);
+    };
+    const openFixture = mode => leaf.setViewState({ type: "markdown", state: { file: file.path, mode, source: true } });
+    try {
+      await openFixture("preview");
+      const nativeSvg = () => [...preview().querySelectorAll("svg")].find(el => el.textContent.includes("Native diagram") && !el.closest(".obsidian-patch-mermaid"));
+      await waitFor(nativeSvg, "Obsidian's native diagram");
+      report.mermaid.hostSvgUsesPeleClasses = !!nativeSvg().querySelector('[class*="pele-"]') || /pele-/.test(nativeSvg().getAttribute("class") ?? "");
+      runCheck();
+      await waitFor(() => reportModal()?.textContent.includes("No patch-mermaid blocks"), "empty state in Reading view");
+      reportModal().querySelector(".modal-header-button").click();
+      pass("Reading view skips native mermaid, frontmatter, literal fence examples, and unfinished quoted comments and math");
+
+      await openFixture("source");
+      const editor = leaf.view.editor;
+      editor.replaceRange(sample.slice(baseline.length), editor.offsetToPos(baseline.length));
+      assert(fs.readFileSync(path.join(context.vault, diagnosticPath), "utf8") === baseline, "Fixture already saved before checking the editor buffer");
+      runCheck();
+      await waitFor(() => reportModal()?.textContent.includes("2 failed to parse"), "three diagrams including two failures in the unsaved buffer");
+      const rows = issues();
+      assert(reportModal().textContent.includes(`Mermaid ${runtime.version} · Checked 3 diagrams`) && rows.length === 2, "Wrong runtime, checked count or errors");
+      assert(rows[0].innerText.includes(`Diagram 2 · Note line ${errorLine + 1} · Syntax error`) && !rows[0].innerText.includes("Lexer error"), "The summary should show the note line and keep parser details collapsed");
+      assert(rows[1].innerText.includes(`Note line ${lastFence + 1} (opening fence)`), "Unlocated error does not link to its opening fence");
+      const toggle = rows[0].querySelector("button[aria-controls]");
+      const details = doc.getElementById(toggle.getAttribute("aria-controls"));
+      assert(details.hidden && toggle.getAttribute("aria-expanded") === "false", "Parser details should start collapsed");
+      toggle.click();
+      assert(!details.hidden && toggle.getAttribute("aria-expanded") === "true" && rows[0].innerText.includes("Lexer error") && rows[1].querySelector("pre").hidden, "Details should expand only the selected parser message");
+      toggle.click();
+      assert(details.hidden, "Details should collapse again");
+      await capture("diagram-check", reportModal());
+      report.mermaid.screenshots.push("diagram-check.png");
+      pass("each issue shows its note line and opens its own accessible parser details on demand");
+      rows[0].querySelector("button").click();
+      await waitFor(() => editor.getCursor().line === errorLine, "jump from the unsaved buffer");
+      const cursor = editor.getCursor();
+      assert(cursor.line === errorLine && cursor.ch === editor.getLine(errorLine).indexOf("hello"), `Wrong nested error position: ${JSON.stringify(cursor)}`);
+      assert(editor.getValue() === sample, "Checking or jumping edited the source");
+      pass("the command checks the unsaved buffer with the active Mermaid engine and jumps through list and callout prefixes to the error column");
+
+      await leaf.view.save();
+      assert(await app.vault.read(file) === sample, "Expected the current fixture on disk before testing undo");
+      runCheck();
+      editor.replaceRange("Extra line\n", { line: 0, ch: 0 });
+      await waitFor(() => reportModal()?.textContent.includes("note changed"), "stale in-flight result discarded");
+      assert(issues().length === 0, "Obsolete result links still present");
+      reportModal().querySelector(".modal-header-button").click();
+      editor.undo();
+      assert(editor.getValue() === sample, "Undo after a check failed to restore the sample");
+      pass("editing during a check discards stale locations and preserves undo");
+
+      await leaf.view.save();
+      assert(await app.vault.read(file) === sample, "The saved fixture differs from the editor after undo");
+      await openFixture("preview");
+      runCheck();
+      await waitFor(() => reportModal()?.textContent.includes("2 failed to parse"), "Reading-view diagnostics");
+      issues()[1].querySelector("button").click();
+      await waitFor(() => leaf.view.getMode() === "source" && leaf.view.editor.getCursor().line === lastFence, "same-pane jump to the opening fence");
+      assert(leaf.view.editor.getValue() === sample, "Switching modes or jumping from Reading view changed the note");
+      assert(await app.vault.read(file) === sample, "Jumping from Reading view changed the saved source");
+      pass("Reading-view diagnostics open the original note in the same pane at the fallback fence");
+
+      const crlf = sample.replaceAll("\n", "\r\n");
+      await leaf.setViewState({ type: "empty" });
+      await app.vault.modify(file, crlf);
+      await openFixture("preview");
+      runCheck();
+      await waitFor(() => reportModal()?.textContent.includes("2 failed to parse"), "CRLF Reading-view diagnostics");
+      issues()[0].querySelector("button").click();
+      await waitFor(() => leaf.view.getMode() === "source" && leaf.view.editor.getCursor().line === errorLine, "CRLF jump to the nested error");
+      assert(leaf.view.editor.getCursor().ch === leaf.view.editor.getLine(errorLine).indexOf("hello"), "CRLF changed the mapped column");
+      assert(await app.vault.read(file) === crlf, "Jump rewrote the saved line endings");
+      pass("Reading-view Jump locates a nested error in a CRLF note and preserves its saved line endings");
+
+      const many = Array.from({ length: 32 }, (_, i) => `\`\`\`patch-mermaid\nInvalid diagram ${i + 1}\n\`\`\``).join("\n\n");
+      leaf.view.editor.setValue(many);
+      runCheck();
+      await waitFor(() => issues().length === 32, "crowded diagram report");
+      const panel = reportModal(), list = panel.querySelector(".obsidian-patch-report-list");
+      const wc = require("electron").remote.getCurrentWebContents(), originalZoom = wc.getZoomFactor();
+      report.mermaid.reportLayout = [];
+      try {
+        for (const zoom of [1, 1.5, 2]) {
+          wc.setZoomFactor(zoom);
+          await wait(200);
+          list.scrollTop = list.scrollHeight;
+          const box = panel.getBoundingClientRect();
+          const jump = issues().at(-1).querySelector("button"), button = jump.getBoundingClientRect();
+          report.mermaid.reportLayout.push({ zoom, width: box.width, top: box.top, bottomGap: innerHeight - box.bottom });
+          assert(box.top >= 23 && innerHeight - box.bottom >= 23 && Math.abs(box.top - (innerHeight - box.bottom)) <= 2, `Report not vertically centered with clearance at ${zoom}x`);
+          assert(box.left >= 15 && innerWidth - box.right >= 15 && box.width >= Math.min(760, innerWidth - 32) - 2, `Unexpected report width at ${zoom}x`);
+          assert(list.scrollTop > 0 && jump.contains(doc.elementFromPoint(button.x + button.width / 2, button.y + button.height / 2)), `Last jump is obscured at ${zoom}x`);
+        }
+        panel.parentElement.style.width = "340px";
+        list.scrollTop = list.scrollHeight;
+        const actions = issues().at(-1).querySelectorAll("button");
+        assert(panel.scrollWidth <= panel.clientWidth + 1 && list.scrollWidth <= list.clientWidth + 1 && [...actions].every(button => {
+          const b = button.getBoundingClientRect();
+          return button.contains(doc.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2));
+        }), "Narrow report should wrap and keep both actions reachable");
+      } finally {
+        panel.parentElement.style.removeProperty("width");
+        wc.setZoomFactor(originalZoom);
+        await wait(200);
+      }
+      pass("a 32-error report keeps viewport margins, scrollable rows and reachable actions at 100%, 150%, 200% zoom and in a narrow container");
+    } finally {
+      reportModal()?.querySelector(".modal-header-button")?.click();
+      await leaf.setViewState({ type: "empty" });
+      await app.vault.delete(file);
+    }
+
     if (build === "full" && options.remote) {
-      const remote = await plugin().setMermaidVersion(runtime.version);
-      assert(remote?.origin === "cdn", `Full remote import failed: ${remote?.fallbackReason}`);
+      const customVersion = runtime.version === "12.1.0" ? "12.3.0" : "12.1.0";
+      const remote = await plugin().setMermaidVersion(customVersion);
+      assert(remote?.origin === "cdn" && remote.version === customVersion, `Full remote import failed: ${remote?.fallbackReason}`);
       pass(`full: native dynamic import loads Mermaid ${remote.version} from jsDelivr without Function construction`);
       const notePath = "Patch Mermaid Tests/Remote Mermaid.md";
       const contents = "```patch-mermaid\n---\nconfig:\n  layout: elk\n---\nflowchart LR\nA[\"Remote source\"] --> B[\"Remote target\"]\n```\n";
@@ -268,6 +405,13 @@ async function mermaidIntegration(app, context) {
       await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "preview", source: false } });
       await until(() => rendered(["Remote source", "Remote target"]), "remote Mermaid renders the fixture");
       pass("full: remote Mermaid and ELK render a visible sanitized diagram");
+      try {
+        runCheck();
+        await waitFor(() => reportModal()?.textContent.includes(`Mermaid ${customVersion} · Checked 1 diagram. No syntax errors.`), "diagram check with the selected remote version");
+        pass("full: the whole-note checker uses the selected remote engine");
+      } finally {
+        reportModal()?.querySelector(".modal-header-button")?.click();
+      }
       await plugin().setMermaidVersion("bundled");
     }
   } catch (error) {
