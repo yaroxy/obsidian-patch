@@ -477,6 +477,15 @@ body {
   --obsidian-patch-icon-color: currentColor;
 }
 
+.obsidian-patch-icons-missing-paths {
+  margin-block: var(--size-4-1) 0;
+  padding-inline-start: 1.5em;
+  max-height: 12em;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
 .obsidian-patch-icons-has-icon > .tree-item-inner::before {
   content: "";
   display: inline-block;

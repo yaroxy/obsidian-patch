@@ -391,11 +391,17 @@ class PatchesSettingTab extends PluginSettingTab {
         desc: "Remove icons whose files or folders no longer exist, for example after a rename outside Obsidian.",
         render: (setting) => {
           const icons = this.plugin.icons;
-          const missing = icons?.missingPaths() ?? [];
+          const missing = (icons?.missingPaths() ?? []).sort();
           setting.setDesc(missing.length === 0 ? "Every icon belongs to an existing file or folder."
-            : `${missing.length} icons belong to paths that no longer exist, for example after a rename outside Obsidian. They return if the path is created again.`);
+            : `${missing.length} missing ${missing.length === 1 ? "path" : "paths"}. Remove clears the saved icon and color for each path listed below.`);
+          if (missing.length) {
+            const list = setting.descEl.createEl("ul", { cls: "obsidian-patch-icons-missing-paths" });
+            for (const path of missing) list.createEl("li", { text: path });
+          }
           setting.addButton((button) => button.setButtonText("Remove").setDisabled(missing.length === 0).onClick(async () => {
-            await icons?.removeIcons(missing);
+            const stillMissing = new Set(icons?.missingPaths());
+            const paths = missing.filter(path => stillMissing.has(path));
+            if (paths.length) await icons?.removeIcons(paths);
             this.update();
           }));
         },
