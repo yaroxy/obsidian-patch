@@ -35,7 +35,7 @@ export class GitHubFolderSuggest extends AbstractInputSuggest<string> {
     return this.app.vault.getAllFolders(false)
       .map(folder => folder.path)
       .filter(path => !path.includes(",") && !others.has(path) && path.toLowerCase().includes(query))
-      .sort(byPath.compare);
+      .sort((left, right) => byPath.compare(left, right));
   }
 
   override renderSuggestion(path: string, el: HTMLElement): void {
