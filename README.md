@@ -16,13 +16,13 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## New in 0.4.0
+## New in 0.5.0
 
-- **[Icon colors](https://yaroxy.github.io/obsidian-patch/features/icons.html):** choose an icon and its color together, with brand colors, eight presets, and custom colors.
-- **[Exact line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html):** type a global width in pixels and keep it synchronized with the slider.
-- **[Callout code backgrounds](https://yaroxy.github.io/obsidian-patch/features/callouts.html#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
+- Check every `patch-mermaid` diagram in a note and jump to the source of a syntax error.
+- Set `patch-banner-width: 65` to give a note’s cover 65% of its pane. Resize body images independently.
+- Complete vault folder paths in the GitHub callout settings and see why a callout becomes a plain blockquote on GitHub.
 
-These features shipped in [Patches 0.4.0](https://github.com/yaroxy/obsidian-patch/releases/tag/0.4.0). The development build adds folder completion, per-note cover widths, and a Mermaid syntax check. [Unreleased changes](CHANGELOG.md#unreleased)
+[Read the 0.5.0 release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0)
 
 ## Features
 
@@ -40,9 +40,9 @@ Find each group under **Settings → Patches**. Open a feature guide for example
 <tbody>
 <tr><th scope="row">Line Width</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/line-width.html">Readable columns</a></td><td>Set the maximum column width globally or for a single note.</td></tr>
 <tr><th scope="row">Math Format</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/math-format.html">Display math</a></td><td>Indent and align formulas.</td></tr>
-<tr><th scope="row">Patch Banner</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/banner.html">Note covers</a></td><td>Use a vault image, animation, or video as a cover. The development build also lets you set its width per note.</td></tr>
+<tr><th scope="row">Patch Banner</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/banner.html">Note covers</a></td><td>Use a vault image, animation, or video as a cover. Set its width per note.</td></tr>
 <tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
-<tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. The development build can also check a note for syntax errors.</td></tr>
+<tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. Check all diagrams in a note and jump to syntax errors.</td></tr>
 <tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
 <tr><th scope="row">No settings required</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Visually edit merged cells, grouped headers, and captions. Convert Markdown tables.</td></tr>
 </tbody>

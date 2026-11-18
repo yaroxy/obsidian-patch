@@ -11,7 +11,7 @@ Open Obsidian’s command palette and search for **Patches:**. Context-sensitive
 | **Edit callout** | Edit the callout at the cursor. |
 | **Convert callout to text** | Remove its callout/blockquote wrapper. |
 | **Convert callout to blockquote** | Keep a plain blockquote without a callout header. |
-| **Check diagrams in this note** (development build) | Check `patch-mermaid` syntax and jump to each affected block in the editor. |
+| **Check diagrams in this note** (0.5.0) | Check `patch-mermaid` syntax and jump to each affected block in the editor. |
 | **Check callouts for GitHub** | See how GitHub displays each callout in the current note, inspect its reasons, and jump to its line. |
 | **Format math block** | Format the display-math block at the cursor. |
 | **Format all math blocks in note** | Format supported display-math blocks in the current note. |

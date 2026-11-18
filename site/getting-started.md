@@ -13,8 +13,8 @@ Requires **Obsidian 1.15.0 or later**.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.4.0
-Version **0.4.0** adds icon color controls, exact global width input, and callout code-block tinting. Features labeled **development build** in the guides are available to people building the Community source. [Unreleased changes](changelog.md#unreleased)
+::: tip New in 0.5.0
+Version **0.5.0** adds per-note cover widths, GitHub folder suggestions, and a command to check every diagram in a note. [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0)
 :::
 
 ## Try one improvement

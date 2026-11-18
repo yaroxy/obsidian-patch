@@ -27,4 +27,4 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 | [Mermaid diagrams](mermaid.md) | Newer diagram types and syntax with light/dark theme support. |
 | [PDF navigation](pdf-export.md) | Heading bookmarks and same-note heading links in native desktop PDF exports. |
 
-The Community development build adds [per-note cover widths](banner.md), [GitHub folder suggestions](callouts.md#github-folders), and a [whole-note Mermaid syntax check](mermaid.md#check-diagrams-in-this-note). See [views and platforms](../reference/compatibility.md) for the supported modes.
+Patches 0.5.0 adds [per-note cover widths](banner.md), [GitHub folder suggestions](callouts.md#github-folders), and a [whole-note Mermaid syntax check](mermaid.md#check-diagrams-in-this-note). See [views and platforms](../reference/compatibility.md) for the supported modes.

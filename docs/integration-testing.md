@@ -54,6 +54,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.5.0 release candidate — 2026-11-18
+
+Both release trees retain the plugin implementation from Community `fd58c47` and Full `355b936`. Community passed 138 unit tests and Full passed 143. Both production builds passed tag-specific package validation. The Community site passed checks for 21 pages and 846 local links and assets.
+
+The versioned Community package ran in dev-vault on macOS with Obsidian 1.15.1. Callouts passed 65 checks, Mermaid 32, Icons 19, and Banner 93. The suites restored their settings and tab. The Icons run used cached graphics and the Banner run skipped video playback. Mobile, other desktop platforms, and a fresh native Full run were outside this packaging pass. The development checks below cover earlier playback, remote icon data, and Full runtime verification.
+
 ## Development checks — 2026-11-18
 
 The Community candidate passed 138 unit tests, and the Full candidate passed 143. Each passed its own production build and release-package validation. The initial Community site build covered 21 pages and 847 local links and assets. Desktop (1280 px) and mobile-width (390 px) browser checks covered the demo buttons, images, layout, and the Unreleased link. The native suites below ran sequentially in `dev-vault` on macOS with Obsidian 1.15.1.

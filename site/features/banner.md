@@ -11,13 +11,13 @@ patch-banner-width: 65
 ---
 ```
 
-In the development build, the optional `patch-banner-width` above centers the cover at 65% of this note’s pane. Use a whole number from 10 to 100, or text such as `"65%"`. Removing the property or entering an invalid value restores the vault width. In 0.4.0, use **Patch Banner → Cover width (%)** to set the width for the vault.
+In 0.5.0, the optional `patch-banner-width` above centers the cover at 65% of this note’s pane. Use a whole number from 10 to 100, or text such as `"65%"`. Removing the property or entering an invalid value restores the vault width. In 0.4.0, use **Patch Banner → Cover width (%)** to set the width for the vault.
 
 The cover picker lists vault file paths locally to find images and videos. These paths are not sent to a remote service.
 
 Covers appear above the title and Properties in Reading View and Live Preview, at their original aspect ratio. Hover to add, change, or remove a cover. Removing it clears `patch-banner` and keeps the media file and any width preference.
 
-The development build supports reusing the same image for a cover and a body embed with Image Converter. The body image can be resized and aligned independently. Editing the underlying image file updates both uses.
+Patches 0.5.0 supports reusing the same image for a cover and a body embed with Image Converter. The body image can be resized and aligned independently. Editing the underlying image file updates both uses.
 
 Save the [Kyoto cover illustration](/examples/kyoto-cover.jpg) to `assets/kyoto-cover.jpg` in your vault to try this example.
 

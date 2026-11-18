@@ -17,7 +17,7 @@ If a video does not play, try a format supported by your device. Autoplay is mut
 
 ## A banner flickers when I hover over it
 
-With Patches 0.4.0 and Image Converter 1.4.6, hovering can shrink a cover to its natural width. Reopening a note can also give the cover the width saved for a body image that uses the same file. On 0.4.0, turning off Image Converter’s **Enable drag resize** temporarily stops the hover flicker. The development build keeps the cover width independent and lets you leave drag resizing enabled for body images. [Issue #38](https://github.com/yaroxy/obsidian-patch/issues/38)
+With Patches 0.4.0 and Image Converter 1.4.6, hovering can shrink a cover to its natural width. Reopening a note can also give the cover the width saved for a body image that uses the same file. On 0.4.0, turning off Image Converter’s **Enable drag resize** temporarily stops the hover flicker. Patches 0.5.0 keeps the cover width independent and lets you leave drag resizing enabled for body images. [Issue #38](https://github.com/yaroxy/obsidian-patch/issues/38)
 
 ## Simple Icons cannot load
 
@@ -25,11 +25,11 @@ Check access to jsDelivr, then retry the picker or **Patch Icons → Update**. L
 
 ## What are “Icons of missing files”?
 
-These are saved icon assignments whose file or folder no longer exists, for example after an external rename. The development build lists the full paths and rechecks them when you select **Remove**. A file restored in the meantime keeps its icon and color. A disabled button means there is nothing to clean up. [Icon guide](features/icons.md)
+These are saved icon assignments whose file or folder no longer exists, for example after an external rename. Patches 0.5.0 lists the full paths and rechecks them when you select **Remove**. A file restored in the meantime keeps its icon and color. A disabled button means there is nothing to clean up. [Icon guide](features/icons.md)
 
 ## What does “GitHub folders” connect to?
 
-This setting selects local vault folders, including their subfolders, for GitHub callout compatibility feedback. Use comma-separated paths or opt in a single note with `github: true`. In the development build, typing part of a path offers matching folders. [Folder completion demo](features/callouts.md#github-folders)
+This setting selects local vault folders, including their subfolders, for GitHub callout compatibility feedback. Use comma-separated paths or opt in a single note with `github: true`. In 0.5.0, typing part of a path offers matching folders. [Folder completion demo](features/callouts.md#github-folders)
 
 ## Table conversion is unavailable
 
@@ -37,7 +37,7 @@ Place the cursor inside a standalone Markdown table, or select complete tables. 
 
 ## A Mermaid example does not render
 
-Use a `patch-mermaid` code block for Patches’ bundled renderer. Check the version shown in Patches settings. In the development build, run **Check diagrams in this note** and choose **Jump** to find the syntax error. The rendered block also reports errors that occur during layout. Some treeView icons require Loose mode and may still be affected by Mermaid’s own filtering. [Diagram checks](features/mermaid.md#check-diagrams-in-this-note)
+Use a `patch-mermaid` code block for Patches’ bundled renderer. Check the version shown in Patches settings. In 0.5.0, run **Check diagrams in this note** and choose **Jump** to find the syntax error. The rendered block also reports errors that occur during layout. Some treeView icons require Loose mode and may still be affected by Mermaid’s own filtering. [Diagram checks](features/mermaid.md#check-diagrams-in-this-note)
 
 ## Report a problem
 

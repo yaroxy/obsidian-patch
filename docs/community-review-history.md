@@ -127,6 +127,10 @@ The source warning flagged the GitHub folder picker passing `byPath.compare` to 
 
 Both branch builds and the documentation deployment passed on GitHub. The follow-up changes the folder picker to call `byPath.compare(left, right)` explicitly in both distributions. [Community build](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018661) · [Full build](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018687) · [Pages deployment](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018799)
 
+### Follow-up preview for the explicit comparator
+
+The dashboard marked preview `fd58c47bc1a53eab02f254b518e1ae460bb6f6f5` **Completed** on 2026-11-18. The final report displayed a passing dependency check and no source warnings, errors, or recommendations. The earlier folder-sort warning cleared. Community passed 138 local unit tests and 65 Callouts checks in the development vault. Full passed 143 local unit tests. Both production packages passed local validation. The two GitHub builds and Pages deployment succeeded. The published plugin version at the time of this branch preview was 0.4.0. [Community build](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490603) · [Full build](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490576) · [Pages deployment](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490542)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

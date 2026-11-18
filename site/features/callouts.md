@@ -29,7 +29,7 @@ becomes:
 
 The GitHub panel explains remaining differences, including Obsidian-only syntax. Nested callouts must be moved to the top level manually. Set `github: true` on a note or choose **Callouts → GitHub folders** to enable the status bar count. Click the count or run **Check callouts for GitHub** to open the note’s report.
 
-In the development build, the command reads the saved note in Reading view and includes unsaved edits in the editor. Each row shows the note line, header, and whether GitHub displays an alert or a plain blockquote. **Details (3)** opens the three reasons for that row. **Jump** moves the cursor to the header in the editor or scrolls to the callout in Reading view. If the note changes, run the command again for current line numbers.
+In 0.5.0, the command reads the saved note in Reading view and includes unsaved edits in the editor. Each row shows the note line, header, and whether GitHub displays an alert or a plain blockquote. **Details (3)** opens the three reasons for that row. **Jump** moves the cursor to the header in the editor or scrolls to the callout in Reading view. If the note changes, run the command again for current line numbers.
 
 ![GitHub treats the callouts on lines 8 and 10 as plain blockquotes. Each row has a Jump button and its own collapsed reasons.](../../docs/images/callout-github-report.png)
 
@@ -64,7 +64,7 @@ Try the nested example in a note:
 
 ## GitHub folders
 
-With **GitHub compatibility** enabled, choose a vault folder to count the callouts GitHub would show as plain blockquotes in its notes and subfolders. In the development build, type part of a folder path and click a match, or use the arrow keys and press **Enter**. **Esc** closes the suggestions. Use a comma to add another folder, or move the cursor back to replace an earlier entry. The field also accepts manually entered paths such as `docs, projects/site`. Commas separate entries, so paths containing a comma cannot be selected.
+With **GitHub compatibility** enabled, choose a vault folder to count the callouts GitHub would show as plain blockquotes in its notes and subfolders. In 0.5.0, type part of a folder path and click a match, or use the arrow keys and press **Enter**. **Esc** closes the suggestions. Use a comma to add another folder, or move the cursor back to replace an earlier entry. The field also accepts manually entered paths such as `docs, projects/site`. Commas separate entries, so paths containing a comma cannot be selected.
 
 The recording selects `Patch Callout Tests`. A note in its `Guides` subfolder contains a supported `[!NOTE]` and an Obsidian `[!example]`. Click the **1/2** status bar count, then **Details (2)** on line 4 to read why GitHub displays that callout as a plain blockquote. All checks run in the vault. For a single note, set `github: true` in its properties.
 

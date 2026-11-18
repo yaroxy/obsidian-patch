@@ -33,7 +33,7 @@ flowchart LR
 ```
 ````
 
-Patches 0.4.0 bundles Mermaid 12.3.0, which introduced numbered flowchart steps. Keep `layout: dagre` in this example to show the badges. In Obsidian 1.15.1, the same source in a native block draws the three nodes and two static arrows. Obsidian documents Mermaid 12.1.0 syntax support in its Pele renderer. [Mermaid flowchart steps](https://mermaid.js.org/syntax/flowchart.html#step-by-step-flow-animation-v12-3-0) · [Obsidian’s diagram release notes](https://obsidian.md/changelog/2026-11-02-desktop-v1.15.0/)
+Patches 0.5.0 bundles Mermaid 12.3.0, which introduced numbered flowchart steps. Keep `layout: dagre` in this example to show the badges. In Obsidian 1.15.1, the same source in a native block draws the three nodes and two static arrows. Obsidian documents Mermaid 12.1.0 syntax support in its Pele renderer. [Mermaid flowchart steps](https://mermaid.js.org/syntax/flowchart.html#step-by-step-flow-animation-v12-3-0) · [Obsidian’s diagram release notes](https://obsidian.md/changelog/2026-11-02-desktop-v1.15.0/)
 
 ## Match the note’s theme
 
@@ -94,7 +94,7 @@ treeView-beta
 
 ## Check diagrams in this note
 
-In the development build, run **Patches: Check diagrams in this note** from the command palette in a Markdown note. It uses the same Mermaid version as the `patch-mermaid` renderer. In the editor it checks unsaved edits. In Reading view it checks the saved note. It includes diagrams in lists and callouts. Other fence languages, including native `mermaid`, are skipped.
+In 0.5.0, run **Patches: Check diagrams in this note** from the command palette in a Markdown note. It uses the same Mermaid version as the `patch-mermaid` renderer. In the editor it checks unsaved edits. In Reading view it checks the saved note. It includes diagrams in lists and callouts. Other fence languages, including native `mermaid`, are skipped.
 
 The report shows the runtime version and the number of diagrams checked. Each error starts as one row with its diagram number and line in the note. **Jump** opens that line in the same pane. **Details** expands the parser’s full message for that row. A line marked **opening fence** takes you to the start of the diagram when Mermaid’s position cannot be mapped reliably. After editing the note, run the command again for current locations. Layout errors appear when the diagram renders.
 

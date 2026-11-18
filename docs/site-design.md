@@ -14,7 +14,7 @@ The homepage and README share a real travel-note capture combining the existing 
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
-The README, homepage, getting-started page, and feature guides distinguish 0.4.0 from the current Community source. The homepage links to the Unreleased changelog and keeps the 0.4.0 demos under their release heading. Update those labels when the new version ships.
+The README, homepage, and guides highlight 0.5.0. The homepage keeps the icon, line-width, and code-background gallery labeled with its original 0.4.0 release.
 
 ## Community Directory screenshots
 

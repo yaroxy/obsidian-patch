@@ -6,7 +6,7 @@ Properties let a note opt into a feature or override a global setting. Add them 
 | --- | --- | --- |
 | `patch-line-width` | Whole number from 500–2000, or a string such as `"1100px"` | Overrides the readable width for the pane showing this note. |
 | `patch-banner` | A quoted vault link, such as `"[[assets/kyoto-cover.jpg]]"` | Uses that vault image, animation, or video as the note cover. |
-| `patch-banner-width` (development build) | Whole percentage from 10 to 100, such as `65` or `"65%"` | Centers this note’s cover at that percentage of the pane. Omitted or invalid values use the vault cover width. |
+| `patch-banner-width` (0.5.0) | Whole percentage from 10 to 100, such as `65` or `"65%"` | Centers this note’s cover at that percentage of the pane. Omitted or invalid values use the vault cover width. |
 | `github` | `true` | Includes the note in GitHub callout compatibility counting. |
 
 ## One note, two appearance choices
@@ -19,7 +19,7 @@ patch-banner-width: 65
 ---
 ```
 
-Enable **Settings → Editor → Readable line length** for a text column up to 1100 px wide. In the development build, the cover independently uses 65% of the pane in Reading view and Live Preview.
+Enable **Settings → Editor → Readable line length** for a text column up to 1100 px wide. In 0.5.0, the cover independently uses 65% of the pane in Reading view and Live Preview.
 
 ## Preparing a note for GitHub
 

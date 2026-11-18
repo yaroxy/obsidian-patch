@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
 ### Added
 
 - **GitHub folders** suggests vault paths as you type. Select a folder to update the callout count for its notes and subfolders. When editing a comma-separated list, a selection replaces just the entry under the cursor.
