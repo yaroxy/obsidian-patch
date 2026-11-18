@@ -12,7 +12,8 @@
     }
     throw new Error(`Timed out: ${label}`);
   }
-  const root = () => leaf.view.getMode() === "preview" ? leaf.view.previewMode.containerEl : leaf.view.contentEl.querySelector(".markdown-source-view");
+  const root = (view = leaf.view) => view.getMode() === "preview" ? view.previewMode.containerEl : view.contentEl.querySelector(".markdown-source-view");
+  const coverImage = () => root()?.querySelector(".obsidian-patch-banner-stage")?.shadowRoot?.querySelector("img");
   async function write(name, link, body = "# Banner test\n\nFull image, original aspect ratio.") {
     const path = `Patch Banner Tests/${name}.md`;
     const text = (link ? `---\npatch-banner: ${JSON.stringify(`[[${link}]]`)}\n---\n\n` : "") + body + "\n";
@@ -28,19 +29,27 @@
     leaf.view.previewMode.applyScroll(0);
   }
   function fullImage() {
-    const img = root()?.querySelector("img.obsidian-patch-banner-media");
+    const img = coverImage();
     if (!img?.naturalWidth) return false;
     const box = img.getBoundingClientRect();
-    return box.width > 0 && box.height > 0 && Math.abs(box.width / box.height - img.naturalWidth / img.naturalHeight) < 0.01;
+    const stage = img.getRootNode().host.getBoundingClientRect();
+    return box.width > 0 && box.height > 0 && Math.abs(box.width - stage.width) < 1 &&
+      Math.abs(box.width / box.height - img.naturalWidth / img.naturalHeight) < 0.01;
   }
-  function coverWidthIs(percent) {
-    const cover = root()?.querySelector(".obsidian-patch-banner-cover");
-    const viewport = root()?.querySelector(leaf.view.getMode() === "preview" ? ".markdown-preview-view" : ".cm-scroller");
-    if (!cover || !viewport) return false;
+  function coverBounds(view) {
+    const container = root(view);
+    const cover = container?.querySelector(".obsidian-patch-banner-cover");
+    const viewport = container?.querySelector(view.getMode() === "preview" ? ".markdown-preview-view" : ".cm-scroller");
+    if (!cover || !viewport?.clientWidth) return;
     const box = cover.getBoundingClientRect();
-    const expected = viewport.clientWidth * percent / 100;
-    const left = viewport.getBoundingClientRect().left + viewport.clientLeft + (viewport.clientWidth - expected) / 2;
-    return Math.abs(box.width - expected) < 1 && Math.abs(box.left - left) < 1;
+    return { paneWidth: viewport.clientWidth, coverWidth: box.width,
+      inset: box.left - viewport.getBoundingClientRect().left - viewport.clientLeft };
+  }
+  function coverWidthIs(percent, view = leaf.view) {
+    const bounds = coverBounds(view);
+    if (!bounds) return false;
+    const expected = bounds.paneWidth * percent / 100;
+    return Math.abs(bounds.coverWidth - expected) < 1 && Math.abs(bounds.inset - (bounds.paneWidth - expected) / 2) < 1;
   }
   try {
     await plugin().setBanner({ enabled: true, autoplayVideos: true, widthPercent: 100 });
@@ -79,7 +88,32 @@
         return JSON.stringify(Object.keys(fm ?? {})) === JSON.stringify(["patch-banner"]);
       }, `${name}: only patch-banner is stored`);
     }
-    checks.push("only patch-banner is stored on notes");
+    checks.push("notes that inherit the vault width need only patch-banner");
+    const asset = "Patch Banner Tests/media/test-image.png";
+    const shared = await write("Shared image", asset, `![[${asset}|240x120]]\n\nBody`);
+    for (const mode of ["source", "preview"]) {
+      await leaf.setViewState({ type: "empty" });
+      await open(shared, mode);
+      const embed = () => root()?.querySelector(".image-embed img");
+      await until(() => fullImage() && embed()?.naturalWidth && embed().src === coverImage().src,
+        `same attachment renders as a cover and body image in ${mode}`);
+      const matches = Array.from(root().querySelectorAll("img")).filter(img => img.src === embed().src);
+      assert(matches.includes(embed()) && !matches.includes(coverImage()), "Body image lookup reached the cover");
+      const before = coverImage().getBoundingClientRect().width;
+      for (const img of matches) img.style.width = "192px";
+      assert(Math.abs(embed().getBoundingClientRect().width - 192) < 1 && coverImage().getBoundingClientRect().width === before,
+        "Restoring a body image width also resized the cover");
+      const stage = coverImage().getRootNode().host;
+      stage.scrollIntoView({ block: "start" });
+      const box = stage.getBoundingClientRect();
+      assert(doc.elementFromPoint(box.left + box.width / 2, box.top + 12) === stage, "Pointer missed the cover stage");
+      const toolbar = root().querySelector(".obsidian-patch-banner-toolbar");
+      toolbar.querySelector('[aria-label="Hide media"]').click();
+      await until(() => !coverImage() && stage.querySelector(".obsidian-patch-banner-message").getBoundingClientRect().height > 0,
+        `hidden cover shows its status in ${mode}`);
+      toolbar.querySelector('[aria-label="Show media"]').click();
+      await until(fullImage, `cover can be shown at full width again in ${mode}`);
+    }
     for (const mode of ["preview", "source"]) {
       await open("Patch Banner Tests/Image.md", mode);
       await plugin().setBanner({ ...plugin().settings.banner, enabled: false, autoplayVideos: true });
@@ -124,16 +158,55 @@
     await app.plugins.disablePlugin("patches");
     await app.plugins.enablePlugin("patches");
     await until(() => plugin().settings.banner.widthPercent === 90 && coverWidthIs(90), "reset percentage survives a plugin reload");
+    const widthNote = await write("Width override", asset);
+    const widthFile = app.vault.getFileByPath(widthNote);
+    const setNoteWidth = value => app.fileManager.processFrontMatter(widthFile, fm => {
+      if (value === undefined) delete fm["patch-banner-width"];
+      else fm["patch-banner-width"] = value;
+    });
+    await setNoteWidth(65);
+    for (const mode of ["preview", "source"]) {
+      await open(widthNote, mode);
+      await until(() => coverWidthIs(65) && fullImage(), `note overrides the 90% vault width with 65% in ${mode}`);
+    }
+    const imageBeforeWidthEdit = coverImage();
+    const editor = leaf.view.editor;
+    const line = editor.getValue().split("\n").findIndex(text => text.startsWith("patch-banner-width:"));
+    assert(line >= 0, "Missing width property on the test note");
+    editor.replaceRange('patch-banner-width: "75%"', { line, ch: 0 }, { line, ch: editor.getLine(line).length });
+    await until(() => coverWidthIs(75) && coverImage() === imageBeforeWidthEdit, "Live Preview resizes the existing image when its note percentage changes");
+    await leaf.view.save();
+    await plugin().setBanner({ ...plugin().settings.banner, widthPercent: 80 });
+    const other = app.workspace.getLeaf("split", "vertical");
+    try {
+      await other.setViewState({ type: "markdown", state: { file: "Patch Banner Tests/Image.md", mode: "preview" } });
+      await until(() => coverWidthIs(75) && coverWidthIs(80, other.view), "split panes show the same image at 75% for the override and 80% for the new vault default");
+      report.splitCoverWidths = [leaf, other].map(({ view }) => ({ note: view.file.name, ...coverBounds(view) }));
+    } finally {
+      other.detach();
+      app.workspace.setActiveLeaf(leaf, { focus: false });
+    }
+    await leaf.setViewState({ type: "empty" });
+    await open(widthNote, "preview");
+    await until(() => coverWidthIs(75) && fullImage(), "reopening the saved note in Reading View restores its percentage");
+    await setNoteWidth(101);
+    await until(() => coverWidthIs(80) && fullImage(), "an out-of-range note percentage falls back to the current vault width");
+    await setNoteWidth(55);
+    await until(() => coverWidthIs(55), "correcting the property reapplies the note width");
+    await setNoteWidth(undefined);
+    await until(() => coverWidthIs(80) && fullImage(), "removing the property restores the current vault width in Reading View");
+    await open(widthNote);
+    await until(() => coverWidthIs(80) && fullImage(), "Live Preview inherits the vault width after the override is removed");
     await plugin().setBanner({ ...plugin().settings.banner, widthPercent: 100 });
     await open("Patch Banner Tests/Image.md", "preview");
-    await until(() => fullImage() && root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/test-image.png?"), "image identity settled before rerender checks");
-    const coverImage = root().querySelector("img.obsidian-patch-banner-media");
+    await until(() => fullImage() && coverImage()?.src.includes("/test-image.png?"), "image identity settled before rerender checks");
+    const originalImage = coverImage();
     for (let i = 0; i < 3; i++) {
       leaf.view.previewMode.rerender(true);
       await wait(80);
     }
     await until(() => root()?.querySelectorAll(".obsidian-patch-banner-cover").length === 1 &&
-      root().querySelector("img.obsidian-patch-banner-media") === coverImage,
+      coverImage() === originalImage,
     "reading rerenders preserve exactly one cover and media instance");
     // Reading View detaches the header while it is far above the viewport.
     const long = await write("Long", "Patch Banner Tests/media/test-portrait.png",
@@ -141,7 +214,7 @@
     await open(long, "preview");
     await until(fullImage, "long note: portrait cover loaded");
     const scroller = root().querySelector(".markdown-preview-view");
-    const longImage = root().querySelector("img.obsidian-patch-banner-media");
+    const longImage = coverImage();
     scroller.scrollTop = scroller.scrollHeight;
     await until(() => !longImage.isConnected, "long note: Reading View detaches the header at the end");
     for (let i = 0; i < 200 && scroller.scrollTop > 0; i++) {
@@ -151,7 +224,7 @@
       assert(scroller.scrollTop < previous, `Scrolling up stalled or jumped from ${Math.round(previous)} to ${Math.round(scroller.scrollTop)}`);
     }
     assert(scroller.scrollTop === 0, "Scrolling up did not reach the top");
-    assert(root().querySelector("img.obsidian-patch-banner-media") === longImage, "Detached header lost its cover media");
+    assert(coverImage() === longImage, "Detached header lost its cover media");
     checks.push("Reading View scrolls up from the end of a note with a tall cover");
     // Live Preview measures the text before a late cover pushes it down, as when the
     // image decodes after a note opens in the same tab; scrolling down must stay smooth.
@@ -177,14 +250,14 @@
     const start = value.indexOf("Patch Banner Tests/media/test-image.png");
     leaf.view.editor.replaceRange("Patch Banner Tests/media/test-portrait.png", leaf.view.editor.offsetToPos(start), leaf.view.editor.offsetToPos(start + "Patch Banner Tests/media/test-image.png".length));
     await until(() => {
-      const img = root()?.querySelector("img.obsidian-patch-banner-media");
+      const img = coverImage();
       return img?.naturalHeight > img?.naturalWidth;
     }, "Live Preview reacts to the current editor frontmatter");
     leaf.view.editor.setValue(value);
-    await until(() => root()?.querySelector("img.obsidian-patch-banner-media")?.src.includes("/test-image.png?"), "editor fixture restored after frontmatter edit");
+    await until(() => coverImage()?.src.includes("/test-image.png?"), "editor fixture restored after frontmatter edit");
     await open("Patch Banner Tests/Portrait.md");
     await until(() => {
-      const img = root()?.querySelector("img.obsidian-patch-banner-media");
+      const img = coverImage();
       const heading = root()?.querySelector(".HyperMD-header-1");
       return fullImage() && heading && heading.getBoundingClientRect().top >= img.getBoundingClientRect().bottom;
     }, "editor measures the full portrait height without overlapping text");
@@ -280,6 +353,9 @@
     const video = root()?.querySelector("video");
     const box = video?.getBoundingClientRect();
     const diagnostics = { file: leaf.view.file?.path, mode: leaf.view.getMode(), hidden: doc.hidden,
+      coverBounds: coverBounds(leaf.view), vaultWidth: plugin()?.settings.banner.widthPercent, fullImage: fullImage(),
+      editorWidth: leaf.view.editor?.getValue().match(/^patch-banner-width:.*$/m)?.[0],
+      cachedWidth: app.metadataCache.getFileCache(leaf.view.file)?.frontmatter?.["patch-banner-width"],
       video: video && { src: video.src, paused: video.paused, ready: video.readyState,
         width: video.videoWidth, height: video.videoHeight, error: video.error?.message,
         box: box && { x: box.x, y: box.y, width: box.width, height: box.height } },

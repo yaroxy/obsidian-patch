@@ -87,3 +87,108 @@ dev-vault 中使用与 spacetime 相同的正文，先关闭封面打开笔记�
 | 修复后 | 90% | 无修正 |
 
 集成脚本新增“长笔记竖图封面在 Live Preview 向下滚动”检查，每步滚动 60px，要求滚动位置既不后退也不额外前跳。修复前：100% 宽度先出现 +4px 前跳，随后反复回退 480–564px，停在 3880 无法到底；90% 宽度回退 312px 与 840px。修复后：两种宽度各两轮均无修正并到达底部。完整集成 92 项检查连续两次通过；其中一次较早的运行在阅读模式视频播放处超时（文档可见、视频已加载但保持暂停），与此前记录的偶发超时相同，未确认原因。
+
+## Issue #38 的开发库复现（2026-11-18）
+
+| 报告内容 | 截至 2026-11-18 的结论 |
+| --- | --- |
+| 像 Iconize 一样为文件夹图标着色 | 0.4.0 已发布。右键文件夹，选择 **Change icon**，选取图标和颜色后点击 **Apply**。[已发布的图标说明](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943392466) |
+| 悬停特定宽高比的封面时闪动 | 已在 Live Preview 用 Image Converter 1.4.6 复现尺寸跳变。开发版已修复，并验证正文同图仍能独立缩放。测试中没有出现系统全屏或遮罩。0.4.0 用户可临时关闭 Image Converter 的 **Enable drag resize**。[同图复测](#同图封面与正文缩放) |
+| 调整正文行宽没有效果 | 默认主题和 Aether Core 在宽窗格下均可从 600 调到 900 px，较大的目标值会受主题留白和窗格宽度限制。仍待报告者在开启 **Readable line length**、移除逐笔记覆盖值后提供 600 / 900 px 对照及其视图、窗格宽度。[原始反馈](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) |
+
+在 macOS 开发库用 Patches Community 0.4.0、已开启的 Readable line length 和 90% 封面宽度，分别加载默认样式、Aether Core 样式、主题加四份片段、仅四份片段。样式临时载入测试窗口，主题 CSS 的 SHA-256 为 `b2a55ec48ad7028d5af6489acaf8dda4fc1b6d1b47282283bf15a2657de8ab53`。开发库仅启用 Patches 和 Hot Reload。报告者未给出其主题版本、样图或各插件设置。[报告与附件](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) · [Aether Core 样式](https://github.com/CosmicSeaFox/Aether-Core/blob/main/theme.css)
+
+第一轮使用 320×160 和 160×320 PNG，分别在阅读视图与 Live Preview 中用 Electron 鼠标事件移入和移出。每种样式组合采样 48 帧，共 16 组。每组都命中了图片的原生 hover。采样期间图片宽高变化均为 0 px，原节点保持挂载。随后加入报告者列出的插件，复现情况见下文。
+
+在宽约 1306 CSS px 的阅读窗格中，同一段正文的实测宽度如下（单位为 CSS px，四舍五入）。
+
+| 目标宽度 | 默认 | 仅片段 | 仅主题 | 主题与片段 |
+| --- | --- | --- | --- | --- |
+| 600 | 600 | 600 | 600 | 600 |
+| 900 | 900 | 900 | 900 | 900 |
+| 1200 | 1200 | 1200 | 1166 | 1166 |
+| 1400 | 1242 | 1242 | 1166 | 1166 |
+
+在同一个主题窗格中单独关闭 `.markdown-preview-view .markdown-preview-section` 的 1000 px 限宽，测量值保持一致。单独移除主题的左右 padding 后，宿主的两侧留白分别从 70 px 回到 32 px，1200 与 1400 两档的正文恢复到 1200 和 1242 px。恢复主题规则后两档又都回到 1166 px。Live Preview 中同一编辑行在所有样式组合中都随设置变宽，达到窗格上限后停止增长。已复现阅读视图的宽度上限，低于上限时的调宽有效；报告者的窗口宽度和视图仍待确认。
+
+### 默认主题的宽度是可读栏上限
+
+本机 Obsidian 1.15.1 的 `app.css` 在 `body` 上定义 `--file-line-width: 700px` 和左右各 32 px 的默认文件留白。`.markdown-preview-view` 应用 `padding: var(--file-margins)`，而 `.markdown-preview-view.is-readable-line-width .markdown-preview-sizer` 通过 `max-width: var(--file-line-width)` 和左右自动外边距让正文居中。编辑器的 `.cm-sizer` 也使用这个最大宽度。Patches 在每个笔记视图写入该变量，优先采用笔记属性，其次采用全库设置。500–2000 px 是插件接受的设置范围，默认值为 900 px。[Obsidian 的 File CSS 变量](https://github.com/obsidianmd/obsidian-developer-docs/blob/main/en/Reference/CSS%20variables/Editor/File.md) · [Patches 的设置范围](../src/features/line-width/config.ts) · [每个视图的赋值代码](../src/features/line-width.ts)
+
+在 dev-vault 的同一篇笔记中，保留默认主题、可读行长和两侧各 32 px 的留白，只改变测试窗口的 UI 缩放以取得不同宽度的窗格。表内均为 CSS px，`clientWidth` 按浏览器 API 返回整数，正文由 `getBoundingClientRect()` 测量。
+
+| 窗格 clientWidth | Patches 设置 | 原生 sizer 的 max-width | 正文实测 |
+| --- | --- | --- | --- |
+| 1306 | 1200 | 1200 | 1200 |
+| 1306 | 1400 | 1400 | 1241.64 |
+| 1929 | 1400 | 1400 | 1400 |
+| 115 | 500 | 500 | 50.82 |
+
+这篇普通段落的宽度等于目标上限和窗格扣除水平留白后可用宽度中的较小值。各组 sizer 的计算 `min-width` 均为 0 px，窄窗格中的正文可缩至 500 甚至 700 px 以下。默认主题的 1242 px 符合这个布局，给 1400 px 足够空间时可准确达到。表格、大段不可断行内容、其他主题和平台可能额外影响布局。
+
+### 报告者插件的对照与最小复现
+
+使用本机 Obsidian 1.15.1、dev-vault 的测试笔记和两张 PNG 的副本，在临时 vault 与独立应用配置中加载 Aether Core 1.0.0 及报告所附的四个片段。Patches 来自同日 dev-vault 的开发构建，横幅实现与 0.4.0 相同。报告者列出 20 个 ID，其中 Iconize（`obsidian-icon-folder`）在其测试中关闭。其余 19 项均从官方目录对应仓库取得报告日期前的稳定发布文件，逐项核实实际加载的插件 ID 和版本。插件使用公开默认设置，未接入账号或 WebDAV 服务。报告者的实际版本、个性化设置和原图未知。[报告者的清单](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) · [官方目录](https://github.com/obsidianmd/obsidian-releases/blob/master/community-plugins.json)
+
+| 组合 | Live Preview 横幅 | 阅读视图 |
+| --- | --- | --- |
+| 仅 Patches | 稳定 | 稳定 |
+| Patches 加全部 19 项 | 指针进入横幅时尺寸跳变 | 默认设置下稳定 |
+| Patches 加其余 18 项，关闭 Image Converter | 稳定 | 此对照仅测 Live Preview |
+| 仅 Patches 与 Image Converter | 可复现；切回默认主题也可复现 | 此对照仅测 Live Preview |
+
+**最小操作。** 在 Live Preview 打开使用 90% 宽度、原图为 160×320 的封面。在本次 1450 CSS px 的窗格里，封面起初是 1305×2610。将指针移至图中下部，轻微左右移动 1 px，图片在 1305×2610 和 160×320 间交替。105 帧中记录到 32 次宽度切换。320×160 的横图则在 1305×652.5 和 320×160 间交替。浏览器的全屏元素、弹窗与图像缩放遮罩均未激活。两组在阅读视图调节全库目标行宽时也得到相同的 600、900、1200、1310 px，对应输入 600、900、1200、1400 px。
+
+Image Converter 1.4.6 在 MarkdownView 容器的 `mouseover` 上识别 vault 图片，并把原 `<img>` 移入一个新的 `.image-resize-container`。该容器的 `display: inline-block` 和 `max-width: fit-content` 会收缩到原图宽度。Patches 的图片 `width: 100%` 因而相对新容器计算。指针离开后 Image Converter 的清理逻辑又将图片移回原父节点。实测的每次尺寸切换都伴随父节点在 `.obsidian-patch-banner-stage` 与 `.image-resize-container` 之间切换。Image Converter 默认启用拖动缩放，阅读视图默认关闭缩放。[Image Converter 悬停判断](https://github.com/xRyul/obsidian-image-converter/blob/1.4.6/src/ImageResizer.ts#L717-L805) · [包装与清理](https://github.com/xRyul/obsidian-image-converter/blob/1.4.6/src/ImageResizer.ts#L872-L965) · [包装器样式](https://github.com/xRyul/obsidian-image-converter/blob/1.4.6/styles.css#L2613-L2622) · [Patches 横幅样式](../styles.css)
+
+已验证两个独立的干预。关闭 Image Converter 的 **Drag & scroll resize → Enable drag resize** 后，两种原图均稳定在 1305 px 宽，再开启即恢复跳变；测试直接切换与该控件相同的保存设置。若保留拖动缩放，仅在测试窗口给 `.obsidian-patch-banner-stage > .image-resize-container` 指定 `display: block; width: 100%; max-width: none` 也消除了尺寸跳变。这项对照只测量悬停时的布局。[上游开关和说明](https://github.com/xRyul/obsidian-image-converter/blob/1.4.6/src/ImageConverterSettings.ts#L977-L994)
+
+另用 Image Converter 1.4.6 的原始 `updateMarkdownLink` 方法和内存编辑器验证缩放完成后的写回。封面属性指向 `assets/cover.png`，传入目标尺寸 420×210 时，编辑模式把正文的 `![[assets/cover.png|240]]` 和 `![[another/cover.png|80]]` 都更新为 `420x210`。封面属性和不同文件名的插图保持原值。阅读模式只给图片写入行内像素宽高。此对照直接调用写回方法。下文另有实际拖动、关闭和重开笔记的结果。[上游文件名匹配](https://github.com/xRyul/obsidian-image-converter/blob/1.4.6/src/ImageResizer.ts#L1654-L1664) · [封面隔离设计](banner-design.md#image-converter-兼容性)
+
+<details>
+<summary>19 个已加载的插件与版本</summary>
+
+| 插件 ID | 实际加载的 manifest 版本 |
+| --- | --- |
+| `advanced-canvas` | [7.1.2](https://github.com/Developer-Mike/obsidian-advanced-canvas/releases/tag/7.1.2) |
+| `auto-card-link-enhanced` | [1.8.3](https://github.com/KreNtal/obsidian-auto-card-link/releases/tag/1.8.3) |
+| `auto-file-organizer` | [1.2.0](https://github.com/mofukuru/auto-file-organizer/releases/tag/1.2.0) |
+| `copy-file-to-clipboard` | [1.0.0](https://github.com/EzXabi/copy-file-to-clipboard/releases/tag/1.0.0) |
+| `dataview` | [0.5.68（发布标签 0.5.70）](https://github.com/blacksmithgu/obsidian-dataview/releases/tag/0.5.70) |
+| `easy-columns` | [1.0.3](https://github.com/LazyTimee/obsidian-easy-columns/releases/tag/1.0.3) |
+| `excalidraw-extras` | [0.2.1](https://github.com/zsviczian/obsidian-excalidraw-extras/releases/tag/0.2.1) |
+| `external-file-card` | [0.0.10](https://github.com/James-Yu/external-file-card/releases/tag/0.0.10) |
+| `foldermate` | [1.1.1](https://github.com/droidstreamer/foldermate/releases/tag/1.1.1) |
+| `image-converter` | [1.4.6](https://github.com/xRyul/obsidian-image-converter/releases/tag/1.4.6) |
+| `janitor` | [1.2.0](https://github.com/Canna71/obsidian-janitor/releases/tag/1.2.0) |
+| `notion-bases` | [1.13.0](https://github.com/bgarciamoura/obsidian-notion-bases-plugin/releases/tag/1.13.0) |
+| `obsidian-excalidraw-plugin` | [2.29.2](https://github.com/zsviczian/obsidian-excalidraw-plugin/releases/tag/2.29.2) |
+| `obsidian-importer` | [3.2.0](https://github.com/obsidianmd/obsidian-importer/releases/tag/3.2.0) |
+| `obsidian-tasks-plugin` | [8.6.0](https://github.com/obsidian-tasks-group/obsidian-tasks/releases/tag/8.6.0) |
+| `powertables` | [1.60.0](https://github.com/obsidian-power-plugins/obsidian-power-tables/releases/tag/1.60.0) |
+| `print-studio` | [0.4.7](https://github.com/5krus/obsidian-print-studio/releases/tag/0.4.7) |
+| `universal-reader` | [0.8.1](https://github.com/ProgrammedByGod/universal-reader/releases/tag/0.8.1) |
+| `webdav-explorer` | [1.0.5](https://github.com/sunmagicshow/obsidian-webdav/releases/tag/1.0.5) |
+
+</details>
+
+### 同图封面与正文缩放
+
+2026-11-18，在 macOS 的 dev-vault 中使用 Obsidian 1.15.1 和 Image Converter 1.4.6。窗格宽 931 px，封面宽度设为 90%。封面与正文引用同一张 320 × 160 PNG。在 Live Preview 将正文图片设为居中，拖动右下角手柄，把宽度从 240 调到 336 px。关闭标签后在新标签打开同一篇笔记，由 Image Converter 自动恢复对齐。
+
+| 观察项 | 0.4.0 原版 | 图片隔离后的开发构建 |
+| --- | --- | --- |
+| 设置居中前悬停 72 帧 | 320 与 837.9 px 间跳变 64 次 | 837.9 px，0 次跳变 |
+| 正文拖动结束时的封面宽度 | 837.9 px | 837.9 px |
+| 关闭标签、重新打开后的封面宽度 | 336 px | 837.9 px |
+| 重开后的正文图片 | 居中，336 px | 居中，336 px |
+
+原版与隔离原型按相反顺序做过两轮对照。随后在部署的开发构建上用原生鼠标输入再验证两轮，重开笔记以及切至阅读视图后，封面均保持 837.9 px。测试前后的附件 SHA-256 一致，正文嵌入链接保存了 `|336x168`，Image Converter 的笔记对齐缓存记录了居中和显示宽高。Banner 集成套件另在阅读视图和 Live Preview 检查同图的独立宽度、鼠标命中以及封面显隐。
+
+## 逐笔记封面宽度（2026-11-18）
+
+在 macOS 的 Obsidian 1.15.1、dev-vault 中，全库宽度设为 90% 时，`patch-banner-width: 65` 在阅读视图和 Live Preview 均得到 65% 的居中封面。通过 Live Preview 编辑器改为 `"75%"` 后，现有图片立即调整宽度。保存、关闭并在阅读视图重开后，仍为 75%。
+
+将库宽度调为 80%，在两个 458 px 的并排窗格查看同一附件。带覆盖值的笔记封面宽 343.5 px（75%），继承库设置的笔记封面宽 366.4 px（80%）。通过 Obsidian 属性接口把覆盖值改为 `101` 后回退到 80%，改为 `55` 后得到 55%，删除属性后两种视图都恢复 80%。
+
+本轮 Banner 集成通过 93 项检查，按 `--skip-playback` 跳过 MP4/WebM 自动播放与手动暂停组。一次运行中既有的长笔记滚动检查观察到 60 px 的滚动动作实际前进 65 px，同一构建按原断言复测通过。

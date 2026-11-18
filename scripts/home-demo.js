@@ -34,10 +34,11 @@ async function captureHomeDemo(app, context) {
     const note = await app.vault.create(`${root}/A weekend in Kyoto.md`, source);
     await leaf.setViewState({ type: "markdown", state: { file: note.path, mode: "preview", source: false } });
     const preview = () => leaf.view.previewMode.containerEl;
-    await until(() => preview()?.querySelector(".obsidian-patch-banner-media")?.complete && preview()?.querySelector("pre .token"), "banner and highlighted code");
+    const coverImage = () => preview()?.querySelector(".obsidian-patch-banner-stage")?.shadowRoot?.querySelector("img");
+    await until(() => coverImage()?.complete && preview()?.querySelector("pre .token"), "banner and highlighted code");
     preview().scrollTop = 0;
     await wait(500);
-    const image = preview().querySelector(".obsidian-patch-banner-media");
+    const image = coverImage();
     const first = image.getBoundingClientRect(), last = preview().querySelector(".callout").getBoundingClientRect();
     const table = preview().querySelector("table");
     assert(image.naturalWidth === 2172 && image.naturalHeight === 724, "Original cover dimensions changed");

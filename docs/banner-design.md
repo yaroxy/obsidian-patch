@@ -1,20 +1,23 @@
 # Patch Banner 设计
 
-状态：已实现；当前方案按用户要求简化为单一属性与完整媒体展示。实际验证范围见 [测试记录](banner-testing.md)。
+封面按原始宽高比完整展示。实际验证范围见 [测试记录](banner-testing.md)。
 
 ## 范围与配置
 
-媒体来自当前 Obsidian vault，支持图片、动图与视频。笔记只使用一个 Text 属性：
+媒体来自当前 Obsidian vault，支持图片、动图与视频。`patch-banner` 指定媒体，可选的 `patch-banner-width` 覆盖这篇笔记的封面宽度。
 
 ```yaml
 ---
 patch-banner: "[[assets/banner.png]]"
+patch-banner-width: 65
 ---
 
 # 笔记正文
 ```
 
 `patch-` 是本插件的属性命名约定。选择器写入完整 vault 路径的普通 wikilink；手写短路径使用 Obsidian 原生解析语义。链接值必须加引号以保持 YAML 字符串类型。参见 [Obsidian Properties](https://obsidian.md/help/properties)。
+
+宽度取 10 到 100 的整数，支持数字 `65` 和文本 `"65%"`。省略、删除或填写无效宽度时，封面沿用当前库设置。单独设置宽度不会创建封面。
 
 不接受远程 URL、file/data URL、嵌入语法、Markdown 链接、列表、别名、标题或块引用。未配置或空字符串表示没有横幅，错误的类型和找不到的媒体显示简短错误。没有多格式回退解析，也没有迁移脚本。
 
@@ -39,13 +42,21 @@ patch-banner: "[[assets/banner.png]]"
 
 GIF 等图片内容提供隐藏/显示，不能承诺逐帧暂停。系统减少动态效果开启时，对可能含动画的图片格式先显示点击加载占位，视频改为点击播放。为避免加入动画检测器，PNG、WebP、AVIF、SVG 里的静态图片也受此策略影响；JPEG、BMP 可直接加载。
 
+## Image Converter 兼容性
+
+Image Converter 1.4.6 悬停时会给普通图片添加缩放手柄。重新打开笔记时，它会扫描笔记窗格里的图片，并将保存的对齐和显示尺寸应用到同一附件。旧版封面因此会在悬停时闪动，也可能在重开笔记后缩到正文插图的宽度。[问题 #38](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) · [原版复现与修复验证](banner-testing.md#同图封面与正文缩放)
+
+首次挂载图片时，Patches 在现有的封面容器上创建开放的 Shadow Root，将原生 `<img>` 放入其中。外层文档查询只能找到正文插图，封面的鼠标操作由工具栏提供。样式表通过 `::part(image)` 为封面图片设置宽度与原始比例。默认插槽继续显示加载和错误信息，以及后来切换到的视频。隐藏或更换封面时会释放原图片。同一容器的后续图片复用隔离层。
+
+正文与封面可以共用同一附件。拖动正文插图只改变它的显示尺寸。直接编辑并覆盖图片文件时，两处都会显示更新后的内容。
+
 ## 操作与设置
 
 - **Select cover**：原生 FuzzySuggestModal 按名称和完整路径选择 vault 媒体，只写入 `patch-banner`。
 - **Remove cover**：只删除 `patch-banner`，保留媒体和其他笔记属性。
 - 没有封面时，标题上方有悬停/键盘聚焦显示的 Add cover；已有封面显示 Change cover / Remove cover。触屏始终显示操作。视频增加播放/暂停，图片增加隐藏/显示。
 
-没有尺寸输入、定位滑块、调整对话框或调整命令。设置页提供 Enabled、Cover width (%) 与 Autoplay videos。两个开关默认开启，宽度为 10–100% 的整数，默认 90%；滑块旁的重置按钮恢复到 90%，同步滑块数值并保存到插件设置，对该 vault 的所有封面生效。拖动时原生滑块提示数值，释放后保存并更新现有视图，不增加 frontmatter 属性。
+设置页提供 Enabled、Cover width (%) 与 Autoplay videos。两个开关默认开启。宽度滑块设置库默认值，初始为 90%，重置按钮可恢复该值。释放滑块后，所有沿用库设置的笔记同步更新。笔记专属的宽度可以在原生 Properties 或 YAML 中编辑。
 
 写入使用 `fileManager.processFrontMatter`，捕获操作发生时的笔记，而非保存时重新查询活跃文件；写入错误显示 Notice。原生 serializer 可能重新排版 YAML、移除注释。
 

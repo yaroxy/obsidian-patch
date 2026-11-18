@@ -16,3 +16,11 @@ body {
 
 
 These variables change presentation, not note content. Explicit per-file icon colors override the inherited icon color. Use **Follow text** to return an icon to the text/snippet color. **Code background** must be enabled for the callout tint variable to apply.
+
+In the development build, target a cover image with `::part(image)` to style it independently of body images. For example, this rounds the cover corners.
+
+```css
+.obsidian-patch-banner-stage::part(image) {
+  border-radius: 8px;
+}
+```

@@ -34,6 +34,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
     private frame = 0;
     private editor?: EditorView;
     private editorState: BannerState = { status: "none" };
+    private noteWidthPercent?: number;
     private measured?: EditorView;
     private restoreScroll?: () => void;
 
@@ -113,6 +114,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
       const state = reading
         ? resolveBanner(plugin.app, file, plugin.app.metadataCache.getFileCache(file)?.frontmatter)
         : this.editorState;
+      this.noteWidthPercent = state.status === "ready" ? state.banner.widthPercent : undefined;
       this.add.hidden = state.status !== "none";
       this.measureFrom(!reading && state.status !== "none" ? this.editor : undefined);
       this.resize();
@@ -151,7 +153,7 @@ export function registerBannerCovers(plugin: Plugin, settings: () => BannerSetti
       if (!this.viewport || !this.host || this.element.hidden || !this.element.isConnected) return;
       const available = this.viewport.clientWidth;
       if (!available) return; // Hidden tabs are measured after they become visible.
-      const width = available * settings().widthPercent / 100;
+      const width = available * (this.noteWidthPercent ?? settings().widthPercent) / 100;
       const viewport = this.viewport.getBoundingClientRect();
       const cover = this.element.getBoundingClientRect();
       const start = viewport.left + this.viewport.clientLeft + (available - width) / 2;
