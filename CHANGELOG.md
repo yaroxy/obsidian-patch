@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Check every `patch-mermaid` diagram in the active note with the selected Full runtime. Open a parser message or jump to its source line. Checks include unsaved editor changes.
+- Set `patch-banner-width` to a whole percentage from 10 to 100 for one note.
+- Complete the folder under the cursor in **GitHub folders** and inspect each callout’s compatibility details in a compact report.
+
+### Changed
+
+- Show complete missing icon paths and recheck them before clearing saved assignments.
+- Report the bundled Mermaid version at build time. Personal builds can pin a different version.
+
+### Fixed
+
+- Preserve the cover width with Image Converter’s drag resize enabled, including when a body image uses the same file.
+- Check the saved note in Reading view, reject outdated callout jump targets, and preserve Windows line endings when jumping to Mermaid source.
+
 ## [0.4.0] - 2026-11-17
 
 ### Added

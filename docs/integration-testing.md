@@ -1,5 +1,11 @@
 # Obsidian integration tests
 
+## Full development candidate — 2026-11-18
+
+The Full source passed 143 unit tests, a clean locked dependency install, the production build, and package validation. On macOS with Obsidian 1.15.1, Full passed 65 Callouts, 107 Banner, 19 Icons, and 31 Mermaid checks in `dev-vault`. The Full-specific Mermaid run rendered with bundled 12.3.0 and an exact custom 12.1.0 from jsDelivr. The note checker showed the selected remote version. A nested syntax error in a CRLF note opened at its original line and column, and the file retained its line endings.
+
+The Callouts suite checked the Reading-view command on an unmarked note, an external save, and stale jump targets. The Banner suite ran with the window visible and included MP4/WebM playback and manual pause. Icons used cached fixtures. The native OS context menu, mobile, and other desktop platforms were outside these runs. Test settings, editor sizes, background throttling, and the previous tab were restored. A final Community Icons run returned the development vault to the Community build.
+
 ## Full 0.4.0 preparation — 2026-11-17
 
 The Full candidate based on `80675bf` synchronizes the icon/color picker, precise global line width, and callout code-block backgrounds from Community's reviewed `3f62957` implementation. Shared feature files and the plugin stylesheet match Community exactly; Full retains its own Mermaid runtime/remote loader, build defaults, validation rules, and manual installation instructions. Fresh locked-dependency installation, 137 unit tests, the production Full build, and tag-specific package validation for 0.4.0 passed.

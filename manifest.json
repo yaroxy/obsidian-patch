@@ -3,7 +3,7 @@
   "name": "Patches",
   "version": "0.4.0",
   "minAppVersion": "1.15.0",
-  "description": "Edit tables and callouts, render newer Mermaid diagrams, format math, and customize note covers, icons, line width, heading labels, and PDF navigation.",
+  "description": "Focused fixes and enhancements for editing and reading Markdown notes.",
   "author": "yaroxy",
   "authorUrl": "https://github.com/yaroxy",
   "isDesktopOnly": false

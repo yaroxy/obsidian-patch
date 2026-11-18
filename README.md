@@ -14,21 +14,42 @@ This is the independent **Full** source branch, `codex/full`, with optional Late
 
 ## Features
 
-Configure the plugin under **Settings → Patches**.
+The current Full source adds the whole-note diagram check, per-note cover widths, and GitHub folder completion. [Unreleased changes](CHANGELOG.md#unreleased)
 
-| Feature                           | What it does                                                                                        |
-| --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| [Active Line](#active-line)       | Marks the cursor's line in the editor margin and highlights its line number.                        |
-| [Callout Code](#callout-code)     | Tints inline code and code blocks to match their callout.                                                 |
-| [Callout Editor](#callout-editor) | Inserts, edits, previews, and unwraps callouts, with GitHub compatibility checks and conversion.    |
-| [Heading Levels](#heading-levels) | Shows H1–H6 labels beside headings in reading and editing views.                                    |
-| [HTML Tables](#html-tables)       | Converts Markdown tables to HTML and visually edits cells, merged headers, alignment, and captions. |
-| [Line Width](#line-width)         | Adjusts readable line width through settings, a status bar slider, or a per-note property.          |
-| [Math Format](#math-format)       | Indents and aligns display-math blocks while preserving formulas.                                   |
-| [Patch Banner](#patch-banner)     | Adds vault images, animations, or videos as note covers.                                            |
-| [Patch Icons](#patch-icons)       | Adds Lucide icons or Simple Icons logos to files and folders in the explorer.                       |
-| [Patch Mermaid](#patch-mermaid)   | Brings newer Mermaid diagram types and syntax to notes, with theme support. |
-| [PDF Export](#pdf-export)         | Adds heading bookmarks and same-note heading links to exported PDFs.                                |
+Find each settings group under **Settings → Patches**.
+
+<table>
+<thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
+<tbody>
+<tr><th rowspan="2" scope="rowgroup">Callouts</th><td><a href="#callout-editor">Callout editor</a></td><td>Edit, convert, and check GitHub compatibility.</td></tr>
+<tr><td><a href="#callout-code">Code backgrounds</a></td><td>Tint code to match the surrounding callout.</td></tr>
+</tbody>
+<tbody>
+<tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="#active-line">Active line</a></td><td>Mark the cursor line and its line number.</td></tr>
+<tr><td><a href="#heading-levels">Heading levels</a></td><td>Show heading levels in the margin.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Line Width</th><td><a href="#line-width">Readable columns</a></td><td>Set a maximum globally or for one note.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Math Format</th><td><a href="#math-format">Display math</a></td><td>Indent and align formulas.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Patch Banner</th><td><a href="#patch-banner">Note covers</a></td><td>Add vault media and set the cover width per note.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Patch Icons</th><td><a href="#patch-icons">File and folder icons</a></td><td>Choose explorer icons and their colors.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Patch Mermaid</th><td><a href="#patch-mermaid">Diagrams</a></td><td>Render and check diagrams with the selected engine.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">PDF Export</th><td><a href="#pdf-export">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">No settings required</th><td><a href="#html-tables">HTML tables</a></td><td>Edit merged cells and convert Markdown tables.</td></tr>
+</tbody>
+</table>
 
 ## Installation
 
@@ -94,6 +115,8 @@ becomes:
 
 The GitHub panel explains remaining differences, including Obsidian-only syntax. Nested callouts must be moved to the top level manually. Set `github: true` on a note or choose **Callouts → GitHub folders** to enable the status bar count; click it or run **Check callouts for GitHub** for details.
 
+In the current Full source, start typing a folder and choose a suggestion to replace the path under the cursor. The report checks unsaved edits in the editor and the saved note in Reading view. Use **Details** to see the reasons for one callout or **Jump** to go to its line. [Folder demo](docs/images/callout-folder-completion.gif) · [Report screenshot](docs/images/callout-github-report.png)
+
 ## Heading Levels
 
 H1–H6 labels appear beside headings in Reading View, Live Preview, and Source mode. Wrapped headings leave room for the label, and Setext headings are supported. Toggle **Editor → Heading levels**; it is on by default. Labels do not change note source or appear in exported PDFs.
@@ -134,6 +157,8 @@ Both table and callout editors resize from their bottom-right corner and remembe
 Adjust the reading column in Reading View, Live Preview, and Source mode. Enable Obsidian's **Settings → Editor → Readable line length**, then use **Line Width** in the plugin settings or the desktop status bar slider. Type an exact whole-number width in settings, then press Enter or leave the field to apply it; the numeric input and slider stay in sync. Both sliders use 1 px steps. The default is **900 px**, with a range of **500–2000 px**; use the settings reset button or click the status bar value to reset it.
 
 ![Entering an exact global width of 1137 px in settings](docs/images/line-width-settings.gif)
+
+The setting is an upper limit. A 1306 px pane with 32 px of padding on each side has room for about 1242 px of text.
 
 Override the width for one note:
 
@@ -196,6 +221,8 @@ Save the [Kyoto cover illustration](docs/images/kyoto-cover.jpg) to `assets/kyot
 
 Under **Patch Banner**, adjust **Cover width (%)** from 10–100% of the pane, with a default of 90%, and toggle **Autoplay videos**. Videos are muted, loop, and pause when hidden. Reduced-motion preferences defer playback and animated images until you choose to show them.
 
+With the current Full source, set `patch-banner-width: 65` to center one note’s cover at 65% of its pane. Omitted or invalid values use the vault setting. Image Converter can resize and align a body image that uses the same attachment independently.
+
 Local images and videos are supported where the platform can decode them. Covers do not appear in Source mode, embedded notes, hover previews, Canvas, or PDF exports. Updating the property uses Obsidian's YAML serializer, which may reformat frontmatter and remove comments.
 
 ## Patch Icons
@@ -208,11 +235,13 @@ For files with different colors, **Keep colors** preserves each one while changi
 
 The picker downloads the latest Simple Icons graphic data from jsDelivr on first use in a session, plus brand-color JSON from the corresponding upstream Simple Icons version. These are image and color data, not executable modules. Icons and brand colors already in use are saved locally and display offline; **Patch Icons → Update** refreshes the pack. If color metadata is unavailable, cached brand colors remain usable and other icons can still use text, preset, or custom colors. Simple Icons provides single-color brand marks, so **Brand color** does not recreate multicolor logos. Icons and colors follow renames and moves made inside Obsidian; changes made outside it leave the old assignment behind.
 
-**Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped; disable Iconize afterwards to avoid duplicate icons. **Icons of missing files** lets you clear unused assignments. Icons appear only in the file explorer.
+**Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped. After importing, disable Iconize to avoid showing two icons for one file. **Icons of missing files** lists the full paths in the current Full source. **Remove** rechecks them so a restored file keeps its icon and color. Icons appear only in the file explorer.
 
 ## Patch Mermaid
 
 Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. This Full distribution offers the bundled Mermaid version plus optional Latest and Custom versions.
+
+The current Full source adds **Patches: Check diagrams in this note**. It checks every `patch-mermaid` fence with the engine actually in use, including a bundled fallback, and shows its version. Use **Details** for the parser message and **Jump** for the source location. In the editor, checks include unsaved changes.
 
 For example, organize incident response with a [Cynefin diagram](https://mermaid.js.org/syntax/cynefin.html), introduced in Mermaid 11.16.0. This works with the default **Bundled** version and **Strict** security level:
 
@@ -314,6 +343,8 @@ npm run check:release
 ```
 
 `dev:full` and `build:full` remain aliases for the default commands. Copy the three installation files from `dist/full/` into `<vault>/.obsidian/plugins/patches/` and reload Obsidian after rebuilding.
+
+You can also pin a different bundled Mermaid version in a personal checkout. Test it with representative diagrams before installing. [Personal build instructions](docs/releases.md#choose-a-bundled-mermaid-version)
 
 See [AGENTS.md](AGENTS.md) for development conventions and feature design references, and [Full builds and migration](docs/releases.md) for distribution checks and migration. [Integration testing](docs/integration-testing.md) covers commands, prerequisites, and restoration behavior. Integration suites deploy Full into `dev-vault` and modify dedicated test fixtures; the new build and fixtures remain afterwards. This branch's CI tests Full but does not publish GitHub releases or release attestations.
 
