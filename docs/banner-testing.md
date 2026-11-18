@@ -94,7 +94,7 @@ dev-vault 中使用与 spacetime 相同的正文，先关闭封面打开笔记�
 | --- | --- |
 | 像 Iconize 一样为文件夹图标着色 | 0.4.0 已发布。右键文件夹，选择 **Change icon**，选取图标和颜色后点击 **Apply**。[已发布的图标说明](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943392466) |
 | 悬停特定宽高比的封面时闪动 | 已在 Live Preview 用 Image Converter 1.4.6 复现尺寸跳变。开发版已修复，并验证正文同图仍能独立缩放。测试中没有出现系统全屏或遮罩。0.4.0 用户可临时关闭 Image Converter 的 **Enable drag resize**。[同图复测](#同图封面与正文缩放) |
-| 调整正文行宽没有效果 | 默认主题和 Aether Core 在宽窗格下均可从 600 调到 900 px，较大的目标值会受主题留白和窗格宽度限制。仍待报告者在开启 **Readable line length**、移除逐笔记覆盖值后提供 600 / 900 px 对照及其视图、窗格宽度。[原始反馈](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) |
+| 调整正文行宽没有效果 | 已在 Aether Core 约 1306 px 的阅读窗格中复现。设置从 1200 调到 1400 px，正文两次都是 1166 px。左右各 70 px 的主题留白耗尽了窗格空间。相同环境从 600 调到 900 px 时正文按设置变宽。仍待报告者确认其原始视图、窗格宽度和两档设置，以判定是否遇到同一上限。[原始反馈](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) |
 
 在 macOS 开发库用 Patches Community 0.4.0、已开启的 Readable line length 和 90% 封面宽度，分别加载默认样式、Aether Core 样式、主题加四份片段、仅四份片段。样式临时载入测试窗口，主题 CSS 的 SHA-256 为 `b2a55ec48ad7028d5af6489acaf8dda4fc1b6d1b47282283bf15a2657de8ab53`。开发库仅启用 Patches 和 Hot Reload。报告者未给出其主题版本、样图或各插件设置。[报告与附件](https://github.com/yaroxy/obsidian-patch/issues/38#issuecomment-6943623664) · [Aether Core 样式](https://github.com/CosmicSeaFox/Aether-Core/blob/main/theme.css)
 
