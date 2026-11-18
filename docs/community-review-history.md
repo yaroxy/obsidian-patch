@@ -119,6 +119,14 @@ Before publication, the draft target, version, three attachment names, sizes, an
 
 The verified hashes are `main.js` `da28a18488765d8712375bb76d66dcbe7adf7d30b40dd0aa23c56eb2f13985b5`, `manifest.json` `83423bb25dfe53e487c1053188e9d6529bba85226eb5b40c55da1f1def44e0dc`, and `styles.css` `f14d16a0f8c0ee0d7828bdb493e0e4e144adebf435957e13db03265a923bed05`. These workflow/asset checks do not constitute a Community Directory release-review result; append that report when available. Full 0.4.0 source is at `a18cfa87012bae4ba773cf53308f4f97fb7530cd` and is not an official release attachment.
 
+## Community branch preview — 2026-11-18
+
+The Obsidian Community dashboard completed a **Review branch** scan for the exact Community commit `3be0d86e46eb04ea183da318e5b88540516b672f`. The report showed one source warning and a passing dependency check. It listed no errors. This preview covered the branch ahead of the next release. [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/3be0d86e46eb04ea183da318e5b88540516b672f) · [Maintainer review dashboard](https://community.obsidian.md/account/plugins/patches)
+
+The source warning flagged the GitHub folder picker passing `byPath.compare` to `Array.prototype.sort`. The `Intl.Collator.prototype.compare` getter returns a function already bound to its collator. A local check sorted `docs/1`, `docs/2`, and `docs/10` in numeric order with both the detached comparator and an explicit call. [Reported line](https://github.com/yaroxy/obsidian-patch/blob/3be0d86e46eb04ea183da318e5b88540516b672f/src/features/callout/folder-suggest.ts#L38) · [ECMA-402 compare accessor](https://tc39.es/ecma402/#sec-intl.collator.prototype.compare)
+
+Both branch builds and the documentation deployment passed on GitHub. The follow-up changes the folder picker to call `byPath.compare(left, right)` explicitly in both distributions. [Community build](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018661) · [Full build](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018687) · [Pages deployment](https://github.com/yaroxy/obsidian-patch/actions/runs/44295018799)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.
