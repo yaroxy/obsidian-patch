@@ -131,6 +131,18 @@ Both branch builds and the documentation deployment passed on GitHub. The follow
 
 The dashboard marked preview `fd58c47bc1a53eab02f254b518e1ae460bb6f6f5` **Completed** on 2026-11-18. The final report displayed a passing dependency check and no source warnings, errors, or recommendations. The earlier folder-sort warning cleared. Community passed 138 local unit tests and 65 Callouts checks in the development vault. Full passed 143 local unit tests. Both production packages passed local validation. The two GitHub builds and Pages deployment succeeded. The published plugin version at the time of this branch preview was 0.4.0. [Community build](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490603) · [Full build](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490576) · [Pages deployment](https://github.com/yaroxy/obsidian-patch/actions/runs/44296490542)
 
+## 0.5.0 release — 2026-11-18
+
+The regular Community release was published from `d268cb0e0ed99b7650ad2ad5143efaa1290d6319`, including the completed branch-preview record. Its plugin source matches the reviewed `fd58c47` implementation. The Full source was synchronized at `2db95be`. The three downloaded Community attachments matched the locally tested files byte for byte. Their GitHub attestations verified against `release.yml` and `refs/tags/0.5.0`. [Release](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0) · [Release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/44302042421)
+
+| Attachment | SHA-256 |
+| --- | --- |
+| `main.js` | `0f28ccb12c83d92d21704c82edc36b0626c20eddaacc99ef29bb1a1b945191fa` |
+| `manifest.json` | `bd20e04af1da79efb63418a2e2dc608853f8cbaa272aaaa85277132d7b7c720d` |
+| `styles.css` | `7f4ab73ce5f3b2f7a09c7327699eba3e4312b61e2b6c9dba6e30f36458cd6ada` |
+
+The Directory marked the release scan **Completed** and listed **0.5.0** as the current published version. The service reproduced `main.js` byte for byte, verified the displayed asset attestations, and passed the dependency check. The single release warning concerns the 10,812,781-byte `main.js`, which exceeds the 5 MB per-file limit on Obsidian Sync Standard. The behavior section listed vault enumeration as a recommendation and individual vault-file reads as a pass. No source error was reported. All five approved desktop screenshots appeared on the public listing in the selected order. [Directory listing](https://community.obsidian.md/plugins/patches) · [Maintainer report](https://community.obsidian.md/account/plugins/patches)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.
