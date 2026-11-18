@@ -68,7 +68,15 @@ function plugin() {
   return p;
 }
 function row() {
-  const element = () => ({ hidden: false, text: "", setText(text) { this.text = text; }, createDiv: () => element() });
+  const element = () => ({
+    hidden: false, text: "", children: [],
+    setText(text) { this.text = text; }, createDiv: () => element(),
+    createEl(tag, options) {
+      const child = Object.assign(element(), { tag }, options);
+      this.children.push(child);
+      return child;
+    },
+  });
   const r = { controls: {}, descEl: element(), setDesc(value) { this.description = value; return this; } };
   for (const type of ["Toggle", "Slider", "ExtraButton", "Dropdown", "Text", "Button"]) {
     r[`add${type}`] = (callback) => {
@@ -185,13 +193,21 @@ test("Full definitions follow version changes made while the settings tab is clo
 test("icon mutations request a declarative update instead of rebuilding the legacy display", async () => {
   const p = plugin(), tab = new CommunityTab(p);
   const actions = [];
-  p.icons = { countIconizeIcons: async () => 2, importIconize: async () => actions.push("import"), missingPaths: () => ["gone.md"], removeIcons: async paths => actions.push(paths) };
+  let missingPaths = ["Two/Note.md", "One/<folder>"];
+  p.icons = { countIconizeIcons: async () => 2, importIconize: async () => actions.push("import"), missingPaths: () => [...missingPaths], removeIcons: async paths => actions.push(paths) };
   const imported = row();
   find(tab, "Patch Icons", "Import from Iconize").render(imported);
   await imported.controls.Button.click();
   const missing = row();
   find(tab, "Patch Icons", "Icons of missing files").render(missing);
+  assert.deepEqual(missing.descEl.children[0].children.map(el => el.text), ["One/<folder>", "Two/Note.md"]);
+  missingPaths = ["New.md", "One/<folder>"];
   await missing.controls.Button.click();
-  assert.deepEqual(actions, ["import", ["gone.md"]]);
+  assert.deepEqual(actions, ["import", ["One/<folder>"]]);
   assert.equal(tab.updates, 2);
+  missingPaths = [];
+  const empty = row();
+  find(tab, "Patch Icons", "Icons of missing files").render(empty);
+  assert.equal(empty.controls.Button.disabled, true);
+  assert.equal(empty.descEl.children.length, 0);
 });

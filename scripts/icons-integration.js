@@ -79,13 +79,27 @@ async function iconsIntegration(app, context) {
     await app.vault.create(notePath, "# Launch checklist\n\n- Review release notes\n- Check installation files\n- Publish after review\n");
     await app.vault.create(cachedPath, "# Reference links\n\nKeep the release guide and review checklist together.\n");
     await leaf.openFile(app.vault.getAbstractFileByPath(notePath));
+    const gone = `${rootPath}/Removed folder`, restored = `${rootPath}/Returned.md`;
     await plugin().saveData({ ...plugin().settings, icons: {
-      enabled: true, paths: { [projectPath]: "lucide:folder", [notePath]: "lucide:book-open", [cachedPath]: simpleId },
+      enabled: true, paths: { [restored]: "lucide:book-open", [gone]: "lucide:folder", [projectPath]: "lucide:folder", [notePath]: "lucide:book-open", [cachedPath]: simpleId },
       colors: { [projectPath]: "red" },
       svgs: { [simpleId]: cachedSvg },
       brandColors: { [simpleId]: "#3776AB" },
     } });
     await reload();
+    app.setting.open();
+    try {
+      app.setting.openTabById("patches");
+      const missingRow = () => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
+        .find(el => el.querySelector(".setting-item-name")?.textContent === "Icons of missing files");
+      const pathList = () => [...(missingRow()?.querySelectorAll(".obsidian-patch-icons-missing-paths li") ?? [])].map(el => el.textContent);
+      await until(() => pathList().join("\n") === [gone, restored].join("\n"), "full missing paths in settings");
+      await app.vault.create(restored, "");
+      missingRow().querySelector("button").click();
+      await until(() => missingRow()?.querySelector("button")?.disabled && pathList().length === 0, "empty missing icon list after cleanup");
+      assert(plugin().settings.icons.paths[restored] === "lucide:book-open" && !plugin().settings.icons.paths[gone], "Cleanup removed the wrong assignments");
+      pass("settings list the missing paths and preserve the icon for a file restored before cleanup");
+    } finally { app.setting.close(); }
     app.workspace.leftSplit.expand();
     await app.workspace.revealLeaf(main);
     await reveal(main.view, notePath);
