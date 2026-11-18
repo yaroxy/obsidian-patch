@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-18
+
 ### Added
 
 - Check every `patch-mermaid` diagram in the active note with the selected Full runtime. Open a parser message or jump to its source line. Checks include unsaved editor changes.

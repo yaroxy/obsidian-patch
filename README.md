@@ -14,7 +14,7 @@ This is the independent **Full** source branch, `codex/full`, with optional Late
 
 ## Features
 
-The current Full source adds the whole-note diagram check, per-note cover widths, and GitHub folder completion. [Unreleased changes](CHANGELOG.md#unreleased)
+Full 0.5.0 adds the whole-note diagram check, per-note cover widths, and GitHub folder completion. [Full changelog](CHANGELOG.md)
 
 Find each settings group under **Settings → Patches**.
 
@@ -115,7 +115,7 @@ becomes:
 
 The GitHub panel explains remaining differences, including Obsidian-only syntax. Nested callouts must be moved to the top level manually. Set `github: true` on a note or choose **Callouts → GitHub folders** to enable the status bar count; click it or run **Check callouts for GitHub** for details.
 
-In the current Full source, start typing a folder and choose a suggestion to replace the path under the cursor. The report checks unsaved edits in the editor and the saved note in Reading view. Use **Details** to see the reasons for one callout or **Jump** to go to its line. [Folder demo](docs/images/callout-folder-completion.gif) · [Report screenshot](docs/images/callout-github-report.png)
+In Full 0.5.0, start typing a folder and choose a suggestion to replace the path under the cursor. The report checks unsaved edits in the editor and the saved note in Reading view. Use **Details** to see the reasons for one callout or **Jump** to go to its line. [Folder demo](docs/images/callout-folder-completion.gif) · [Report screenshot](docs/images/callout-github-report.png)
 
 ## Heading Levels
 
@@ -221,7 +221,7 @@ Save the [Kyoto cover illustration](docs/images/kyoto-cover.jpg) to `assets/kyot
 
 Under **Patch Banner**, adjust **Cover width (%)** from 10–100% of the pane, with a default of 90%, and toggle **Autoplay videos**. Videos are muted, loop, and pause when hidden. Reduced-motion preferences defer playback and animated images until you choose to show them.
 
-With the current Full source, set `patch-banner-width: 65` to center one note’s cover at 65% of its pane. Omitted or invalid values use the vault setting. Image Converter can resize and align a body image that uses the same attachment independently.
+With Full 0.5.0, set `patch-banner-width: 65` to center one note’s cover at 65% of its pane. Omitted or invalid values use the vault setting. Image Converter can resize and align a body image that uses the same attachment independently.
 
 Local images and videos are supported where the platform can decode them. Covers do not appear in Source mode, embedded notes, hover previews, Canvas, or PDF exports. Updating the property uses Obsidian's YAML serializer, which may reformat frontmatter and remove comments.
 
@@ -235,13 +235,13 @@ For files with different colors, **Keep colors** preserves each one while changi
 
 The picker downloads the latest Simple Icons graphic data from jsDelivr on first use in a session, plus brand-color JSON from the corresponding upstream Simple Icons version. These are image and color data, not executable modules. Icons and brand colors already in use are saved locally and display offline; **Patch Icons → Update** refreshes the pack. If color metadata is unavailable, cached brand colors remain usable and other icons can still use text, preset, or custom colors. Simple Icons provides single-color brand marks, so **Brand color** does not recreate multicolor logos. Icons and colors follow renames and moves made inside Obsidian; changes made outside it leave the old assignment behind.
 
-**Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped. After importing, disable Iconize to avoid showing two icons for one file. **Icons of missing files** lists the full paths in the current Full source. **Remove** rechecks them so a restored file keeps its icon and color. Icons appear only in the file explorer.
+**Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped. After importing, disable Iconize to avoid showing two icons for one file. **Icons of missing files** lists the full paths in Full 0.5.0. **Remove** rechecks them so a restored file keeps its icon and color. Icons appear only in the file explorer.
 
 ## Patch Mermaid
 
 Use newer Mermaid diagram types and syntax without waiting for Obsidian to update its renderer. Write a `patch-mermaid` code block. This Full distribution offers the bundled Mermaid version plus optional Latest and Custom versions.
 
-The current Full source adds **Patches: Check diagrams in this note**. It checks every `patch-mermaid` fence with the engine actually in use, including a bundled fallback, and shows its version. Use **Details** for the parser message and **Jump** for the source location. In the editor, checks include unsaved changes.
+Full 0.5.0 adds **Patches: Check diagrams in this note**. It checks every `patch-mermaid` fence with the engine actually in use, including a bundled fallback, and shows its version. Use **Details** for the parser message and **Jump** for the source location. In the editor, checks include unsaved changes.
 
 Bundled Mermaid 12.3.0 can number a flowchart’s arrows and play them in sequence. In this example, the dot follows the draft through review and publication. The badges stay visible between steps. Keep `layout: dagre` to display both badges. [Mermaid flowchart steps](https://mermaid.js.org/syntax/flowchart.html#step-by-step-flow-animation-v12-3-0)
 
