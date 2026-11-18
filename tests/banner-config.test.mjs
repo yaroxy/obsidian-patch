@@ -18,7 +18,7 @@ test("persisted width percentages keep valid values and default invalid data to 
 });
 
 test("absent banners do not create a configuration", () => {
-  for (const value of [undefined, null, {}, { "patch-banner": "", tags: ["note"] }]) {
+  for (const value of [undefined, null, {}, { "patch-banner-width": 65 }, { "patch-banner": "", tags: ["note"] }]) {
     assert.deepEqual(parseBannerConfig(value), { status: "none" });
   }
 });
@@ -27,6 +27,20 @@ test("quoted wikilink values preserve Unicode and spaces", () => {
   assert.deepEqual(parseBannerConfig({ "patch-banner": "[[assets/旅行 banner.PNG]]" }), {
     status: "ready", config: { linkpath: "assets/旅行 banner.PNG" },
   });
+});
+
+test("note cover widths accept whole percentages and an optional percent sign", () => {
+  for (const [input, expected] of [[10, 10], [100, 100], ["65", 65], ["75%", 75], [" 80 % ", 80]]) {
+    const result = parseBannerConfig({ "patch-banner": "[[cover.png]]", "patch-banner-width": input });
+    assert.deepEqual(result, { status: "ready", config: { linkpath: "cover.png", widthPercent: expected } });
+  }
+});
+
+test("missing or invalid widths leave the cover available at the vault default", () => {
+  for (const input of [undefined, null, "", " ", true, [65], 0, 9, 101, -60, 60.5, NaN, Infinity, "50px", "23.5%", "1e2", "%"]) {
+    const result = parseBannerConfig({ "patch-banner": "[[cover.png]]", "patch-banner-width": input });
+    assert.deepEqual(result, { status: "ready", config: { linkpath: "cover.png" } });
+  }
 });
 
 test("YAML arrays, remote sources and other link protocols are rejected", () => {

@@ -266,7 +266,8 @@ body {
   background: var(--background-secondary);
 }
 
-.obsidian-patch-banner .obsidian-patch-banner-media {
+.obsidian-patch-banner .obsidian-patch-banner-media,
+.obsidian-patch-banner-stage::part(image) {
   display: block;
   width: 100%;
   height: auto;
@@ -274,6 +275,10 @@ body {
   max-width: none;
   margin: 0;
   object-fit: contain;
+}
+
+.obsidian-patch-banner-stage::part(image) {
+  pointer-events: none;
 }
 
 .obsidian-patch-banner-message {

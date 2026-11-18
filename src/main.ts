@@ -341,7 +341,7 @@ class PatchesSettingTab extends PluginSettingTab {
     return [
       this.toggle("Enabled", "Display vault media from the patch-banner note property in Reading View and Live Preview.",
         () => settings().enabled, (enabled) => this.plugin.setBanner({ ...settings(), enabled })),
-      this.slider("Cover width (%)", `10–100% of the note pane, centered. Default: ${DEFAULT_BANNER_WIDTH_PERCENT}%. The title and text keep their normal width.`,
+      this.slider("Cover width (%)", `Covers use 10–100% of the note pane (default ${DEFAULT_BANNER_WIDTH_PERCENT}%). Set patch-banner-width on a note to override this.`,
         () => settings().widthPercent, 10, 100, 1, DEFAULT_BANNER_WIDTH_PERCENT, `${DEFAULT_BANNER_WIDTH_PERCENT}%`,
         (widthPercent) => this.plugin.setBanner({ ...settings(), widthPercent })),
       this.toggle("Autoplay videos", "Play visible videos silently. Reduced motion uses click to play.",
@@ -425,11 +425,11 @@ class PatchesSettingTab extends PluginSettingTab {
   private lineWidthDefinitions(): SettingDefinition[] {
     const settings = (): LineWidthSettings => this.plugin.settings.lineWidth;
     return [
-      this.toggle("Enabled", `Sets the width of notes in Reading View, Live Preview and Source mode. Requires Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
+      this.toggle("Enabled", `Sets the maximum reading column width in Reading View, Live Preview and Source mode. Requires Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
         () => settings().enabled, (enabled) => this.plugin.setLineWidth({ ...settings(), enabled })),
       {
         name: "Line width (px)",
-        desc: `${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Type an exact value and press Enter or leave the field to apply, or drag the slider. Default: ${DEFAULT_LINE_WIDTH} px; Obsidian's own width is 700 px.`,
+        desc: `${MIN_LINE_WIDTH}–${MAX_LINE_WIDTH} px, for notes without the property. Type a value and press Enter or leave the field to apply, or drag the slider. The column shrinks to fit the pane and theme padding. Patches defaults to ${DEFAULT_LINE_WIDTH} px.`,
         render: (setting) => {
           let input: TextComponent;
           let slider: SliderComponent;

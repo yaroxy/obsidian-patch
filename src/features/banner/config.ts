@@ -10,6 +10,7 @@ export interface BannerSettings {
 
 export interface BannerConfig {
   linkpath: string;
+  widthPercent?: number;
 }
 
 export interface ResolvedBanner extends BannerConfig {
@@ -40,8 +41,7 @@ export function parseBannerSettings(data: unknown): BannerSettings {
   return {
     enabled: typeof value.enabled === "boolean" ? value.enabled : true,
     autoplayVideos: typeof value.autoplayVideos === "boolean" ? value.autoplayVideos : true,
-    widthPercent: typeof value.widthPercent === "number" && Number.isInteger(value.widthPercent) &&
-      value.widthPercent >= 10 && value.widthPercent <= 100 ? value.widthPercent : DEFAULT_BANNER_WIDTH_PERCENT,
+    widthPercent: isBannerWidth(value.widthPercent) ? value.widthPercent : DEFAULT_BANNER_WIDTH_PERCENT,
   };
 }
 
@@ -58,7 +58,12 @@ export function parseBannerConfig(frontmatter: unknown): BannerConfigResult {
   if (!linkpath || /^(?:[a-z][a-z\d+.-]*:|\/|\\)/i.test(linkpath)) {
     return { status: "error", message: "Use a vault wikilink, such as [[assets/banner.png]]." };
   }
-  return { status: "ready", config: { linkpath } };
+  const config: BannerConfig = { linkpath };
+  const rawWidth = frontmatter["patch-banner-width"];
+  const percentage = typeof rawWidth === "string" ? /^(\d+)\s*%?$/.exec(rawWidth.trim()) : null;
+  const width = percentage ? Number(percentage[1]) : rawWidth;
+  if (isBannerWidth(width)) config.widthPercent = width;
+  return { status: "ready", config };
 }
 
 export function resolveBanner(app: App, note: TFile, frontmatter: unknown): BannerState {
@@ -69,6 +74,10 @@ export function resolveBanner(app: App, note: TFile, frontmatter: unknown): Bann
   const kind = mediaKind(file.extension);
   if (!kind) return { status: "error", message: `Unsupported banner format: ${file.extension}` };
   return { status: "ready", banner: { ...parsed.config, file, kind } };
+}
+
+function isBannerWidth(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 10 && value <= 100;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -136,6 +136,7 @@ export class BannerMedia {
         this.toggle.hidden = false;
         this.labelToggle("Retry media");
       }, { once: true });
+      let parent: HTMLElement | ShadowRoot = this.stage;
       if (media.tagName === "VIDEO") {
         const video = media as HTMLVideoElement;
         video.muted = true;
@@ -146,11 +147,21 @@ export class BannerMedia {
         video.addEventListener("pause", () => this.updateToggle());
       } else {
         (media as HTMLImageElement).alt = "";
+        media.part.add("image");
+        parent = this.imageRoot();
       }
       media.src = this.app.vault.getResourcePath(banner.file);
-      this.stage.prepend(media);
+      parent.prepend(media);
     }
     this.updateToggle();
+  }
+
+  private imageRoot(): ShadowRoot {
+    if (this.stage.shadowRoot) return this.stage.shadowRoot;
+    const root = this.stage.attachShadow({ mode: "open" });
+    // The slot keeps the status message and subsequent videos in the light DOM.
+    root.append(this.stage.ownerDocument.defaultView!.createEl("slot"));
+    return root;
   }
 
   private toggleMedia(): void {
