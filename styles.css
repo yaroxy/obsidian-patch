@@ -1,3 +1,66 @@
+.modal-container.obsidian-patch-report-container {
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.modal.obsidian-patch-report {
+  width: 760px;
+  max-width: 100%;
+  max-height: min(760px, 100%);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.obsidian-patch-report > .modal-header { flex: none; }
+.obsidian-patch-report > .modal-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.obsidian-patch-report > .modal-content > [role="status"] {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.obsidian-patch-report-list {
+  min-height: 0;
+  margin: var(--size-4-3) 0 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.obsidian-patch-report-item {
+  border-block-start: 1px solid var(--background-modifier-border);
+  padding: var(--size-4-2) var(--size-2-2);
+  overflow-wrap: anywhere;
+}
+
+.obsidian-patch-report-row,
+.obsidian-patch-report-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.obsidian-patch-report-row {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.obsidian-patch-mermaid-report .obsidian-patch-report-item pre {
+  margin: var(--size-4-2) 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
 .obsidian-patch-mermaid {
   box-sizing: border-box;
   max-width: 100%;
@@ -716,12 +779,16 @@ body {
 .obsidian-patch-callout-github-status.is-error,
 .obsidian-patch-callout-report-head .is-error { color: var(--color-orange); }
 
-.obsidian-patch-callout-report-head > button { margin-inline-start: auto; }
-
-.obsidian-patch-callout-report-row {
-  padding-block: var(--size-4-2);
-  border-block-end: 1px solid var(--background-modifier-border);
+.obsidian-patch-callout-report-head {
+  min-width: 0;
+  flex: 1 1 16rem;
 }
+
+.obsidian-patch-callout-report-head > :is(strong, .obsidian-patch-callout-report-outcome) { flex: none; }
+.obsidian-patch-callout-report-head > [aria-hidden] { display: inline-flex; flex: none; }
+.obsidian-patch-callout-report-marker { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.obsidian-patch-callout-report-outcome { color: var(--text-muted); font-size: var(--font-ui-small); }
+.obsidian-patch-callout-report-outcome::before { content: "·"; margin-inline-end: var(--size-4-2); }
 
 .obsidian-patch-callout-status {
   display: inline-flex;

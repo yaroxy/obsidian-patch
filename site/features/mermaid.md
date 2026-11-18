@@ -31,7 +31,7 @@ cynefin-beta
 ```
 ````
 
-Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks continue to use Obsidian's renderer.
+Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks use Obsidian’s renderer. Obsidian 1.15 introduced Pele with a documented Mermaid 12.1.0 syntax baseline. Patches 0.4.0 bundles the upstream Mermaid 12.3.0 engine for `patch-mermaid`. [Obsidian’s diagram release notes](https://obsidian.md/changelog/2026-11-02-desktop-v1.15.0/)
 
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,6 +57,14 @@ treeView-beta
 ```
 ````
 
+## Check diagrams in this note
+
+In the development build, run **Patches: Check diagrams in this note** from the command palette in a Markdown note. It uses the same Mermaid version as the `patch-mermaid` renderer. In the editor it checks unsaved edits. In Reading view it checks the saved note. It includes diagrams in lists and callouts. Other fence languages, including native `mermaid`, are skipped.
+
+The report shows the runtime version and the number of diagrams checked. Each error starts as one row with its diagram number and line in the note. **Jump** opens that line in the same pane. **Details** expands the parser’s full message for that row. A line marked **opening fence** takes you to the start of the diagram when Mermaid’s position cannot be mapped reliably. After editing the note, run the command again for current locations. Layout errors appear when the diagram renders.
+
 ## Which build should I use?
 
 Use the Community build for normal installation. It bundles Mermaid with the plugin and updates through Patches releases. Full is an optional manual source build; its [branch documentation](https://github.com/yaroxy/obsidian-patch/tree/codex/full) covers the extra runtime choices. See [network and privacy](../privacy.md).
+
+For a personal build, you can [choose an exact Mermaid version at build time](https://github.com/yaroxy/obsidian-patch/blob/main/docs/releases.md#choose-a-bundled-mermaid-version-for-a-personal-build). Official release testing covers the bundled version. Test a different version with your diagrams in a development vault before using it in your main vault.

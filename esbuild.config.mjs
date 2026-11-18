@@ -63,6 +63,9 @@ const distribution = {
       };
       await writeFile(join(outputDir, "metafile.json"), JSON.stringify(result.metafile, null, 2) + "\n");
       await writeFile(join(outputDir, "build-info.json"), JSON.stringify(info, null, 2) + "\n");
+      if (production) {
+        console.log(`Bundled Mermaid ${info.mermaidVersion}. If you changed the release pin, test diagram rendering in a development vault before installing. See docs/releases.md.`);
+      }
     });
   },
 };

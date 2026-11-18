@@ -1,6 +1,7 @@
 import { ViewPlugin, type EditorView } from "@codemirror/view";
 import { debounce, editorInfoField, MarkdownView, Notice, setIcon, type App, type Editor, type MarkdownPostProcessorContext, type Plugin, type TFile } from "obsidian";
 import { CalloutEditor, GitHubReport, type CalloutDraft } from "./callout/editor";
+import { editorLines, isActiveCheckNote, readCheckSource, sameCheckText } from "./note-check-source";
 import {
   calloutAt, calloutLines, commonIndent, findCallouts, formatHeader, githubIssues, unwrapToBlockquote, unwrapToText, withMarkers,
   type Callout, type CalloutHeader,
@@ -33,7 +34,7 @@ const NEW_HEADER: CalloutHeader = { type: "note", metadata: "", fold: "", title:
  * a blockquote, and check them against GitHub's alert rules. Every entry point
  * writes back only if the callout's source is still what was opened.
  */
-export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings): void {
+export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings): () => void {
   const { app } = plugin;
   const pathOf = (info: { file?: TFile | null } | null | undefined): string => info?.file?.path ?? "";
 
@@ -61,7 +62,13 @@ export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings
   plugin.addCommand({
     id: "check-callouts-github",
     name: "Check callouts for GitHub",
-    editorCallback: (editor) => report(app, editor),
+    checkCallback: (checking) => {
+      const view = app.workspace.getActiveViewOfType(MarkdownView);
+      const context = view ?? app.workspace.activeEditor;
+      if (!context?.editor) return false;
+      if (!checking) void report(app, context.editor, view ?? undefined);
+      return true;
+    },
   });
 
   plugin.registerEvent(app.workspace.on("editor-menu", (menu, editor, info) => {
@@ -118,7 +125,7 @@ export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings
     });
   });
 
-  registerGitHubStatus(plugin, settings);
+  return registerGitHubStatus(plugin, settings);
 }
 
 function calloutAtCursor(editor: Editor): Callout | undefined {
@@ -247,21 +254,37 @@ function insert(app: App, editor: Editor, sourcePath: string, github: boolean): 
   }).open();
 }
 
-function report(app: App, editor: Editor): void {
-  const callouts = findCallouts(editor.getValue());
-  if (callouts.length === 0) {
-    new Notice("This note has no callouts.");
-    return;
-  }
-  new GitHubReport(app, callouts.map((callout) => ({ line: callout.line, label: formatHeader(callout.header), issues: githubIssues(callout) })), (line) => {
+async function report(app: App, editor: Editor, view?: MarkdownView): Promise<void> {
+  const file = view?.file;
+  const active = () => view && file ? isActiveCheckNote(view, file) : app.workspace.activeEditor?.editor === editor;
+  const read = () => view && file ? readCheckSource(view, file) : editor.getValue();
+  const readError = () => { new Notice("Could not read the note to check its callouts."); };
+  const jump = async (text: string, line: number) => {
+    if (!active() || !sameCheckText(text, await read()) || !active()) {
+      new Notice("The note changed. Run the callout check again for current line numbers.");
+      return;
+    }
+    if (view?.getMode() === "preview") {
+      // Obsidian's line navigation waits for the preview sections to finish rendering.
+      view.setEphemeralState({ line, focus: true });
+      return;
+    }
     editor.setCursor({ line, ch: 0 });
     editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } }, true);
     editor.focus();
-  }).open();
+  };
+  try {
+    const text = await read();
+    if (!active()) return;
+    const callouts = findCallouts(editorLines(text));
+    if (!callouts.length) { new Notice("This note has no callouts."); return; }
+    const entries = callouts.map((callout) => ({ line: callout.line, label: formatHeader(callout.header), issues: githubIssues(callout) }));
+    new GitHubReport(app, entries, (line) => { void jump(text, line).catch(readError); }).open();
+  } catch { readError(); }
 }
 
 /** A status bar count of callouts GitHub would show as plain blockquotes, for notes meant for GitHub. */
-function registerGitHubStatus(plugin: Plugin, settings: () => CalloutSettings): void {
+function registerGitHubStatus(plugin: Plugin, settings: () => CalloutSettings): () => void {
   const { app } = plugin;
   const status = plugin.addStatusBarItem();
   status.addClass("obsidian-patch-callout-status", "mod-clickable");
@@ -270,14 +293,19 @@ function registerGitHubStatus(plugin: Plugin, settings: () => CalloutSettings): 
     if (app.metadataCache.getFileCache(file)?.frontmatter?.[GITHUB_PROPERTY] === true) return true;
     return settings().githubFolders.some((folder) => file.path.startsWith(`${folder.replace(/\/+$/, "")}/`));
   };
-  const update = debounce(() => {
+  let revision = 0;
+  const refresh = debounce(async (requested: number) => {
     const view = app.workspace.getActiveViewOfType(MarkdownView);
     const file = view?.file;
     if (!settings().github || !view || !file || !marked(file)) {
       status.hide();
       return;
     }
-    const callouts = findCallouts(view.editor.getValue());
+    let text: string;
+    try { text = await readCheckSource(view, file); }
+    catch { if (requested === revision) status.hide(); return; }
+    if (requested !== revision || !isActiveCheckNote(view, file)) return;
+    const callouts = findCallouts(editorLines(text));
     const failing = callouts.filter((callout) => githubIssues(callout).some(({ level }) => level === "error")).length;
     if (callouts.length === 0) {
       status.hide();
@@ -291,12 +319,15 @@ function registerGitHubStatus(plugin: Plugin, settings: () => CalloutSettings): 
       ? `GitHub would show ${failing} of ${callouts.length} callouts as plain blockquotes. Click for details.`
       : "GitHub shows every callout in this note as an alert.");
   }, 300, true);
+  const update = () => refresh(++revision);
   status.addEventListener("click", () => {
     const view = app.workspace.getActiveViewOfType(MarkdownView);
-    if (view) report(app, view.editor);
+    if (view) void report(app, view.editor, view);
   });
   plugin.registerEvent(app.workspace.on("active-leaf-change", update));
   plugin.registerEvent(app.workspace.on("editor-change", update));
   plugin.registerEvent(app.metadataCache.on("changed", update));
   app.workspace.onLayoutReady(update);
+  plugin.register(() => { ++revision; refresh.cancel(); });
+  return update;
 }

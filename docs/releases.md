@@ -23,6 +23,23 @@ Keep shared feature fixes synchronized from Community into Full while preserving
 
 Because both builds use the same ID, installing one replaces the other and keeps the same settings and command hotkeys. A subsequent Community Directory update replaces a manually installed full build with the community build. To continue using the full build, build and install it again from source.
 
+## Choose a bundled Mermaid version for a personal build
+
+Official builds use the exact Mermaid version in the release lockfile. Dependabot checks npm weekly, and the build reads the installed Mermaid version for the settings page and `dist/community/build-info.json`. A personal Community build can bundle a different version and still render diagrams offline. The production build prints the selected version and a reminder to test custom builds.
+
+In a separate checkout of the desired Patches release, run the following commands. Replace `12.1.0` with the exact version you want to try. The install updates that checkout’s `package.json` and `package-lock.json`, so the same selection can be rebuilt with `npm ci`.
+
+```sh
+npm install --save-exact mermaid@12.1.0
+npm test
+npm run build
+npm run check:release
+```
+
+**Compatibility:** Release testing covers the pinned dependency. A different version may change diagram syntax, SVG output, or compatibility with the bundled ELK layout engine. Check npm’s peer dependency messages when choosing another major version. Compilation and the package check alone do not exercise rendering in Obsidian.
+
+Before using a personal build in your main vault, run `node scripts/test-mermaid.mjs /absolute/path/to/dev-vault` from the same checkout. This suite installs that build into the named development vault and exercises the actual renderer. See [Integration testing](integration-testing.md) for prerequisites, fixtures, and settings restoration. Try representative diagrams from your own notes as well. A later directory update replaces the personal build with the official bundle.
+
 ## Migrating from obsidian-patch
 
 Run the migration before manually creating a `patches` installation. The tool refuses an existing destination directory or conflicting destination command hotkeys instead of overwriting them.

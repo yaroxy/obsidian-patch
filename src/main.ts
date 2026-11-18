@@ -22,6 +22,7 @@ import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type
 import { registerTables } from "./features/table";
 import { MATH_INDENTS, parseMathFormatSettings, registerMathFormat, type MathFormatSettings } from "./features/math-format";
 import { GITHUB_PROPERTY, parseCalloutSettings, registerCallouts, type CalloutSettings } from "./features/callout";
+import { GitHubFolderSuggest } from "./features/callout/folder-suggest";
 import {
   parseIconSettings,
   registerIcons,
@@ -69,6 +70,7 @@ export default class PatchesPlugin extends Plugin {
   private applyActiveLine?: (enabled: boolean) => void;
   private applyBanner?: (settings: BannerSettings) => void;
   private applyLineWidth?: (settings: LineWidthSettings) => void;
+  private refreshCalloutStatus?: () => void;
   private applyHeadingLevels?: (enabled: boolean) => void;
 
   override async onload(): Promise<void> {
@@ -99,7 +101,7 @@ export default class PatchesPlugin extends Plugin {
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
     registerMathFormat(this, () => this.settings.mathFormat);
-    registerCallouts(this, () => this.settings.callouts);
+    this.refreshCalloutStatus = registerCallouts(this, () => this.settings.callouts);
     this.icons = registerIcons(this, this.settings.icons, async (icons) => {
       this.settings.icons = icons;
       await this.saveData(this.settings);
@@ -156,6 +158,7 @@ export default class PatchesPlugin extends Plugin {
 
   async setCallouts(callouts: CalloutSettings): Promise<void> {
     this.settings.callouts = callouts;
+    this.refreshCalloutStatus?.();
     await this.saveData(this.settings);
   }
 
@@ -299,12 +302,15 @@ class PatchesSettingTab extends PluginSettingTab {
         () => settings().github, (github) => this.plugin.setCallouts({ ...settings(), github })),
       {
         name: "GitHub folders",
-        desc: `For notes in these folders, and notes whose ${GITHUB_PROPERTY} property is true, the status bar counts callouts that GitHub would show as plain blockquotes. Separate folders with commas.`,
+        desc: `Count callouts GitHub would show as plain quotes in these folders and their subfolders. Type to find a folder. Separate paths with commas, or set ${GITHUB_PROPERTY}: true on one note.`,
         render: (setting) => {
-          setting.addText((text) => text.setPlaceholder("docs, projects/site").setValue(settings().githubFolders.join(", "))
-            .onChange((value) => this.plugin.setCallouts({
-              ...settings(), githubFolders: value.split(",").map((folder) => folder.trim()).filter((folder) => folder !== ""),
-            })));
+          setting.addText((text) => {
+            text.setPlaceholder("docs, projects/site").setValue(settings().githubFolders.join(", "))
+              .onChange((value) => this.plugin.setCallouts({
+                ...settings(), githubFolders: value.split(",").map((folder) => folder.trim()).filter(Boolean),
+              }));
+            new GitHubFolderSuggest(this.plugin.app, text.inputEl);
+          });
         },
       },
     ];

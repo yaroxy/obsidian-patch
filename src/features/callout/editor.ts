@@ -1,4 +1,5 @@
 import { Component, DropdownComponent, MarkdownRenderer, Modal, Scope, TextComponent, setIcon, setTooltip, type App } from "obsidian";
+import { CheckReportModal } from "../../ui/check-report";
 import { makeResizable } from "../../ui/resizable-modal";
 import { calloutLines, defaultTitle, githubIssues, toGitHub, type CalloutHeader, type Fold, type GitHubIssue } from "./model";
 
@@ -284,31 +285,37 @@ export class CalloutEditor extends Modal {
   }
 }
 
+function countLabel(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 /** Lists the callouts of a note with how GitHub would show each. */
-export class GitHubReport extends Modal {
+export class GitHubReport extends CheckReportModal {
   constructor(app: App, entries: { line: number; label: string; issues: GitHubIssue[] }[], goTo: (line: number) => void) {
-    super(app);
-    this.setTitle("Callouts on GitHub");
-    this.modalEl.addClass("obsidian-patch-callout-report");
+    super(app, "Callouts on GitHub", "obsidian-patch-callout-report");
     const failing = entries.filter(({ issues }) => issues.some(({ level }) => level === "error")).length;
-    this.contentEl.createEl("p", {
-      text: failing === 0 ? `GitHub shows all ${entries.length} callouts as alerts.`
-        : `GitHub shows ${failing} of ${entries.length} callouts as plain blockquotes.`,
-    });
-    for (const { line, label, issues } of entries) {
-      const row = this.contentEl.createDiv({ cls: "obsidian-patch-callout-report-row" });
-      const head = row.createDiv({ cls: "obsidian-patch-callout-report-head" });
+    const alerts = entries.length - failing;
+    this.summaryEl.setText(`${countLabel(entries.length, "callout")} checked · ${countLabel(alerts, "alert")} · ${countLabel(failing, "plain blockquote")}`);
+    const list = this.addList("Callouts in this note");
+    for (const { line, label: header, issues } of entries) {
       const error = issues.some(({ level }) => level === "error");
-      setIcon(head.createSpan({ cls: error ? "is-error" : "is-ok" }), error ? "alert-triangle" : "check-circle-2");
-      head.createSpan({ text: `Line ${line + 1}: ${label}` });
-      const button = head.createEl("button", { text: "Go to" });
-      button.addEventListener("click", () => {
+      const { row, label, actions } = this.addRow(list, `Jump to the callout on line ${line + 1}`, () => {
+        this.shouldRestoreSelection = false;
         this.close();
         goTo(line);
       });
+      row.addClass("obsidian-patch-callout-report-row");
+      label.addClass("obsidian-patch-callout-report-head");
+      const icon = label.createSpan({ cls: error ? "is-error" : "is-ok", attr: { "aria-hidden": "true" } });
+      setIcon(icon, error ? "alert-triangle" : "check-circle-2");
+      label.createEl("strong", { text: `Line ${line + 1}` });
+      label.createSpan({ cls: "obsidian-patch-callout-report-marker", text: header, attr: { title: header } });
+      label.createSpan({ cls: "obsidian-patch-callout-report-outcome", text: error ? "Plain blockquote" : "Alert" });
       if (issues.length > 0) {
-        const ul = row.createEl("ul");
-        for (const { message } of issues) ul.createEl("li", { text: message });
+        const details = row.createEl("ul");
+        for (const { message } of issues) details.createEl("li", { text: message });
+        const caption = `Details (${issues.length})`;
+        this.addDetails(actions, details, `${caption} for the callout on line ${line + 1}`, caption);
       }
     }
   }
