@@ -243,36 +243,32 @@ Use newer Mermaid diagram types and syntax without waiting for Obsidian to updat
 
 The current Full source adds **Patches: Check diagrams in this note**. It checks every `patch-mermaid` fence with the engine actually in use, including a bundled fallback, and shows its version. Use **Details** for the parser message and **Jump** for the source location. In the editor, checks include unsaved changes.
 
-For example, organize incident response with a [Cynefin diagram](https://mermaid.js.org/syntax/cynefin.html), introduced in Mermaid 11.16.0. This works with the default **Bundled** version and **Strict** security level:
+Bundled Mermaid 12.3.0 can number a flowchart’s arrows and play them in sequence. In this example, the dot follows the draft through review and publication. The badges stay visible between steps. Keep `layout: dagre` to display both badges. [Mermaid flowchart steps](https://mermaid.js.org/syntax/flowchart.html#step-by-step-flow-animation-v12-3-0)
+
+![From draft to publication. Arrow 1 connects Write draft to Review changes. Arrow 2 connects Review changes to Publish note.](docs/images/mermaid-flow-steps.png)
 
 ````markdown
 ```patch-mermaid
-cynefin-beta
-  title Incident Response
-
-  complex
-    "Investigate root cause"
-    "Run chaos experiment"
-
-  complicated
-    "Analyze performance data"
-    "Expert review needed"
-
-  clear
-    "Restart service"
-    "Apply known fix"
-
-  chaotic
-    "Page on-call immediately"
-
-  confusion
-    "Unknown failure mode"
+---
+title: From draft to publication
+config:
+  layout: dagre
+  flowchart:
+    stepNumbers: true
+    stepDuration: 1.5
+    rankSpacing: 110
+---
+flowchart LR
+  A[Write draft] review@--> B[Review changes]
+  B publish@--> C[Publish note]
+  review@{ step: 1 }
+  publish@{ step: 2 }
 ```
 ````
 
-![A Cynefin incident response diagram following Obsidian's light and dark themes](docs/images/mermaid-theme.gif)
+Each arrow plays for 1.5 seconds with **Bundled** and the default **Strict** security level. With **Custom** set to Mermaid 12.1.0, the same diagram displays static arrows. [Watch the three-second loop](docs/images/mermaid-flow-steps.gif)
 
-Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks continue to use Obsidian's renderer.
+Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagram configuration to follow light and dark mode automatically. Standard `mermaid` blocks use Obsidian’s renderer. [Light and dark theme example](docs/images/mermaid-theme.gif)
 
 | Setting         | Choices                                                                                                                                                                       |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

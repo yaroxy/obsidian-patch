@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Demonstrate numbered flowchart steps with bundled Mermaid 12.3.0 and document how the same source renders with Custom 12.1.0.
 - Show complete missing icon paths and recheck them before clearing saved assignments.
 - Report the bundled Mermaid version at build time. Personal builds can pin a different version.
 

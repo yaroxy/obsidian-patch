@@ -6,6 +6,8 @@ The Full source passed 143 unit tests, a clean locked dependency install, the pr
 
 The Callouts suite checked the Reading-view command on an unmarked note, an external save, and stale jump targets. The Banner suite ran with the window visible and included MP4/WebM playback and manual pause. Icons used cached fixtures. The native OS context menu, mobile, and other desktop platforms were outside these runs. Test settings, editor sizes, background throttling, and the previous tab were restored. A final Community Icons run returned the development vault to the Community build.
 
+The numbered publishing flow in the README was checked in the same vault with **Strict** and `layout: dagre`. Bundled 12.3.0 showed badges 1 and 2, highlighted each edge in turn, and moved a dot along it. With Custom 12.1.0 loaded from jsDelivr, the same source drew the three nodes and two static arrows. The native Obsidian 1.15.1 block also drew a static diagram. The session restored its settings and tab. [Example and capture](../README.md#patch-mermaid)
+
 ## Full 0.4.0 preparation — 2026-11-17
 
 The Full candidate based on `80675bf` synchronizes the icon/color picker, precise global line width, and callout code-block backgrounds from Community's reviewed `3f62957` implementation. Shared feature files and the plugin stylesheet match Community exactly; Full retains its own Mermaid runtime/remote loader, build defaults, validation rules, and manual installation instructions. Fresh locked-dependency installation, 137 unit tests, the production Full build, and tag-specific package validation for 0.4.0 passed.
