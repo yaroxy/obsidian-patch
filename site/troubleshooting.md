@@ -5,7 +5,7 @@
 1. Enable **Obsidian Settings → Editor → Readable line length**.
 2. Enable **Patches → Line Width → Enabled**.
 3. Check for a `patch-line-width` property on the note. A valid note property takes precedence over the global setting.
-4. Try 600 px and 900 px in a wide pane. The column can only grow into the space left by the pane and its theme padding. For example, Aether Core reserved 70 px on each side of the 1306 px Reading pane we tested. If both smaller settings still look the same, include the view mode and pane width in your report.
+4. Try 600 px and 900 px in a wide pane. On Aether Core, both values took effect in our 1306 px Reading pane. Settings of 1200 and 1400 px both produced a 1166 px column because the theme reserved 70 px on each side. If 600 and 900 px also look the same for you, include the two settings, view mode, and pane width in your report.
 
 In the numeric field, use a whole number from **500 to 2000**, then press Enter or leave the field. Empty, fractional, and out-of-range entries are not saved. The numeric field requires **0.4.0 or later**; see the [Line Width guide](features/line-width.md).
 
