@@ -2,7 +2,7 @@
 
 2026-11-12，阶段 1 和阶段 2。实验在 `dev-vault` 中完成。
 
-**当前决定：按用户要求暂缓 PDF 分页显示的实现。** 保留本次实验及复现材料，下面的研究方向仅供将来决定重启时参考。
+**2026-11-12 的决定是暂缓实现 PDF 分页显示。** 11 月 18 日重新讨论的独立 PDF 预览与可供比较的插件见文末。
 
 **真实 PDF 页界能够映射到文字内容及其源码位置，但当前方法尚不能完整覆盖所有页界。** 本次 37 个跨页边界中，32 个文字边界定位成功；其余 5 个页首包含尚未建立映射的公式或图片。正常阅读布局中的准确位置可能位于一行文字中间，不能直接表示成横贯整行的精确分页线。
 
@@ -90,3 +90,24 @@ Chromium 会给被页边裁切的文字留下链接矩形。实验共排除了 9
 基线日志位于其上级目录。临时目录可能被系统清理，紧凑结果、脚本、样例和本报告保留在仓库中。
 
 本次新增内容为实验脚本、样例和报告，未实现生产分页功能。基线测试在 `dev-vault` 部署了当前构建；插件设置已按备份逐字恢复。实验标签页已关闭、原阅读笔记已恢复、调试器已断开、后台节流恢复为原值，最后的 Obsidian 错误记录为 `No errors captured.`。开发结果保存在任务报告中，未加入长期项目记忆。
+
+## 独立标签页 PDF 预览调研（2026-11-18）
+
+已有 Obsidian 插件能边写边看纸面排版，也有插件能局部排版并替换真实 PDF 的页面。它们采用的排版引擎决定了用户看到的是哪一种导出结果。下表核对了对应发行版本的源码和作者文档。
+
+| 插件 | 编辑时能看到什么 | 分页与导出如何对应 |
+| --- | --- | --- |
+| Live PDF Preview 1.3.4 | 普通 Markdown 在右侧栏随输入刷新，包括尚未保存的编辑。光标前的文本相同时，复用这部分已渲染的 HTML。 | 预览按纸张尺寸重新构造 HTML 页，点击导出后才把这些页面交给 Electron 生成 PDF。[编辑与缓存](https://github.com/kimsunin/obsidian-live-pdf-preview/blob/1.3.4/src/view.ts#L471-L553) · [分页](https://github.com/kimsunin/obsidian-live-pdf-preview/blob/1.3.4/src/pagination.ts#L305-L351) · [导出](https://github.com/kimsunin/obsidian-live-pdf-preview/blob/1.3.4/src/export.ts#L445-L565) |
+| Print Studio 0.4.7 | 修改纸张或样式时，打印面板自动更新。改了笔记正文后，在面板点 **Refresh note** 重新取内容。 | iframe 展示插件生成的分页 HTML。预览缩放独立于导出纸张尺寸。[渲染源码](https://github.com/5krus/obsidian-print-studio/blob/0.4.7/src/panel.ts#L457-L474) · [使用说明](https://github.com/5krus/obsidian-print-studio/blob/0.4.7/docs/GUIDE.md#L83-L96) |
+| PDF Preview Print 1.0.6 | 打开导出对话框时可取编辑器中未保存的正文，改变打印选项会刷新预览。 | 它自己组装打印文档，在隐藏的 Electron 视图生成 PDF，用 PDF.js 显示各页，再把同一份 PDF 字节保存。这个做法可保证预览与该插件的导出一致。[正文读取](https://github.com/H9-G/pdf-preview-print/blob/1.0.6/src/render.ts#L12-L24) · [生成、预览与保存](https://github.com/H9-G/pdf-preview-print/blob/1.0.6/src/modal.ts#L181-L265) |
+| qmd as md 0.4.3 | `.qmd` 保存后由本机 `quarto preview` 自动重编。启用选项后，位于 `_quarto.yml` 项目内的 `.md` 也支持。 | 当 Quarto 输出 PDF 时，可在右侧 Obsidian 原生 PDF 阅读器复用同一标签页。Typst 或 LaTeX 决定最终版式。[预览及适用范围](https://github.com/danieltomasz/qmd-as-md-obsidian/blob/0.4.3/README.md#L76-L115) |
+| LaTeX 0.1.2 | Markdown 章节保存后，驻留的 LuaLaTeX 进程重排受影响的小节，把生成的页拼入上一次完整 PDF。右侧标签页显示更新后的 PDF。 | 它能读取上次排版留下的分页状态与计数器。后续页码或布局可能受影响时会标记这些页，随后用整本编译校正。这是实际的局部 PDF 更新，依赖 LaTeX 的排版状态。[快速预览与 PDF 窗格](https://github.com/Gameboard-dev/latex/blob/0.1.2/docs/builds-and-preview.md#L55-L103) · [页面拼接源码](https://github.com/Gameboard-dev/latex/blob/0.1.2/core/src/splice.rs#L329-L340) |
+| Typst Live 0.1.1 | `.typ` 修改后，Tinymist 用未保存的内容更新侧栏中的 SVG，并支持从预览跳回源码。 | Typst 用依赖跟踪和缓存复用计算结果，独立预览可以消费 SVG。这一版插件把 PDF 导出留给 Typst 或 Tinymist。[侧栏和输入](https://github.com/qiulinfan/obsidian-tinymist/blob/0.1.1/README.md#L15-L35) · [发行版限制](https://github.com/qiulinfan/obsidian-tinymist/blob/0.1.1/README.md#L146-L151) · [Typst 的设计](https://github.com/typst/typst#design-principles) |
+
+**值得评审的范围是让普通 `.md` 在独立标签页显示 Obsidian 原生「导出为 PDF」的结果。** 上述实现各自覆盖了输入时刷新、真实 PDF 字节或局部重排。本次核对的发行版中，尚未找到同时使用原生笔记打印流程、跟随正文修改、并提供局部 PDF 重排的实现。Patches 的已有实验能从桌面端原生导出窗口取得完整 PDF，使用的是宿主未公开的 `printToPdfDesktop` 方法。该实验读取已保存笔记，尚未验证原生方法如何处理未保存的编辑。[原生导出实验](../scripts/prototypes/pdf-pages/export.js) · [Patches 的宿主适配](heading-and-pdf-design.md#宿主方法的适配)
+
+**纸张尺寸与预览宽度可以分开。** 假设打印视口固定为 A4、纵向、给定页边距及打印缩放，拖窄右侧标签页只需把同一页 PDF 缩小。改成 Letter、横向或不同页边距，或修改打印样式、字体、图片和正文，都可能触发重排。开头增加一行可能让此后的多个分页点一起移动。Electron 的 `printToPDF` 返回本次生成的 PDF 数据，`pageRanges` 用于选择输出哪些页，公开接口没有提供从上一次排版断点恢复的能力。[Electron 打印接口](https://www.electronjs.org/docs/latest/api/web-contents#contentsprinttopdfoptions) · [本项目六组打印对照](../scripts/prototypes/pdf-pages/results/2026-11-12.json)
+
+**建议先验证整份原生 PDF 能否足够快地刷新。** 桌面原型可从已保存的笔记开始，将连续保存合并为一次导出，同时最多运行一次，排队时只保留最新版本。预览在原页保留上一次成功结果，明确标出“更新中”或“更新失败”。只有笔记和打印设置仍匹配才显示新结果。用户点击导出时可以直接保存屏幕上这份最新 PDF。要支持停笔即见未保存的改动，还需验证原生打印流程拿到的是同一版正文，并等到字体、图片和 Mermaid 就绪。
+
+一次可供决策的小实验是复用两篇既有样例，分别在首页和末页增删一段，更换一张图片，再把 A4 改成 Letter。记录冷启动以及重复编辑从保存到第一张可见新页的耗时（中位数和 P95），用同一修订的手动原生导出核对页数、逐页文字、公式和图片的位置，并核对 Patches 的标题书签与跳转。拖窄预览应保持页数及页内位置，连续保存应只显示最新结果。11 月 12 日的 43 页样本验证了页界映射和打印对照。实时刷新延迟、资源消耗和当前宿主版本的输出一致性仍待实测。是否值得实现逐页缓存，可以等这组数据再决定。[原型和既有测量范围](../scripts/prototypes/pdf-pages/README.md)

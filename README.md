@@ -2,7 +2,7 @@
 
 # Patches
 
-Focused fixes and enhancements for everyday Obsidian work.
+Focused fixes and enhancements for Obsidian.
 
 Edit tables and callouts, shape your reading space, and make diagrams and exported PDFs more useful.
 
@@ -22,24 +22,31 @@ One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/ob
 - **[Exact line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html):** type a global width in pixels and keep it synchronized with the slider.
 - **[Callout code backgrounds](https://yaroxy.github.io/obsidian-patch/features/callouts.html#code-backgrounds):** tint code blocks to match each callout, including nested ones, while preserving syntax highlighting.
 
-[Patches 0.4.0](https://github.com/yaroxy/obsidian-patch/releases/tag/0.4.0) adds these improvements. See [the changelog](CHANGELOG.md) for the complete changes and the linked guides for recorded demos.
+These features shipped in [Patches 0.4.0](https://github.com/yaroxy/obsidian-patch/releases/tag/0.4.0). The development build adds folder completion, per-note cover widths, and a Mermaid syntax check. [Unreleased changes](CHANGELOG.md#unreleased)
 
 ## Features
 
-Configure Patches under **Settings → Patches**. Each guide includes examples, settings, and limitations.
+Find each group under **Settings → Patches**. Open a feature guide for examples.
 
-| Feature | What it adds |
-| --- | --- |
-| [HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html) | Visual editing, merged cells, grouped headers, captions, and Markdown conversion. |
-| [Callouts](https://yaroxy.github.io/obsidian-patch/features/callouts.html) | Editing, preview, conversion, GitHub compatibility, and matching code backgrounds. |
-| [Math formatting](https://yaroxy.github.io/obsidian-patch/features/math-format.html) | Indentation and alignment for display math, preserving formulas. |
-| [Banners](https://yaroxy.github.io/obsidian-patch/features/banner.html) | Vault images, animations, and videos as note covers. |
-| [File and folder icons](https://yaroxy.github.io/obsidian-patch/features/icons.html) | Lucide icons and Simple Icons brand marks, with colors you choose. |
-| [Line width](https://yaroxy.github.io/obsidian-patch/features/line-width.html) | Exact global width and per-note overrides for readable columns. |
-| [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) | A margin marker and highlighted line number for the cursor’s line. |
-| [Heading levels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) | H1–H6 labels beside headings in reading and editing views. |
-| [Mermaid diagrams](https://yaroxy.github.io/obsidian-patch/features/mermaid.html) | Newer diagram types and syntax that follow Obsidian’s theme. |
-| [PDF navigation](https://yaroxy.github.io/obsidian-patch/features/pdf-export.html) | Heading bookmarks and same-note heading links in desktop PDF exports. |
+<table>
+<thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
+<tbody>
+<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and convert callouts. Choose <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders to check for GitHub</a> and match code backgrounds.</td></tr>
+</tbody>
+<tbody>
+<tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/active-line.html">Active line</a></td><td>Mark the current line in the margin and highlight its line number.</td></tr>
+<tr><td><a href="https://yaroxy.github.io/obsidian-patch/features/heading-levels.html">Heading levels</a></td><td>Show H1–H6 labels beside headings in reading and editing views.</td></tr>
+</tbody>
+<tbody>
+<tr><th scope="row">Line Width</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/line-width.html">Readable columns</a></td><td>Set the maximum column width globally or for a single note.</td></tr>
+<tr><th scope="row">Math Format</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/math-format.html">Display math</a></td><td>Indent and align formulas.</td></tr>
+<tr><th scope="row">Patch Banner</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/banner.html">Note covers</a></td><td>Use a vault image, animation, or video as a cover. The development build also lets you set its width per note.</td></tr>
+<tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
+<tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html">Diagrams</a></td><td>Render diagrams with bundled Mermaid. The development build can check a note and jump to syntax errors.</td></tr>
+<tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
+<tr><th scope="row">No settings required</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Visually edit merged cells, grouped headers, and captions. Convert Markdown tables.</td></tr>
+</tbody>
+</table>
 
 ## Installation
 
@@ -51,7 +58,7 @@ Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Di
 
 For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 
-Official releases contain the **Community** build with bundled Mermaid. The optional [Full branch](https://github.com/yaroxy/obsidian-patch/tree/codex/full) adds remote Mermaid versions for manual source builds. Both use the same plugin ID; installing one replaces the other.
+Official releases contain the **Community** build with bundled Mermaid. To bundle a different version yourself, see [Choose a Mermaid version](#choose-a-mermaid-version). The optional [Full branch](https://github.com/yaroxy/obsidian-patch/tree/codex/full) adds remote Mermaid versions for manual source builds. Both use the same plugin ID; installing one replaces the other.
 
 ## Try it
 
@@ -90,6 +97,21 @@ npm run docs:build  # static site → site/.vitepress/dist/
 Install the three plugin files from `dist/community/` into the vault’s `patches` directory and reload the plugin. Integration checks deploy to `dev-vault` and create temporary fixtures; read [integration testing](docs/integration-testing.md) first.
 
 See [AGENTS.md](AGENTS.md) for feature design references, [release documentation](docs/releases.md) for the plugin workflow, and [documentation maintenance](docs/site-design.md) for the website.
+
+Design research covers an independent PDF preview tab and incremental bilingual translation. The PDF experiment is awaiting scope review, and translation implementation is deferred. [PDF pagination research](docs/pdf-pagination-prototype.md#独立标签页-pdf-预览调研2026-11-18) · [Incremental translation research](docs/code-block-lint-and-bilingual-translation.md#incremental-translation-research)
+
+### Choose a Mermaid version
+
+In a separate checkout of the Patches release you want to build, replace `12.1.0` below with your chosen exact version. The install saves it in that checkout’s package and lockfile.
+
+```sh
+npm install --save-exact mermaid@12.1.0
+npm test
+npm run build
+npm run check:release
+```
+
+Official release testing covers the pinned version. Other versions can change diagram syntax, layout, or ELK compatibility. Before using the build in your own notes, run `node scripts/test-mermaid.mjs /absolute/path/to/dev-vault` in a [prepared development vault](docs/integration-testing.md) and try your own diagrams. **Settings → Patches → Patch Mermaid** shows the version actually bundled.
 
 ## Acknowledgments
 

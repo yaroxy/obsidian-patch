@@ -30,6 +30,7 @@ Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled v
 - Obsidian 1.15.0 or later must finish loading, expose the CLI developer commands, and have no open dialogs in the development window.
 - Runners in `main` deploy `dist/community/` and reject Full, including any stale Full output. The separate `codex/full` checkout deploys its own `dist/full/` by default. Run suites from only one checkout at a time.
 - `OBSIDIAN_CLI` overrides the executable. On macOS the runner prefers `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`, avoiding a PATH entry that launches the GUI executable. Other installations fall back to `obsidian` on PATH.
+- On macOS, Obsidian 1.15.1 uses one `~/.obsidian-cli.sock` per account, including when processes have separate `--user-data-dir` values. Open a second test vault in the running app, or use a separate OS account for a fully isolated process. Starting and then closing a second process under the same account can disconnect the original app’s CLI until its next normal restart.
 - Banner needs `ffmpeg` and `gif2webp` on PATH. Its image, portrait, GIF, animated WebP, MP4 and WebM samples are generated inside its fixture directory; a vault-root `banner.png` is no longer needed.
 - Navigation needs `python3` with `pypdf` and `pdfplumber`. Set `PDF_PYTHON` to a Python environment with those packages. PDF verification is required and is not silently skipped.
 - Icons verifies the combined icon/color picker using cached fixtures. Add `PATCHES_TEST_ICONS_REMOTE=1` to require a live Simple Icons download, matching upstream brand-color metadata, and cached-color rendering after reload. The native OS context menu itself is not automated; registered menu handlers open the real picker.
@@ -52,6 +53,29 @@ Each output directory contains:
 CLI errors are checked even when Obsidian exits with status zero. Assertion failures and cleanup failures both make the command fail; a cleanup error does not overwrite the original assertion. `SIGINT` and `SIGTERM` request cancellation and wait for the same cleanup path. The in-app timeout interrupts the suite's next cancellable wait or checkpoint.
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
+
+## Development checks — 2026-11-18
+
+The Community candidate passed 138 unit tests, and the Full candidate passed 143. Each passed its own production build and release-package validation. The Community site built 21 pages with 847 local links and assets. Desktop (1280 px) and mobile-width (390 px) browser checks covered the demo buttons, images, layout, and the Unreleased link. The native suites below ran sequentially in `dev-vault` on macOS with Obsidian 1.15.1.
+
+| Native suite | Community | Full | What was verified |
+| --- | ---: | ---: | --- |
+| Callouts | 65 | 65 | Folder completion preserved neighboring paths and updated a child note’s count. The Reading-view command worked in an unmarked note. An external save updated the count and invalidated a stale jump. [Folder demo](images/callout-folder-completion.gif) · [Report screenshot](images/callout-github-report.png) |
+| Banner | 107 | 107 | Same-file covers and body images retained independent widths in both views. The suites covered per-note and split-pane widths plus MP4/WebM playback and manual pause. The first Community playback run timed out while the document was hidden. Both complete runs passed in a visible window. [Banner measurements](banner-testing.md#逐笔记封面宽度2026-11-18) |
+| Icons | 20 | 19 | Both checked folder colors, missing paths, and restoration before cleanup. Community also fetched a live graphic and its matching brand color and verified the cache after reload. Full used cached fixtures. The native OS context menu itself was outside both runs. [Icon verification](icons-design.md) |
+| Mermaid | 32 | 31 | Both checked unsaved edits, nested fences, stale results, undo, and a Reading-view jump that preserved CRLF file bytes. The bundled version was 12.3.0. Full also rendered with custom 12.1.0 from jsDelivr and displayed that engine’s version in the whole-note check. [Checker design](code-block-lint-and-bilingual-translation.md#code-block-linting) |
+
+Both reports kept the final actions reachable with 32 entries at 100%, 150%, and 200% desktop zoom and in a 340 CSS pixel container. In the GitHub report, Space expanded only the focused row. Supported alerts with an advisory kept their explanation, and fully compatible alerts showed only **Jump**. All completed suites restored settings, the previous tab, editor sizes, and background throttling. The final Icons run restored the Community plugin files to the development vault. Native mobile, Windows, and Linux checks were outside this round.
+
+### Earlier Mermaid checks
+
+In a separate source copy of 0.4.0, selecting Mermaid 12.1.0 with `npm install --save-exact mermaid@12.1.0` passed 132 unit tests, the production build, package validation, and 25 native Mermaid checks. Build metadata and the settings panel reported 12.1.0. This run predates the whole-note checker and covers the suite’s diagrams and configurations on this host. Other custom versions, including 13.x prereleases, were outside this run. The subsequent Icons run restored the default 12.3.0 build to the development vault.
+
+With the 12.3.0 runtime, the initial checker passed 29 native checks and 136 unit tests, plus the build, package, and documentation checks. It located the original line and column inside nested lists and callouts, opened the correct fence from Reading view, and skipped a plain `mermaid` block that Obsidian rendered as a Pele SVG.
+
+A comparison with the installed Obsidian 1.15.1 Markdown section parser found the same opening-fence lines in all 119 offline samples after correcting how unfinished comments and display math end at a container boundary. The samples covered nested lists and quotes, literal Markdown examples, raw HTML, and opening and closing delimiter lengths.
+
+After a normal Obsidian restart restored the dev-vault CLI connection, five save/undo cases reproduced a stale Reading-view buffer. The saved file and editor held the restored text while the view retained the preceding revision. Reading the saved source in Reading view and checking it against the editor before a jump restored the correct destination in all five cases. The suite also covered unfinished math and comments in blockquotes and restored settings, the active tab, editor sizes, and background throttling.
 
 ## 0.4.0 release preparation — 2026-11-17
 

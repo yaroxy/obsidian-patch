@@ -38,7 +38,7 @@ const groups = [
         <figcaption>A cover, a clearer itinerary, and code that fits its callout. <a :href="withBase('/features/banner.html')">Start with a banner →</a></figcaption>
       </figure>
     </section>
-    <div class="patches-preview"><span>Patches 0.4.0</span> Icon colors, exact global width, and callout code backgrounds are now available. <a :href="withBase('/changelog.html')">Read the changes →</a></div>
+    <div class="patches-preview"><span>In development</span> Per-note cover widths, GitHub folder suggestions, and a whole-note Mermaid check. <a :href="withBase('/changelog.html#unreleased')">See unreleased changes →</a></div>
     <section class="patches-updates" aria-labelledby="updates-title">
       <div class="patches-section-heading"><p class="patches-eyebrow">NEW IN 0.4.0</p><h2 id="updates-title">A few more personal touches.</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">

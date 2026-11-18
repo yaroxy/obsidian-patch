@@ -33,7 +33,10 @@ for (const [file, html] of contents) {
 }
 // Check both repository links and published guide URLs against this build.
 const readme = fileURLToPath(new URL('../README.md', import.meta.url));
-for (const [, value] of (await readFile(readme, 'utf8')).matchAll(/\]\(([^)]+)\)/g)) {
+const markdown = await readFile(readme, 'utf8');
+const readmeLinks = [...markdown.matchAll(/\]\(([^)]+)\)|\bhref="([^"]+)"/g)];
+for (const [, markdownUrl, htmlUrl] of readmeLinks) {
+  const value = markdownUrl ?? htmlUrl;
   if (value.startsWith(`https://yaroxy.github.io${base}`)) {
     await checkSiteLink('README.md', 'href', value, new URL(value));
     continue;

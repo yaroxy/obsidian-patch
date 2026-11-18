@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **GitHub folders** suggests vault paths as you type. Select a folder to update the callout count for its notes and subfolders. When editing a comma-separated list, a selection replaces just the entry under the cursor.
+- Set `patch-banner-width` on a note to use 10–100% of its pane width for the cover. Omitted or invalid values use the vault setting.
+- Run **Check diagrams in this note** to check every `patch-mermaid` block with the active Mermaid version. It reads unsaved edits in the editor and the saved file in Reading view. **Jump** opens the source line and **Details** shows the parser message.
+
+### Changed
+
+- **Callouts on GitHub** shows each callout’s line and whether GitHub renders it as an alert or a plain blockquote. **Details** expands the reasons for one row. **Jump** goes to the callout in the current view. Long lists scroll below the summary.
+- **Icons of missing files** lists the full vault paths before cleanup. Clicking **Remove** rechecks each displayed path so a restored file keeps its icon and color.
+- Personal builds print the bundled Mermaid version and a reminder to test a custom pin. The README documents how to select an exact version.
+- Shorten the plugin manifest description, group the README guides in settings order, and document how pane width and theme padding limit the readable column.
+
+### Fixed
+
+- Keep a cover at its configured width while Image Converter resizes or aligns a body image that uses the same attachment. The fix also prevents cover flicker on hover.
+- Open the GitHub callout check from Reading view, refresh its count after an external save, and detect changes before jumping. Mermaid source jumps preserve Windows line endings.
+
 ## [0.4.0] - 2026-11-17
 
 ### Added

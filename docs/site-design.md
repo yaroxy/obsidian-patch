@@ -14,7 +14,19 @@ The homepage and README share a real travel-note capture combining the existing 
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
-The documentation describes Patches 0.4.0, with version-availability notes on the three newly updated guides and a release-status statement in the README, homepage, and getting-started page. Keep those notes synchronized with actual releases; do not imply that an unreleased development build can already be installed from the Community Directory. Images that show an older interface must not be described as screenshots of the new controls.
+The README, homepage, getting-started page, and feature guides distinguish 0.4.0 from the current Community source. The homepage links to the Unreleased changelog and keeps the 0.4.0 demos under their release heading. Update those labels when the new version ships.
+
+## Community Directory screenshots
+
+The gallery shows five features available in 0.4.0. Each upload is a 1200 × 800 PNG made from a real Obsidian capture. The images retain their aspect ratio and include the full controls. Use this order in the Directory’s screenshot editor.
+
+| Order | Screenshot | What to look for |
+| --- | --- | --- |
+| 1 | [Kyoto travel note](images/community/01-kyoto-note.png) | A cover, merged itinerary, and code inside a callout in one finished note. |
+| 2 | [Icon colors](images/community/02-icon-colors.png) | The Python icon preview, its brand color, and the color controls in one picker. |
+| 3 | [HTML table editor](images/community/03-table-editor.png) | A kana chart with grouped cells, a selected row segment, and the editing toolbar. |
+| 4 | [Callout code](images/community/04-callout-code.png) | Syntax-highlighted code in a dark-theme warning and its nested tip. |
+| 5 | [Mermaid diagram](images/community/05-mermaid-diagram.png) | A Cynefin diagram for classifying incidents, with labels visible in all four domains. |
 
 ## Feature demo captures
 
