@@ -23,6 +23,14 @@ Keep shared feature fixes synchronized from Community into Full while preserving
 
 Because both builds use the same ID, installing one replaces the other and keeps the same settings and command hotkeys. A subsequent Community Directory update replaces a manually installed full build with the community build. To continue using the full build, build and install it again from source.
 
+## Updating Obsidian and CodeMirror dependencies
+
+Obsidian provides CodeMirror at runtime. In both distributions, keep `@codemirror/state` and `@codemirror/view` pinned to the exact peer versions declared by the `obsidian` package. Dependabot leaves routine version updates for these three packages to the maintainer.
+
+When updating `obsidian`, check the target package's peers with `npm view obsidian@VERSION peerDependencies`. Set all three versions together in `package.json`, regenerate `package-lock.json` with `npm install --package-lock-only`, then run `npm ci`, `npm test`, and `npm run build`. Commit the manifest and lockfile changes together.
+
+In November 2026, Dependabot raised `@codemirror/view` to `6.43.15` while `obsidian@1.14.4` still required `6.43.13`. Both GitHub workflows stopped at `npm ci` with `ERESOLVE`. Restoring the matching peer pin allowed the other two dependency updates to proceed. [Dependency PR #39](https://github.com/yaroxy/obsidian-patch/pull/39) · [Build failure](https://github.com/yaroxy/obsidian-patch/actions/runs/44318558495)
+
 ## Choose a bundled Mermaid version for a personal build
 
 Official builds use the exact Mermaid version in the release lockfile. Dependabot checks npm weekly, and the build reads the installed Mermaid version for the settings page and `dist/community/build-info.json`. A personal Community build can bundle a different version and still render diagrams offline. The production build prints the selected version and a reminder to test custom builds.
