@@ -1,10 +1,11 @@
 import { ViewPlugin, type EditorView } from "@codemirror/view";
-import { Notice, setIcon, type App, type Editor, type EditorPosition, type MarkdownPostProcessorContext, type Plugin } from "obsidian";
+import { editorLivePreviewField, finishRenderMath, loadMathJax, Notice, renderMath, setIcon, type App, type Editor, type EditorPosition, type MarkdownPostProcessorContext, type Plugin } from "obsidian";
 import { TableEditor } from "./table/editor";
 import { createTable, parseTable, tableRanges } from "./table/model";
-import { registerTableConversion } from "./table/conversion";
+import { INLINE_MATH, registerTableConversion } from "./table/conversion";
 
 const STALE = "The table changed while it was being edited. Open the editor again.";
+const WIDGET_MATH = `.cm-html-embed > table ${INLINE_MATH}`;
 
 /**
  * Visual editing for HTML tables in notes. Every entry point opens the same
@@ -68,9 +69,35 @@ export function registerTables(plugin: Plugin): void {
     });
   });
 
-  // Live Preview draws the block as a widget whose events CodeMirror ignores, so
-  // a plain listener adds the button to the widget's own actions on first hover.
   plugin.registerEditorExtension(ViewPlugin.define((view) => {
+    // Live Preview widgets bypass the Reading View math postprocessor.
+    const renderedMath = new WeakMap<HTMLElement, string>();
+    let destroyed = false;
+    const typeset = async (): Promise<void> => {
+      if (destroyed || !view.state.field(editorLivePreviewField, false)) return;
+      const formulas = view.contentDOM.querySelectorAll<HTMLElement>(`${WIDGET_MATH}:not(.is-loaded)`);
+      if (!formulas.length) return;
+      await loadMathJax();
+      if (destroyed) return;
+      let changed = false;
+      for (const el of formulas) {
+        if (!view.contentDOM.contains(el) || el.childElementCount || el.classList.contains("is-loaded")) continue;
+        const tex = el.textContent;
+        try {
+          el.replaceChildren(renderMath(tex, false));
+          el.addClass("is-loaded");
+          renderedMath.set(el, tex);
+          changed = true;
+        } catch { /* Keep the TeX visible if MathJax cannot render it. */ }
+      }
+      if (changed) {
+        await finishRenderMath();
+        if (!destroyed) view.requestMeasure();
+      }
+    };
+    const updateMath = (): void => { void typeset().catch(() => { /* MathJax unavailable. */ }); };
+
+    // CodeMirror ignores widget events. Add the button on first hover.
     const hover = (evt: MouseEvent): void => {
       const embed = (evt.target as Element | null)?.closest?.<HTMLElement>(".cm-html-embed");
       const actions = embed?.querySelector<HTMLElement>(":scope > .embed-actions");
@@ -80,7 +107,20 @@ export function registerTables(plugin: Plugin): void {
       addButton(button, () => editWidget(app, view, embed));
     };
     view.contentDOM.addEventListener("mouseover", hover);
-    return { destroy: () => view.contentDOM.removeEventListener("mouseover", hover) };
+    queueMicrotask(updateMath);
+    return {
+      docViewUpdate: updateMath,
+      destroy: () => {
+        destroyed = true;
+        view.contentDOM.removeEventListener("mouseover", hover);
+        for (const el of view.contentDOM.querySelectorAll<HTMLElement>(WIDGET_MATH)) {
+          const tex = renderedMath.get(el);
+          if (tex === undefined) continue;
+          el.setText(tex);
+          el.removeClass("is-loaded");
+        }
+      },
+    };
   }));
 }
 

@@ -49,12 +49,19 @@
       return [...container.querySelectorAll("table")].map(t => t.cloneNode(true));
     } finally { component.unload(); }
   }
-  async function screenshot(name) {
+  async function screenshot(name, target) {
     const wc = require("electron").remote.getCurrentWebContents();
     const debugger_ = wc.debugger, owned = !debugger_.isAttached();
     if (owned) debugger_.attach("1.3");
     try {
-      const { data } = await debugger_.sendCommand("Page.captureScreenshot", { format: "png" });
+      const params = { format: "png" };
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const x = Math.max(0, Math.floor(rect.left) - 24), y = Math.max(0, Math.floor(rect.top) - 16);
+        params.clip = { x, y, width: Math.min(win.innerWidth, Math.ceil(rect.right) + 24) - x,
+          height: Math.min(win.innerHeight, Math.ceil(rect.bottom) + 16) - y, scale: 1 };
+      }
+      const { data } = await debugger_.sendCommand("Page.captureScreenshot", params);
       fs.writeFileSync(path.join(output, name + ".png"), Buffer.from(data, "base64"));
     } finally { if (owned) debugger_.detach(); }
   }
@@ -144,6 +151,49 @@
     assert(editor().getValue().endsWith('[ref]: https://example.com "Title"\n'), "Reference definition changed");
     pass("alignment, escaped pipes, formatting, inline HTML, wiki aliases and reference links survive");
 
+    const math = options.mathFixture;
+    const formulas = (table, selector, read) => [...table.rows].map(row =>
+      [...row.cells].map(cell => [...cell.querySelectorAll(selector)].map(read)));
+    const renderedMath = table => formulas(table, "mjx-math[data-latex]", el => el.getAttribute("data-latex"));
+    const sourceMath = table => formulas(table, "span.math.math-inline", el => el.textContent);
+    const expectedMath = renderedMath((await nativeTables(math))[0]);
+    const formulaCount = expectedMath.flat(2).length;
+    assert(formulaCount === 10, `Markdown table rendered ${formulaCount} of 10 formulas`);
+    await source(math); selectAll(); await open();
+    assert(JSON.stringify(sourceMath(grid())) === JSON.stringify(expectedMath), "Formula source lost in the table editor");
+    assert(grid().querySelector("strong") && grid().querySelector("code")?.textContent === "norm", "Adjacent formatting lost");
+    type(grid().caption, "Vector operations");
+    confirm();
+    const mathHtml = editor().getValue();
+    assert(JSON.stringify(sourceMath(tables(mathHtml)[0])) === JSON.stringify(expectedMath), "Saved HTML changed the TeX or its cell");
+    assert(!mathHtml.includes("mjx-") && tables(mathHtml)[0].caption?.textContent === "Vector operations",
+      "Saved HTML contains generated math markup or lost the caption");
+    editor().undo(); assert(editor().getValue() === math, "Math table conversion needed more than one undo");
+    editor().redo(); assert(editor().getValue() === mathHtml, "Math table conversion redo failed");
+    await leaf.view.save();
+    await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "preview" } });
+    await until(() => leaf.view.previewMode.containerEl.querySelectorAll("table mjx-math").length === formulaCount, "inline math in Reading View");
+    const mathTable = leaf.view.previewMode.containerEl.querySelector("table");
+    assert(JSON.stringify(renderedMath(mathTable)) === JSON.stringify(expectedMath), "Reading View changed the formulas");
+    await doc.fonts.ready;
+    await screenshot("inline-math-table", mathTable);
+    await source("Intro\n\n" + mathHtml, true);
+    await until(() => leaf.view.contentEl.querySelector(".cm-html-embed table"), "converted math table in Live Preview");
+    await until(() => leaf.view.contentEl.querySelectorAll(".cm-html-embed table mjx-math").length === formulaCount, "inline math in Live Preview");
+    assert(JSON.stringify(renderedMath(leaf.view.contentEl.querySelector(".cm-html-embed table"))) === JSON.stringify(expectedMath), "Live Preview changed the formulas");
+    pass("inline formulas in headers and body cells survive conversion, caption editing, undo, Reading View and Live Preview");
+
+    const escapedTex = String.raw`a < b \& c \| d`;
+    const escapedMath = simple.replace("| x | y |", () => `| **$${escapedTex}$** | \`$literal$\` |`);
+    await source(escapedMath); await open(); confirm();
+    const escapedHtml = editor().getValue();
+    const escapedTable = tables(escapedHtml)[0];
+    assert(escapedTable.querySelector("strong .math")?.textContent === escapedTex && escapedTable.querySelector("code")?.textContent === "$literal$",
+      "Escaping or adjacent inline code changed");
+    assert(escapedHtml.includes("&lt;") && escapedHtml.includes("&amp;") && renderedMath((await nativeTables(escapedHtml))[0]).flat(2)[0] === escapedTex,
+      "Escaped HTML did not round-trip to the original TeX");
+    pass("inline TeX preserves angle brackets, ampersands and escaped pipes alongside literal dollar signs in code");
+
     for (const text of ["A | B | C\n- | - | -\nx | y\nonly one cell", "| Header |\n| - |", "# Before\n" + simple + "\n# After", simple + "\n    | code | row |"]) {
       await source(text); selectAll(); await open(); confirm();
       assert(JSON.stringify((await nativeTables(editor().getValue())).map(cells)) === JSON.stringify((await nativeTables(text)).map(cells)), "Boundary table lost cells");
@@ -162,7 +212,6 @@
 
     for (const [bad, reason] of [
       [simple + "\n| extra | cells | rejected |", "more cells"],
-      [simple.replace("| x | y |", "| $x^2$ | y |"), "not supported"],
       [simple.replace("| x | y |", "| ![[missing.png]] | y |"), "not supported"],
       [simple.replace("| x | y |", "| [^foot] | y |"), "Footnotes"],
     ]) {
@@ -172,7 +221,7 @@
       await wait(60);
       assert(!modal() && editor().getValue() === text, "Invalid second table partially converted the batch");
     }
-    pass("extra cells, formulas, embeds and footnotes reject the entire batch without partial writes");
+    pass("extra cells, embeds and footnotes reject the entire batch without partial writes");
 
     for (const text of ["```sql\n" + simple + "\n```", "> [!note]\n" + simple.split("\n").map(l => "> " + l).join("\n"), "Paragraph\n" + simple]) {
       await source(text); selectAll(); app.commands.executeCommandById(cmd);

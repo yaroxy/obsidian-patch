@@ -14,7 +14,7 @@ This is the independent **Full** source branch, `codex/full`, with optional Late
 
 ## Features
 
-Full 0.5.0 adds the whole-note diagram check, per-note cover widths, and GitHub folder completion. [Full changelog](CHANGELOG.md)
+Full 0.5.1 preserves inline formulas when converting Markdown tables to HTML. [Full changelog](CHANGELOG.md)
 
 Find each settings group under **Settings → Patches**.
 
@@ -146,7 +146,7 @@ Review the preview, drag across cells or Shift-click to select a range, then use
 
 ![Grouping a Kyoto weekend itinerary by day and adding a table caption](docs/images/table-conversion.gif)
 
-Select several complete Markdown tables to convert them together. **Previous table** and **Next table** switch between drafts; **Convert all N tables** writes the batch in one undo step. Conversion preserves headers, alignment, common inline formatting, and links. Tables in code blocks, lists, or callouts are excluded; formulas, images, embeds, footnotes, and excess cells are rejected before anything is written.
+Select several complete Markdown tables to convert them together. **Previous table** and **Next table** switch between drafts, and **Convert all N tables** writes the batch in one undo step. Conversion preserves headers, alignment, common inline formatting, links, and inline LaTeX. The table editor shows editable TeX, and Obsidian typesets it in Reading View and Live Preview. Tables in code blocks, lists, or callouts are excluded. Images, embeds, footnotes, and excess cells are rejected before anything is written. [See the converted formula table](docs/images/inline-math-table.png)
 
 In the editor, Tab moves between cells, Enter adds a line within a cell, and Escape leaves the cell. Pasting inserts plain text with its line breaks; Mod+Z and Mod+Shift+Z undo and redo edits. **Save** or Mod+Enter applies HTML-table edits. Untouched cell markup is preserved, and conflicting source changes prevent saving. Tables inside callouts and blockquotes are not detected for editing.
 

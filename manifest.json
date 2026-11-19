@@ -1,7 +1,7 @@
 {
   "id": "patches",
   "name": "Patches",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "minAppVersion": "1.15.0",
   "description": "Focused fixes and enhancements for editing and reading Markdown notes.",
   "author": "yaroxy",

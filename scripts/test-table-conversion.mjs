@@ -3,5 +3,8 @@ import { runIntegration } from "./lib/integration-runner.mjs";
 
 await runIntegration({ name: "table-conversion", folder: "Patch Table Conversion Tests",
   script: new URL("./table-conversion-integration.js", import.meta.url),
-  options: { fixture: readFileSync(new URL("../tests/fixtures/markdown-tables.md", import.meta.url), "utf8") },
+  options: {
+    fixture: readFileSync(new URL("../tests/fixtures/markdown-tables.md", import.meta.url), "utf8"),
+    mathFixture: readFileSync(new URL("../tests/fixtures/markdown-table-inline-math.md", import.meta.url), "utf8"),
+  },
 });

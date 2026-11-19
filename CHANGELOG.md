@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-19
+
+### Fixed
+
+- Preserve inline LaTeX when converting Markdown tables to HTML. Obsidian renders the formulas in Reading View and Live Preview. [View the converted table](docs/images/inline-math-table.png)
+
 ## [0.5.0] - 2026-11-18
 
 ### Added
