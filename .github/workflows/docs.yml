@@ -41,7 +41,7 @@ jobs:
       - run: npm run docs:check
       - name: Upload review preview
         if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: patches-docs-preview
           path: site/.vitepress/dist/
