@@ -62,6 +62,7 @@ export function registerTableConversion(plugin: Plugin): void {
 
 const message = (error: unknown): string => error instanceof Error ? error.message : String(error);
 const INLINE = new Set(["A", "ABBR", "B", "BR", "CODE", "DEL", "EM", "I", "KBD", "MARK", "S", "SAMP", "SMALL", "SPAN", "STRONG", "SUB", "SUP", "U", "VAR", "WBR"]);
+export const INLINE_MATH = "span.math.math-inline";
 
 async function renderTable(plugin: Plugin, source: MarkdownTable, text: string, references: string, path: string, component: Component): Promise<Table> {
   const width = source.align.length;
@@ -78,9 +79,17 @@ async function renderTable(plugin: Plugin, source: MarkdownTable, text: string, 
     || Array.from(rendered.rows).some(row => row.cells.length !== width)) {
     throw new Error("This table's structure could not be converted reliably.");
   }
-  if (rendered.querySelector(".math, .internal-embed, .footnote-ref") || [...rendered.querySelectorAll("th *, td *")].some(el =>
-    !INLINE.has(el.tagName) || [...el.classList].some(cls => !["internal-link", "external-link"].includes(cls)))) {
-    throw new Error("Formulas, images, embeds and dynamic content are not supported in HTML conversion yet.");
+  // Obsidian's Reading View typesets plain TeX in this span inside HTML blocks.
+  // Save the TeX from the formula root so the MathJax-generated markup stays transient.
+  for (const math of rendered.querySelectorAll("th .math, td .math")) {
+    if (!math.matches(INLINE_MATH)) throw new Error("Only inline formulas are supported in HTML conversion.");
+    const tex = math.querySelector(":scope > mjx-container > mjx-math")?.getAttribute("data-latex");
+    if (tex == null) throw new Error("The source of an inline formula could not be recovered.");
+    math.replaceWith(createSpan({ cls: "math math-inline", text: tex }));
+  }
+  if (rendered.querySelector(".internal-embed, .footnote-ref") || [...rendered.querySelectorAll("th *, td *")].some(el =>
+    !INLINE.has(el.tagName) || (!el.matches(INLINE_MATH) && [...el.classList].some(cls => cls !== "internal-link" && cls !== "external-link")))) {
+    throw new Error("Images, embeds and dynamic content are not supported in HTML conversion yet.");
   }
   const table = createTable(rendered.rows.length, width);
   for (let r = 0; r < table.rows.length; r++) {

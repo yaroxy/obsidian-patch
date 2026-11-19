@@ -54,6 +54,10 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## Inline math in converted tables — 2026-11-19
+
+The Community candidate based on `5f95d60` passed 138 unit tests, the production build, release-file validation, and documentation checks for 21 pages and 850 links and assets. On macOS with Obsidian 1.15.1, the Table and Markdown conversion suites passed 30 and 18 checks. Conversion preserved the formula source and cell positions in the reported table and the public vector example. The suites covered one-step undo, editable TeX in the modal, native Reading View and Live Preview rendering, and restoration of the test session state. The screenshot is a crop of the converted vector example in Reading View. Mobile, other desktop platforms, and Full were outside this run. [Screenshot](images/inline-math-table.png)
+
 ## 0.5.0 release candidate — 2026-11-18
 
 Both release trees retain the plugin implementation from Community `fd58c47` and Full `355b936`. Community passed 138 unit tests and Full passed 143. Both production builds passed tag-specific package validation. The Community site passed checks for 21 pages and 846 local links and assets.

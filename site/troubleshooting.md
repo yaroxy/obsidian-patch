@@ -33,7 +33,7 @@ This setting selects local vault folders, including their subfolders, for GitHub
 
 ## Table conversion is unavailable
 
-Place the cursor inside a standalone Markdown table, or select complete tables. Tables inside code blocks, lists, or callouts are excluded. Formulas, images, embeds, footnotes, and extra cells are rejected before conversion writes to the note. [Table guide](features/tables.md).
+Place the cursor inside a standalone Markdown table, or select complete tables. Tables inside code blocks, lists, or callouts are excluded. Images, embeds, footnotes, and extra cells are rejected before conversion writes to the note. Patches 0.5.0 also rejects tables with inline formulas. Version 0.5.1 will preserve them. [Inline formula example](features/tables.md#convert-tables-with-inline-formulas)
 
 ## A Mermaid example does not render
 

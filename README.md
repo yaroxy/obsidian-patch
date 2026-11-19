@@ -24,6 +24,8 @@ One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/ob
 
 [Read the 0.5.0 release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0)
 
+**Coming in 0.5.1** · Convert Markdown tables with inline LaTeX and keep the formulas rendered in Obsidian. [Preview the converted table](docs/images/inline-math-table.png).
+
 ## Features
 
 Find each group under **Settings → Patches**. Open a feature guide for examples.
