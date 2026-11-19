@@ -16,15 +16,9 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## New in 0.5.0
+## New in 0.5.1
 
-- Check every `patch-mermaid` diagram in a note and jump to the source of a syntax error.
-- Set `patch-banner-width: 65` to give a note’s cover 65% of its pane. Resize body images independently.
-- Complete vault folder paths in the GitHub callout settings and see why a callout becomes a plain blockquote on GitHub.
-
-[Read the 0.5.0 release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0)
-
-**Coming in 0.5.1** · Convert Markdown tables with inline LaTeX and keep the formulas rendered in Obsidian. [Preview the converted table](docs/images/inline-math-table.png).
+Convert Markdown tables to HTML and keep inline LaTeX rendered in Reading View and Live Preview. [See the converted table](docs/images/inline-math-table.png) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
 
 ## Features
 

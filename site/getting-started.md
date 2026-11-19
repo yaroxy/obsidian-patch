@@ -13,8 +13,8 @@ Requires **Obsidian 1.15.0 or later**.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.5.0
-Version **0.5.0** adds per-note cover widths, GitHub folder suggestions, and a command to check every diagram in a note. [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0)
+::: tip New in 0.5.1
+Version **0.5.1** preserves inline formulas when converting Markdown tables to HTML. [Table example](features/tables.md#convert-tables-with-inline-formulas) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
 :::
 
 ## Try one improvement

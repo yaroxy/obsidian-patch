@@ -58,6 +58,8 @@ A frozen Obsidian process or a non-returning native operation cannot be forcibly
 
 The Community candidate based on `5f95d60` passed 138 unit tests, the production build, release-file validation, and documentation checks for 21 pages and 850 links and assets. On macOS with Obsidian 1.15.1, the Table and Markdown conversion suites passed 30 and 18 checks. Conversion preserved the formula source and cell positions in the reported table and the public vector example. The suites covered one-step undo, editable TeX in the modal, native Reading View and Live Preview rendering, and restoration of the test session state. The screenshot is a crop of the converted vector example in Reading View. Mobile, other desktop platforms, and Full were outside this run. [Screenshot](images/inline-math-table.png)
 
+The versioned 0.5.1 Community build retained the reviewed implementation at `f62d1bc`. It passed 138 unit tests, tag-specific package validation, the 21-page documentation build and link check, and a fresh run of Markdown conversion (18 checks) and Table editing (30 checks) on macOS with Obsidian 1.15.1. Full passed 143 unit tests, its production build, and tag-specific package validation. Mobile, other desktop platforms, and a native Full run were outside this packaging pass.
+
 ## 0.5.0 release candidate — 2026-11-18
 
 Both release trees retain the plugin implementation from Community `fd58c47` and Full `355b936`. Community passed 138 unit tests and Full passed 143. Both production builds passed tag-specific package validation. The Community site passed checks for 21 pages and 846 local links and assets.

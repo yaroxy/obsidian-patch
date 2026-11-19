@@ -143,6 +143,10 @@ The regular Community release was published from `d268cb0e0ed99b7650ad2ad5143efa
 
 The Directory marked the release scan **Completed** and listed **0.5.0** as the current published version. The service reproduced `main.js` byte for byte, verified the displayed asset attestations, and passed the dependency check. The single release warning concerns the 10,812,781-byte `main.js`, which exceeds the 5 MB per-file limit on Obsidian Sync Standard. The behavior section listed vault enumeration as a recommendation and individual vault-file reads as a pass. No source error was reported. All five approved desktop screenshots appeared on the public listing in the selected order. [Directory listing](https://community.obsidian.md/plugins/patches) · [Maintainer report](https://community.obsidian.md/account/plugins/patches)
 
+## 0.5.1 branch preview — 2026-11-19
+
+The maintainer reported that the Community **Review branch** scan completed and approved proceeding with release. The preview branch pointed to `f62d1bc66b7dfd7a1fcd3b599a80ff41b47f2d38`. The release preparation retains that plugin implementation and advances version metadata and publication documentation. The published package receives its own Directory scan. [Reviewed candidate](https://github.com/yaroxy/obsidian-patch/commit/f62d1bc66b7dfd7a1fcd3b599a80ff41b47f2d38)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

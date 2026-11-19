@@ -38,7 +38,7 @@ const groups = [
         <figcaption>A cover, a clearer itinerary, and code that fits its callout. <a :href="withBase('/features/banner.html')">Start with a banner →</a></figcaption>
       </figure>
     </section>
-    <div class="patches-preview"><span>New in 0.5.0</span> Per-note cover widths, GitHub folder suggestions, and a whole-note Mermaid check. <a href="https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.0">Read the release notes →</a></div>
+    <div class="patches-preview"><span>New in 0.5.1</span> Keep inline formulas when converting Markdown tables to HTML. <a href="https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1">Read the release notes →</a></div>
     <section class="patches-updates" aria-labelledby="updates-title">
       <div class="patches-section-heading"><p class="patches-eyebrow">FROM 0.4.0</p><h2 id="updates-title">A few more personal touches.</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">

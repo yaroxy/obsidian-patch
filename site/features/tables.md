@@ -25,7 +25,7 @@ Select several complete Markdown tables to convert them together. **Previous tab
 
 ## Convert tables with inline formulas
 
-**Coming in 0.5.1.** Convert a Markdown table that uses `$...$` in its headers or body cells. The table editor shows editable TeX. Obsidian typesets it in Reading View, and Patches enables the same rendering in Live Preview.
+Patches 0.5.1 preserves `$...$` in table headers and body cells. The table editor shows editable TeX. Obsidian typesets it in Reading View, and Patches enables the same rendering in Live Preview.
 
 ![An HTML table in Obsidian displaying a vector norm, dot product, and projection as typeset formulas](../../docs/images/inline-math-table.png)
 
