@@ -5,6 +5,14 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Obsidian pins these exact CodeMirror peers. Update the three together by hand.
+    ignore:
+      - dependency-name: "obsidian"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "@codemirror/state"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+      - dependency-name: "@codemirror/view"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
     # Minor and patch updates arrive together in one pull request; each major
     # update still gets its own, because it may need code changes.
     groups:
