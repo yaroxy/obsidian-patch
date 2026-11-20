@@ -1,14 +1,14 @@
 # Patch Banner 验证记录
 
-日期：2026-11-02（Asia/Taipei）。当前版本只使用 `patch-banner`，媒体以原始比例完整展示，并位于原生标题和 Properties 之前。
+日期：2026-11-02。当前版本只使用 `patch-banner`，媒体以原始比例完整展示，并位于原生标题和 Properties 之前。
 
 ## 环境与结果
 
 - macOS，Obsidian / installer 1.14.5。
-- 测试库：`/Users/roxy/Documents/obsidian-vaults/dev-vault`。
+- 测试库：`dev-vault`。
 - 构建产物已部署至该库的 `obsidian-patch` 插件目录。
 - `npm run build` 通过，`npm test` 的 7 项配置/解析测试通过。
-- `node scripts/test-banner.mjs /Users/roxy/Documents/obsidian-vaults/dev-vault` 的 86 项集成检查通过。最后读取 Obsidian 开发错误记录为 `No errors captured.`。结果保存在测试库的 `Patch Banner Tests/results.json`。
+- `node scripts/test-banner.mjs /path/to/dev-vault` 的 86 项集成检查通过。最后读取 Obsidian 开发错误记录为 `No errors captured.`。结果保存在测试库的 `Patch Banner Tests/results.json`。
 
 脚本在同一现有窗口内批量执行检查，整个运行只调用两次 CLI：重载插件、提交批量检查。通过 vault 内结果文件轮询，不反复启动应用进程；不主动创建测试窗格之外的独立笔记窗口，不改变 Dock 设置。原生设置页可能由 Obsidian 放在另一 document 中，控件测试从设置页的 containerEl 读取，并使用控件自己的 window 派发事件。
 
@@ -52,7 +52,7 @@
 
 ## 阅读视图底部无法上滚（2026-11-03）
 
-现象：spacetime 的 `柯南.md`（2003×2493 竖图封面，正文含 29 行表格）在阅读视图滚到底部后无法向上滚动；Live Preview 正常。
+现象：一篇带 2003×2493 竖图封面和 29 行表格的笔记，在阅读视图滚到底部后无法向上滚动；Live Preview 正常。
 
 原因：阅读视图把滚出渲染窗口的标题容器整段卸载，只保留上次测得的高度。旧实现找不到标题容器时会移除封面并释放媒体。上滚时宿主挂回标题，测得无封面高度 320px（原为 999px），文档变短；随后封面插回、图片重建，标题重新变高，Chrome 的 scroll anchoring 把滚动位置下推；宿主按 320px 判断标题仍在窗口外，再次卸载，滚动位置被钳回末尾，如此循环。用户库当时的状态与之吻合：标题已卸载、记录高度 320、封面不在标题内。
 
@@ -73,13 +73,13 @@ Obsidian 窗口被其他窗口遮挡时，`document.visibilityState` 为 `hidden
 
 ## Live Preview 向下滚动时封面跳动（2026-11-03）
 
-现象：先在编辑视图打开任意笔记，再在同一 tab 打开 `柯南.md`，向下滚动到标题附近时，封面跳回视野。用户库中运行 Obsidian 1.14.5 与 1.15.0 时都出现。
+现象：先在编辑视图打开任意笔记，再在同一 tab 打开带竖图封面的复现笔记，向下滚动到标题附近时，封面跳回视野。用户库中运行 Obsidian 1.14.5 与 1.15.0 时都出现。
 
-原因：在 spacetime 中挂只读记录器后由用户复现，捕获到 CodeMirror 的 `measure()` 在滚动中把 `scrollTop` 从 2058 改为 1193。当时正文顶端位于滚动容器 1711px 处，正文总高 1216，视口为 `[0, 3283]`，文档长 3313。CodeMirror 用原始偏移 2058 + 8 选取锚点，已超出正文总高，落在尚未渲染的最后一行；高度表按查询高度外推，给出 top 2054。这一行进入视口并实测为 1189 后，修正值为 1189 − 2054 = −865。没有封面时，正文上方只有标题与 Properties（约 350px），不会出现这种外推。换 tab 内文件时图片晚于正文解码，正文先被测量、随后被封面推到视口外，是触发条件之一。
+原因：用户复现时，只读记录器捕获到 CodeMirror 的 `measure()` 在滚动中把 `scrollTop` 从 2058 改为 1193。当时正文顶端位于滚动容器 1711px 处，正文总高 1216，视口为 `[0, 3283]`，文档长 3313。CodeMirror 用原始偏移 2058 + 8 选取锚点，已超出正文总高，落在尚未渲染的最后一行；高度表按查询高度外推，给出 top 2054。这一行进入视口并实测为 1189 后，修正值为 1189 − 2054 = −865。没有封面时，正文上方只有标题与 Properties（约 350px），不会出现这种外推。换 tab 内文件时图片晚于正文解码，正文先被测量、随后被封面推到视口外，是触发条件之一。
 
 修复：有封面的编辑器从正文顶端计算滚动偏移（`banner/scroll-offset.ts`）。
 
-dev-vault 中使用与 spacetime 相同的正文，先关闭封面打开笔记以复现解码时序，再开启封面，按用户日志的触控板惯性曲线向下滚动：
+在 dev-vault 中使用复现笔记的正文，先关闭封面打开笔记以复现解码时序，再开启封面，重放记录下来的触控板惯性滚动：
 
 | 构建 | 封面宽度 | 结果 |
 | --- | --- | --- |

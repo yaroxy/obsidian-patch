@@ -84,7 +84,7 @@ src/features/
 
 - `npm test`：模型 13 项通过。
 - `node scripts/test-math-format.mjs <dev-vault>`：8 项通过。覆盖命令只在公式块内可用、只改光标所在的块、光标保持在原行、一次撤销完全还原、callout 中的块、跳过含空行的块、通知计数、幂等。
-- spacetime 全库语料：86 篇笔记共 1427 个 `$$` 块。
+- 验证语料：86 篇笔记共 1427 个 `$$` 块。
   - 结果：改动 346 个，不变 1060 个，跳过 21 个（全部因为块内有空行）。
   - 等价性：每个改动的块都用 Obsidian 的 MathJax 4.1.3 `tex2mml` 分别生成格式化前后的 MathML，去掉回显源码的 `data-latex` 和 `alttext` 属性后比较，全部一致。
   - 幂等：格式化两次没有变化。

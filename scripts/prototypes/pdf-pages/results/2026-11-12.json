@@ -1,6 +1,5 @@
 {
   "date": "2026-11-12",
-  "timezone": "Asia/Taipei",
   "scope": "Stages 1 and 2 native-host experiment; not a production implementation",
   "sourceCommit": "2f60da5fb7a674af5c0c5cfaf46a41576b675c17",
   "environment": {
@@ -25,9 +24,6 @@
     "Edge Cases.md": "fd8f263b35198fd80855f1b621fe725f46f1e2255a2f0bdac9ae624241dc3444",
     "banner.png": "00b818b7a3dbb056e21b6738102d3defb7cad26d46ec1daf3b4a3a0647edb149"
   },
-  "outputDirectory": "/private/tmp/obsidian-patch-pdf-20261112/experiment",
-  "exportRunId": "1794486114586-6526",
-  "mappingRunId": "1794486387710-6694",
   "cases": [
     {
       "name": "claude-pages-a4-landscape-80",

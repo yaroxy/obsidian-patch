@@ -72,7 +72,7 @@ src/features/
 
 - `npm test`：模型 10 项通过。
 - `node scripts/test-table.mjs <dev-vault>`：22 项通过，覆盖两种视图的按钮、未改动不写回、单格修改只改动该格、拖选合并、撤销重做、Escape、Live Preview 写回和两个命令。
-- spacetime 中的五十音表（176 行 HTML，含 rowspan、colspan、表名和 `<small>`）复制到 dev-vault 后，未改动保存不写文件，修改一格后全文只有该格变化。
+- 将一张 176 行 HTML 表格复制到 dev-vault。样例含 rowspan、colspan、表名和 `<small>`。未改动保存不写文件，修改一格后全文只有该格变化。
 
 2026-11-11，Obsidian 1.15.0：`test-table.mjs` 23 项通过，新增一项检查调整大小的把手和固定在底部的按钮；拖动调整的行为由 callout 集成测试覆盖。
 

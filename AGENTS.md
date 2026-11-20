@@ -2,7 +2,7 @@
 
 ## Project memory
 
-Before planning or editing this plugin, including testing or deployment in `dev-vault` or `spacetime`, read `/Users/roxy/.codex/memories/obsidian-patch.md`.
+Before planning, editing, testing, or deploying this plugin, read any project memory referenced by your local agent instructions.
 
 ## Feature references
 

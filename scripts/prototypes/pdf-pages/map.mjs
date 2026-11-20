@@ -1,14 +1,17 @@
 // PROTOTYPE: rerun view mapping without re-exporting PDFs.
 import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
+import { obsidianCli } from "../../lib/integration-runner.mjs";
+
 const here = dirname(fileURLToPath(import.meta.url));
-const output = resolve(process.argv[2] ?? "/private/tmp/obsidian-patch-pdf-prototype");
+const output = resolve(process.argv[2] ?? join(tmpdir(), "obsidian-patch-pdf-prototype"));
 const analysis = JSON.parse(readFileSync(join(output, "pdf-analysis.json"), "utf8"));
 if (!analysis.every(r => r.paginationAndLinesPreserved)) throw new Error("Token instrumentation changed pagination or line layout; mapping results would be invalid.");
-const cli = process.env.OBSIDIAN_CLI ?? "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli";
+const cli = obsidianCli();
 const runId = `${Date.now()}-${process.pid}`;
 const code = `void (${readFileSync(join(here, "map-views.js"), "utf8")})(app,${JSON.stringify({ output, runId })})`;
 execFileSync(cli, ["vault=dev-vault", "eval", `code=${code}`], { encoding: "utf8", timeout: 30000 });
