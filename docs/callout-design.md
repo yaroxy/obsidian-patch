@@ -133,7 +133,7 @@ src/features/
   - 包裹选区，以及插入空 callout 后光标的位置；
   - Live Preview 与阅读视图的按钮和写回；
   - 状态栏计数。
-- spacetime 全库：
+- 验证语料：
   - 范围识别：147 篇笔记中的 562 个顶层 callout，与 Obsidian `metadataCache` 的 callout section 起止行完全一致，没有遗漏，也没有多余。
   - 往返：「转成正文 → 重新包裹」的结果与规范形式相比，561 个一致。唯一例外是一个 callout 的正文每行都以多余空格开头，重新包裹后整体缩进 1 格，渲染不变。
 - 原有的 HTML 表格和 Banner 集成测试仍然全部通过。

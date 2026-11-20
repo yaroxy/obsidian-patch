@@ -10,11 +10,13 @@ Open `dev-vault` in desktop Obsidian with its CLI available, then run from the r
 
 ```sh
 node scripts/prototypes/pdf-pages/run.mjs \
-  /Users/roxy/Documents/obsidian-vaults/dev-vault \
-  /private/tmp/obsidian-patch-pdf-repro
+  /path/to/dev-vault \
+  "${TMPDIR:-/tmp}/obsidian-patch-pdf-repro"
 ```
 
-Requirements: Node.js, Obsidian's native `obsidian-cli` executable, and Python with `pypdf` and `pdfplumber`. The recorded run used pypdf 6.21.4 and pdfplumber 0.11.9. `PDF_PYTHON` selects a Python executable; otherwise the runner uses the installed Codex Python runtime when available, then `python3`. `OBSIDIAN_CLI` overrides `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`. The main Obsidian application executable is not interchangeable with this CLI in the tested installation.
+Requirements include Node.js, Obsidian's native CLI, and Python with `pypdf` and `pdfplumber`. The recorded run used pypdf 6.21.4 and pdfplumber 0.11.9. Set `PDF_PYTHON` to select an interpreter, or use the default `python3`. The runner uses the [integration test CLI settings](../../../docs/integration-testing.md#running), including `OBSIDIAN_CLI` for a custom executable.
+
+Supply the path to the open `dev-vault` as the first argument. The optional output directory defaults to `obsidian-patch-pdf-prototype` under the system temporary directory.
 
 The command recreates three owned fixtures under `dev-vault/Patch PDF Prototype/`: `Claude Pages.md`, `Edge Cases.md`, and `banner.png`. It exports twelve PDFs, analyzes six reference/marked pairs, and measures the page-start positions in four view configurations. It leaves the fixtures and output files for inspection. Temporary tabs, print interception, debugger attachment, and background throttling are restored when the respective operation finishes. It does not deploy or modify the plugin.
 
@@ -23,7 +25,7 @@ The command recreates three owned fixtures under `dev-vault/Patch PDF Prototype/
 To rerun just the view measurements on existing results:
 
 ```sh
-node scripts/prototypes/pdf-pages/map.mjs /private/tmp/obsidian-patch-pdf-repro
+node scripts/prototypes/pdf-pages/map.mjs "${TMPDIR:-/tmp}/obsidian-patch-pdf-repro"
 ```
 
 This rejects changed fixture source and PDF instrumentation that changed the measured pagination or line layout. Theme, fonts, screen width, Obsidian version, and print settings can change pagination or screen coordinates. Treat the recorded counts as a result for the recorded environment.

@@ -8,13 +8,7 @@
 
 ## 恢复的实验和基线
 
-源仓库基线为 `main` 的 `2f60da5`。原实验来自 Claude 会话：
-
-`/Users/roxy/.claude/projects/-Users-roxy-Documents-workspace-obsidian-patch/62a559a8-ac13-41f5-a186-0ed4a6c738b2.jsonl`
-
-原脚本位于：
-
-`/private/tmp/claude-501/-Users-roxy--claude-spares-spare-Sn6c7F/62a559a8-ac13-41f5-a186-0ed4a6c738b2/scratchpad/exp/`
+源仓库基线为 `main` 的 `2f60da5`。
 
 原样例 `dev-vault/Patch Page Tests/Pages.md` 保持原状。复现实验复制其内容和图片，并增加重复段落、重复标题、长表格、长代码、公式和折叠 Callout 样例。新入口为 `scripts/prototypes/pdf-pages/run.mjs`，说明见同目录 `README.md`。
 
@@ -83,10 +77,6 @@ Chromium 会给被页边裁切的文字留下链接矩形。实验共排除了 9
 
 ## 结果文件和收尾
 
-复跑命令、依赖和源映射边界见 `scripts/prototypes/pdf-pages/README.md`。紧凑结果保存在 `scripts/prototypes/pdf-pages/results/2026-11-12.json`，原始 PDF、逐页解析、DOM 坐标和截图位于：
-
-`/private/tmp/obsidian-patch-pdf-20261112/experiment/`
-
-基线日志位于其上级目录。临时目录可能被系统清理，紧凑结果、脚本、样例和本报告保留在仓库中。
+复跑命令、依赖和源映射边界见 `scripts/prototypes/pdf-pages/README.md`。紧凑结果保存在 `scripts/prototypes/pdf-pages/results/2026-11-12.json`。复跑时，原始 PDF、逐页解析、DOM 坐标和截图保存在命令指定的输出目录。
 
 本次新增内容为实验脚本、样例和报告，未实现生产分页功能。基线测试在 `dev-vault` 部署了当前构建；插件设置已按备份逐字恢复。实验标签页已关闭、原阅读笔记已恢复、调试器已断开、后台节流恢复为原值，最后的 Obsidian 错误记录为 `No errors captured.`。开发结果保存在任务报告中，未加入长期项目记忆。

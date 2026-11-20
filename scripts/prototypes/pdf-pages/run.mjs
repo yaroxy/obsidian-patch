@@ -1,15 +1,18 @@
 // PROTOTYPE: native PDF pagination experiment, not part of the plugin bundle.
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { resolve, join, basename, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { createHash } from "node:crypto";
+import { obsidianCli } from "../../lib/integration-runner.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const vault = resolve(process.argv[2] ?? "/Users/roxy/Documents/obsidian-vaults/dev-vault");
-const output = resolve(process.argv[3] ?? "/private/tmp/obsidian-patch-pdf-prototype");
-const cli = process.env.OBSIDIAN_CLI ?? "/Applications/Obsidian.app/Contents/MacOS/obsidian-cli";
+if (!process.argv[2]) throw new Error("Supply the path to an open dev-vault");
+const vault = resolve(process.argv[2]);
+const output = resolve(process.argv[3] ?? join(tmpdir(), "obsidian-patch-pdf-prototype"));
+const cli = obsidianCli();
 if (basename(vault) !== "dev-vault") throw new Error("This experiment is restricted to dev-vault.");
 mkdirSync(output, { recursive: true });
 const folder = "Patch PDF Prototype";
@@ -65,8 +68,7 @@ while (Date.now() - start < 300000) {
   await delay(500);
 }
 if (!finished) throw new Error("Export experiment timed out; inspect export-status.json and the development window.");
-const bundledPython = "/Users/roxy/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3";
-const python = process.env.PDF_PYTHON ?? (existsSync(bundledPython) ? bundledPython : "python3");
+const python = process.env.PDF_PYTHON ?? "python3";
 const analysis = execFileSync(python, [join(here, "analyze.py"), output], { encoding: "utf8", timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
 writeFileSync(join(output, "analysis.log"), analysis);
 console.log(analysis.trim());

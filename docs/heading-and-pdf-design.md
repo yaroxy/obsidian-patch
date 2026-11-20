@@ -48,7 +48,7 @@ H1～H6 标签固定在标题区域最右侧；标题正文预留 2.75rem，换�
 ```sh
 npm test
 npm run build
-node scripts/test-navigation.mjs /Users/roxy/Documents/obsidian-vaults/dev-vault /private/tmp/obsidian-patch-navigation-tests
+node scripts/test-navigation.mjs /path/to/dev-vault
 ```
 
 集成入口写入 `dev-vault/Patch Navigation Tests/` 中的专用样例，部署当前构建，并在结束时恢复插件设置、弹窗尺寸、原标签页和后台节流。所有集成测试共用运行入口，详见 `integration-testing.md`。`OBSIDIAN_CLI` 可覆盖原生 CLI 路径；PDF 校验需要 pypdf 与 pdfplumber，可通过 `PDF_PYTHON` 指定 Python，默认使用 `python3`。
