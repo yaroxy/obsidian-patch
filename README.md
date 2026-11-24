@@ -16,25 +16,22 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## New in 0.5.1
+## New in 0.6.0
 
-Convert Markdown tables to HTML and keep inline LaTeX rendered in Reading View and Live Preview. [See the converted table](docs/images/inline-math-table.png) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
+Convert a standalone HTML table back to Markdown. The preview shows how merged cells and captions will appear before you apply the change. In this watchlist, **Repeat across slots** puts Friday beside both films. [Try the watchlist](https://yaroxy.github.io/obsidian-patch/features/tables.html#convert-an-html-table-to-markdown)
 
-## Next release preview
+![Markdown source and rendered preview showing Friday beside both Arrival and Moon](docs/images/watchlist-html-to-markdown.png)
 
-- **Tables.** Convert a standalone HTML table back to Markdown. On desktop, resize the preview to compare wide tables with their Markdown source. Choose an installed font for inline code in HTML table cells.
-- **Callouts.** Type `> [!tip` and choose `TIP` to insert `> [!TIP]`. Multiline plain-text pastes keep their quote markers. Give each callout type a Lucide icon and a preset or custom color.
-
-[Full list of unreleased changes](CHANGELOG.md#unreleased)
+Give each callout type its own icon and color. Type `> [!tip` and choose `TIP` to insert `> [!TIP]`, then paste several lines of plain text to keep them inside the callout. [Callout guide](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
 
 ## Features
 
-These features are available in 0.5.1. Open a feature guide for examples.
+Open a feature guide for settings, examples, and supported views.
 
 <table>
 <thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
 <tbody>
-<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and unwrap callouts. Match code backgrounds to their callout and check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>.</td></tr>
+<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and unwrap callouts. Set icons and colors by type, tint code backgrounds, and check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>.</td></tr>
 </tbody>
 <tbody>
 <tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/active-line.html">Active line</a></td><td>Mark the current line in the margin and highlight its line number.</td></tr>
@@ -47,7 +44,7 @@ These features are available in 0.5.1. Open a feature guide for examples.
 <tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
 <tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. Check all diagrams in a note and jump to syntax errors.</td></tr>
 <tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
-<tr><th scope="row">No settings required</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Convert Markdown tables to HTML, then edit merged cells, grouped headers, and captions visually.</td></tr>
+<tr><th scope="row">HTML Tables</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Convert between Markdown and HTML, edit merged cells and captions, and choose a font for inline code in HTML table cells.</td></tr>
 </tbody>
 </table>
 

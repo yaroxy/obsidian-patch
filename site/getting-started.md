@@ -13,11 +13,9 @@ Requires **Obsidian 1.15.0 or later**.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.5.1
-Version **0.5.1** preserves inline formulas when converting Markdown tables to HTML. [Table example](features/tables.md#convert-tables-with-inline-formulas) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
+::: tip New in 0.6.0
+Convert an HTML table back to Markdown and preview what happens to its merged cells. Give a callout type an icon and color, then use it in your note by typing `> [!`. [Try the watchlist table](features/tables.md#convert-an-html-table-to-markdown) · [Customize a callout](features/callouts.md#type-appearance)
 :::
-
-The next release adds the [reverse conversion from HTML to Markdown](features/tables.md#convert-an-html-table-to-markdown) and [callout type suggestions in the editor](features/callouts.md#type-completion-and-paste).
 
 ## Try one improvement
 

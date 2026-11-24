@@ -190,6 +190,10 @@ Local ESLint using the recommended `eslint-plugin-obsidianmd` 0.6.0 configuratio
 
 The table conversion preview now shares the desktop resize grip used by the table and callout editors and stores its dimensions separately. The updated default build passed the [native conversion and editor checks](integration-testing.md#resizable-conversion-preview--2026-11-24). Local recommended ESLint on all 51 TypeScript source files reported zero errors and the same six `prefer-active-doc` warnings. The public Directory entry still listed 0.5.1 on this date. An official branch preview result for this change is pending.
 
+## 0.6.0 branch preview — maintainer-confirmed pass, 2026-11-24
+
+The maintainer confirmed the Community branch preview passed for commit `1a64287718438134b8f70c92c7fb777454618378`. The screenshot shows **Completed** and a passing dependency check with no vulnerable dependencies found. The 0.6.0 build reproduces the reviewed `main.js` and `styles.css` byte for byte. The Directory reviews the published assets separately after release. [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/1a64287718438134b8f70c92c7fb777454618378)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

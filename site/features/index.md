@@ -6,11 +6,11 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 
 | Feature | What it adds |
 | --- | --- |
-| [HTML tables](tables.md) | Convert Markdown tables to HTML and edit merged cells, grouped headers, and captions. |
+| [HTML tables](tables.md) | Convert between Markdown and HTML tables. Edit merged cells, grouped headers, and captions. |
 | [Callouts](callouts.md) | Insert, edit, preview, and unwrap callouts. Tint code backgrounds and check GitHub compatibility. |
 | [Math formatting](math-format.md) | Indentation and alignment for display math, preserving formulas. |
 
-The next release adds [HTML-to-Markdown conversion](tables.md#convert-an-html-table-to-markdown), [table code fonts](tables.md#inline-code-font), [callout type completion and paste](callouts.md#type-completion-and-paste), and [per-type callout icons and colors](callouts.md#type-appearance).
+Version 0.6.0 adds [HTML-to-Markdown conversion](tables.md#convert-an-html-table-to-markdown), [table code fonts](tables.md#inline-code-font), [callout type completion and paste](callouts.md#type-completion-and-paste), and [per-type callout icons and colors](callouts.md#type-appearance).
 
 ## Shape your notes
 
@@ -29,4 +29,4 @@ The next release adds [HTML-to-Markdown conversion](tables.md#convert-an-html-ta
 | [Mermaid diagrams](mermaid.md) | Newer diagram types and syntax with light/dark theme support. |
 | [PDF navigation](pdf-export.md) | Heading bookmarks and same-note heading links in native desktop PDF exports. |
 
-Patches 0.5.1 preserves [inline formulas in converted HTML tables](tables.md#convert-tables-with-inline-formulas). See [views and platforms](../reference/compatibility.md) for the supported modes.
+See [views and platforms](../reference/compatibility.md) for the supported modes.

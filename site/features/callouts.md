@@ -10,7 +10,7 @@ Edit a callout's type, title, fold state, metadata, and content side by side wit
 
 ## Type completion and paste
 
-In the next release, type `> [!tip` in the editor and choose **TIP** to insert `> [!TIP]`. In the callout editor, search by name or alias, or enter a new type. Aliases with the same appearance share a group. Pasting multiline plain text inside the body adds the callout’s `>` markers to each line.
+In Patches 0.6.0 or later, type `> [!tip` in the editor and choose **TIP** to insert `> [!TIP]`. In the callout editor, search by name or alias, or enter a new type. Aliases with the same appearance share a group. Pasting multiline plain text inside the body adds the callout’s `>` markers to each line.
 
 Patches writes uppercase markers when you insert a callout, wrap a selection, or choose a type. Reselecting an existing `[!tip]` changes it to `[!TIP]`. A custom name whose uppercase form would resolve to a different Obsidian type keeps its spelling. Editing only the title or fold state preserves both the marker’s spelling and the original body. If another edit changes the callout while the dialog is open, saving keeps your draft open.
 
@@ -39,7 +39,7 @@ In 0.5.0, the command reads the saved note in Reading view and includes unsaved 
 
 ## Type appearance
 
-In the upcoming release, open **Settings → Patches → Callouts → Type appearance → Customize**. To reproduce the movie-night example, enter `watchlist`, choose the `clapperboard` icon and set **Custom color** to `#327771`. Click **Apply**. Both `> [!WATCHLIST]` and a hand-typed `> [!watchlist]` use this appearance. You can also pick one of eight theme colors. Each type has its own settings, including built-in aliases. To reset it, select **Use theme icon** and **Use theme color** and apply.
+In Patches 0.6.0 or later, open **Settings → Patches → Callouts → Type appearance → Customize**. To reproduce the movie-night example, enter `watchlist`, choose the `clapperboard` icon and set **Custom color** to `#327771`. Click **Apply**. Both `> [!WATCHLIST]` and a hand-typed `> [!watchlist]` use this appearance. You can also pick one of eight theme colors. Each type has its own settings, including built-in aliases. To reset it, select **Use theme icon** and **Use theme color** and apply.
 
 ![The filtered WATCHLIST type and the preview of Friday double feature share a teal clapperboard icon. The inline code queued has a matching tint.](../../docs/images/watchlist-callout-editor.png)
 

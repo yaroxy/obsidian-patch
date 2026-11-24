@@ -25,7 +25,7 @@ Select several complete Markdown tables to convert them together. **Previous tab
 
 ## Convert an HTML table to Markdown
 
-In the next release, place the cursor inside a standalone HTML table and run **Patches: Convert HTML tables to Markdown**. You can also select several complete tables, or choose **Convert to Markdown** in the visual table editor. Compare the Markdown source with its rendered preview. For merged cells, headers, and captions, choose how to represent them and review any formatting that Markdown will drop. Patches checks the result with Obsidian’s renderer before applying the conversion in one undo step.
+In Patches 0.6.0 or later, place the cursor inside a standalone HTML table and run **Patches: Convert HTML tables to Markdown**. You can also select several complete tables, or choose **Convert to Markdown** in the visual table editor. Compare the Markdown source with its rendered preview. For merged cells, headers, and captions, choose how to represent them and review any formatting that Markdown will drop. Patches checks the result with Obsidian’s renderer before applying the conversion in one undo step.
 
 On desktop, drag the bottom-right corner of the conversion preview to give a wide table more room. The preview remembers its own size in this vault, separately from the table and callout editors. Double-click the corner to restore the default. In a narrow preview, the rendered table moves below the Markdown source.
 
@@ -74,11 +74,11 @@ In the editor, Tab moves between cells, Enter adds a line within a cell, and Esc
 
 On desktop, drag the bottom-right corner of the table editor to resize the grid. The editor remembers this size in the current vault. Double-click the corner to reset.
 
-In the next release, a conflicting edit keeps the draft open. Editing and conversion support up to 50,000 grid positions per table. Count rows times columns after expanding merged cells, including empty positions. If a table exceeds the limit, split it into smaller tables before opening it in the visual editor.
+If the source table changes while the editor is open, Patches 0.6.0 keeps your draft open. Editing and conversion support up to 50,000 grid positions per table. Count rows times columns after expanding merged cells, including empty positions. If a table exceeds the limit, split it into smaller tables before opening it in the visual editor.
 
 ## Inline code font
 
-In the next release, open **Settings → Patches → HTML Tables → Inline code font** and enter an installed family name such as `JetBrains Mono`. Press Enter or leave the field to apply it to inline code in standalone HTML table cells in Reading View, Live Preview and the visual editor. Clear the field to use the theme font again. The font preference is saved in this vault. The font must be installed on each device.
+In Patches 0.6.0 or later, open **Settings → Patches → HTML Tables → Inline code font** and enter an installed family name such as `JetBrains Mono`. Press Enter or leave the field to apply it to inline code in standalone HTML table cells in Reading View, Live Preview and the visual editor. Clear the field to use the theme font again. The font preference is saved in this vault. The font must be installed on each device.
 
 ## Related reference
 

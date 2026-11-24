@@ -14,21 +14,23 @@ The homepage and README share a real travel-note capture combining the existing 
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
-The README and homepage highlight the current patch. The [table guide](../site/features/tables.md#convert-tables-with-inline-formulas) has a copyable example and a real Reading View screenshot for 0.5.1. The homepage keeps the icon, line-width, and code-background gallery labeled with its original 0.4.0 release.
+The README and homepage highlight the 0.6.0 editor features. The [table guide](../site/features/tables.md#convert-an-html-table-to-markdown) includes a copyable watchlist for reverse conversion alongside the [0.5.1 inline-formula example](../site/features/tables.md#convert-tables-with-inline-formulas). The homepage keeps the icon, line-width, and code-background gallery labeled with its original 0.4.0 release.
 
 The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
 
 ## Community Directory screenshots
 
-The gallery shows five features available in 0.4.0. Each upload is a 1200 × 800 PNG made from a real Obsidian capture. The images retain their aspect ratio and include the full controls. Use this order in the Directory’s screenshot editor.
+The 0.6.0 gallery is prepared for the five desktop slots under **Edit listing → Screenshots**. Replace the third and fourth images with the new watchlist examples. Each PNG fits the full Obsidian capture on a 1200 × 800 canvas, preserves its aspect ratio, and is below 5 MB. [Directory screenshot requirements](https://docs.obsidian.md/community-directory/manage-entry)
 
 | Order | Screenshot | What to look for |
 | --- | --- | --- |
 | 1 | [Kyoto travel note](images/community/01-kyoto-note.png) | A cover, merged itinerary, and code inside a callout in one finished note. |
 | 2 | [Icon colors](images/community/02-icon-colors.png) | The Python icon preview, its brand color, and the color controls in one picker. |
-| 3 | [HTML table editor](images/community/03-table-editor.png) | A kana chart with grouped cells, a selected row segment, and the editing toolbar. |
-| 4 | [Callout code](images/community/04-callout-code.png) | Syntax-highlighted code in a dark-theme warning and its nested tip. |
+| 3 | [HTML table to Markdown](images/community/03-watchlist-html-to-markdown.png) | The movie list in Markdown and the rendered preview, with Friday repeated for both films and the caption above the table. |
+| 4 | [Custom callout appearance](images/community/04-watchlist-callout.png) | The WATCHLIST type and live preview share a teal clapperboard, with matching inline code tint. |
 | 5 | [From draft to publication](images/community/05-mermaid-diagram.png) | Two numbered handoffs in Patches 0.4.0 above the same source in Obsidian 1.15.1’s native Mermaid block. |
+
+The original 0.4.0 gallery used the [kana table editor](images/community/03-table-editor.png) and [nested callout code](images/community/04-callout-code.png) in slots 3 and 4.
 
 ## Feature demo captures
 
