@@ -18,6 +18,8 @@ The README and homepage highlight the 0.6.0 editor features. The [table guide](.
 
 The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
 
+The [callout appearance recording](images/callout-type-appearance.gif) follows the same example in Patches 0.6.0 on Debian with Obsidian 1.15.1. It shows where to open Customize, how to find the icon and apply a color, and what the result looks like in the note. The feature guide displays a still of the result when the browser requests reduced motion.
+
 ## Community Directory screenshots
 
 The 0.6.0 gallery is prepared for the five desktop slots under **Edit listing → Screenshots**. Replace the third and fourth images with the new watchlist examples. Each PNG fits the full Obsidian capture on a 1200 × 800 canvas, preserves its aspect ratio, and is below 5 MB. [Directory screenshot requirements](https://docs.obsidian.md/community-directory/manage-entry)

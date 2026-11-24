@@ -41,7 +41,10 @@ In 0.5.0, the command reads the saved note in Reading view and includes unsaved 
 
 In Patches 0.6.0 or later, open **Settings → Patches → Callouts → Type appearance → Customize**. To reproduce the movie-night example, enter `watchlist`, choose the `clapperboard` icon and set **Custom color** to `#327771`. Click **Apply**. Both `> [!WATCHLIST]` and a hand-typed `> [!watchlist]` use this appearance. You can also pick one of eight theme colors. Each type has its own settings, including built-in aliases. To reset it, select **Use theme icon** and **Use theme color** and apply.
 
-![The filtered WATCHLIST type and the preview of Friday double feature share a teal clapperboard icon. The inline code queued has a matching tint.](../../docs/images/watchlist-callout-editor.png)
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="../../docs/images/watchlist-callout-editor.png">
+  <img src="../../docs/images/callout-type-appearance.gif" alt="Choosing a clapperboard and a custom teal color for WATCHLIST, applying them, and viewing the Friday double feature callout in a note.">
+</picture>
 
 GitHub supports the five alert markers `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` and `[!CAUTION]` and supplies their visual appearance.
 

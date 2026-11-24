@@ -22,31 +22,33 @@ Convert a standalone HTML table back to Markdown. The preview shows how merged c
 
 ![Markdown source and rendered preview showing Friday beside both Arrival and Moon](docs/images/watchlist-html-to-markdown.png)
 
-Give each callout type its own icon and color. Type `> [!tip` and choose `TIP` to insert `> [!TIP]`, then paste several lines of plain text to keep them inside the callout. [Callout guide](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
+Give each callout type its own icon and color. In the example below, `WATCHLIST` gets a teal clapperboard. Type `> [!watch` and choose `WATCHLIST` to use it in another note. Pasting several lines of plain text into the callout keeps them quoted. [Callout guide](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
+
+![Choosing the clapperboard icon and a teal color for WATCHLIST, then applying them to a Friday double feature callout](docs/images/callout-type-appearance.gif)
 
 ## Features
 
-Open a feature guide for settings, examples, and supported views.
+The groups below match **Settings → Patches**.
 
-<table>
-<thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
-<tbody>
-<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and unwrap callouts. Set icons and colors by type, tint code backgrounds, and check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>.</td></tr>
-</tbody>
-<tbody>
-<tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/active-line.html">Active line</a></td><td>Mark the current line in the margin and highlight its line number.</td></tr>
-<tr><td><a href="https://yaroxy.github.io/obsidian-patch/features/heading-levels.html">Heading levels</a></td><td>Show H1–H6 labels beside headings in reading and editing views.</td></tr>
-</tbody>
-<tbody>
-<tr><th scope="row">Line Width</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/line-width.html">Readable columns</a></td><td>Set the maximum column width globally or for a single note.</td></tr>
-<tr><th scope="row">Math Format</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/math-format.html">Display math</a></td><td>Indent and align formulas.</td></tr>
-<tr><th scope="row">Patch Banner</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/banner.html">Note covers</a></td><td>Use a vault image, animation, or video as a cover. Set its width per note.</td></tr>
-<tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
-<tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. Check all diagrams in a note and jump to syntax errors.</td></tr>
-<tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
-<tr><th scope="row">HTML Tables</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Convert between Markdown and HTML, edit merged cells and captions, and choose a font for inline code in HTML table cells.</td></tr>
-</tbody>
-</table>
+- **Callouts**
+  - [Edit, preview, and unwrap callouts](https://yaroxy.github.io/obsidian-patch/features/callouts.html). Set icons and colors by type, tint code backgrounds, and [check folders for GitHub compatibility](https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders).
+- **Editor**
+  - [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) marks the current line in the margin and highlights its line number.
+  - [Show H1–H6 labels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) beside headings in reading and editing views.
+- **HTML Tables**
+  - [Convert between Markdown and HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html). Edit merged cells and captions, and choose a font for inline code in HTML cells.
+- **Line Width**
+  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note.
+- **Math Format**
+  - [Indent and align display formulas](https://yaroxy.github.io/obsidian-patch/features/math-format.html).
+- **Patch Banner**
+  - [Add a note cover](https://yaroxy.github.io/obsidian-patch/features/banner.html) using an image, animation, or video from the vault. Set its width per note.
+- **Patch Icons**
+  - [Customize file and folder icons](https://yaroxy.github.io/obsidian-patch/features/icons.html) with Lucide icons, brand marks, and colors.
+- **Patch Mermaid**
+  - [Number and animate flowchart steps](https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart). Check every diagram in a note and jump to syntax errors.
+- **PDF Export**
+  - [Add PDF navigation](https://yaroxy.github.io/obsidian-patch/features/pdf-export.html) with bookmarks and links to headings in the same note on desktop.
 
 ## Installation
 
