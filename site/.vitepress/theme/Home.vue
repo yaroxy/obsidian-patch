@@ -38,7 +38,7 @@ const groups = [
         <figcaption>A cover, a clearer itinerary, and code that fits its callout. <a :href="withBase('/features/banner.html')">Start with a banner →</a></figcaption>
       </figure>
     </section>
-    <div class="patches-preview"><span>New in 0.6.0</span> Convert HTML tables back to Markdown and give each callout type its own icon and color. <a :href="withBase('/features/tables.html#convert-an-html-table-to-markdown')">Try the watchlist table →</a></div>
+    <div class="patches-preview"><span>New in 0.7.0</span> See which lines changed as you edit a note in a desktop Git vault. <a :href="withBase('/reference/commands.html#compare-a-note-with-git')">Compare a note with its last commit →</a></div>
     <section class="patches-updates" aria-labelledby="updates-title">
       <div class="patches-section-heading"><p class="patches-eyebrow">FROM 0.4.0</p><h2 id="updates-title">A few more personal touches.</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">

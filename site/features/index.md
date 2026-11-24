@@ -6,6 +6,7 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 
 | Feature | What it adds |
 | --- | --- |
+| [Note Git diff](../reference/commands.md#compare-a-note-with-git) | On desktop, compare a note with its last commit and jump to changes from the editor margin. |
 | [HTML tables](tables.md) | Convert between Markdown and HTML tables. Edit merged cells, grouped headers, and captions. |
 | [Callouts](callouts.md) | Insert, edit, preview, and unwrap callouts. Tint code backgrounds and check GitHub compatibility. |
 | [Math formatting](math-format.md) | Indentation and alignment for display math, preserving formulas. |

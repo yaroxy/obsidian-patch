@@ -46,7 +46,7 @@ In Patches 0.6.0 or later, open **Settings → Patches → Callouts → Type app
   <img src="../../docs/images/callout-type-appearance.gif" alt="Choosing a clapperboard and a custom teal color for WATCHLIST, applying them, and viewing the Friday double feature callout in a note.">
 </picture>
 
-In the development build, **Choose icon** searches Lucide and the optional Simple Icons catalog. Install it once with **Settings → Patches → Patch Icons → Simple Icons → Install**. New brand logos are then searchable offline. Pick a swatch to preview a theme color, use **Custom color**, or choose **Brand color** if the logo has an official color. Click **Apply** to save the type. This also works when file explorer icons are disabled.
+In 0.7.0, **Choose icon** searches Lucide and the optional Simple Icons catalog. Install it once with **Settings → Patches → Patch Icons → Simple Icons → Install**. New brand logos are then searchable offline. Pick a swatch to preview a theme color, use **Custom color**, or choose **Brand color** if the logo has an official color. Click **Apply** to save the type. This also works when file explorer icons are disabled.
 
 The desktop appearance panel has its own resize grip. Drag the bottom-right corner to change its size or double-click to restore the default. The type field and its suggestions follow the interface font selected in **Settings → Appearance**.
 

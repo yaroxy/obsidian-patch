@@ -11,12 +11,12 @@ Requires **Obsidian 1.15.0 or later**.
 3. Select **Install**, then **Enable**.
 4. Open **Settings → Patches** to configure its features.
 
-In the development build, Lucide icons are ready to use. For brand logos, select **Settings → Patches → Patch Icons → Simple Icons → Install**. One download serves callouts, files and folders.
+In 0.7.0, Lucide icons are ready to use. For brand logos, select **Settings → Patches → Patch Icons → Simple Icons → Install**. One download serves callouts, files and folders.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.6.0
-Convert an HTML table back to Markdown and preview what happens to its merged cells. Give a callout type an icon and color, then use it in your note by typing `> [!`. [Try the watchlist table](features/tables.md#convert-an-html-table-to-markdown) · [Customize a callout](features/callouts.md#type-appearance)
+::: tip New in 0.7.0
+On desktop, click a change marker beside a note to compare it with its last Git commit. Callouts can also use brand logos from your installed Simple Icons catalog. [Compare a note with Git](reference/commands.md#compare-a-note-with-git) · [Customize a callout](features/callouts.md#type-appearance)
 :::
 
 ## Try one improvement

@@ -196,6 +196,12 @@ The maintainer confirmed the Community branch preview passed for commit `1a64287
 
 The [release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/45359246067) prepared a GitHub draft from tag `0.6.0` at `43d4e846157259fd1fe381ee9cc21d3fe33cc3d2`. Each of the three downloaded attachments matched the clean local build byte for byte. GitHub CLI verified the provenance of each attachment against this commit, tag, and repository release workflow on a GitHub-hosted runner.
 
+## 0.7.0 Git and appearance candidate — 2026-11-24
+
+The maintainer's Directory screenshot shows a completed preview for `417027fb6394a6e838bbd015c753225c0c87a7e5`. The visible source warnings cover the gutter's DOM element creation, CommonJS import style and desktop guards for three Node built-ins. The 0.7.0 candidate creates each gutter marker through its own editor window's Obsidian helper and loads the three modules inside an explicit desktop-app check.
+
+The local recommended Obsidian ESLint configuration reported no diagnostics in the Git feature and six existing main-window warnings elsewhere. The updated candidate still needs its own Directory preview. [0.7.0 package and native checks](integration-testing.md#070-community-candidate--2026-11-24)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

@@ -55,6 +55,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.7.0 Community candidate — 2026-11-24
+
+The production Community build with `main.js` SHA-256 `f1175ad9852e39304f4f9307080ee2d5c1a5a382b8a218bc32ad8bba69c5398a` passed the 0.7.0 release-package check. Node 22 passed 178 unit tests, including the Git mobile guard. The documentation check covered 21 pages and 880 links and assets.
+
+Debian with Obsidian 1.15.1 passed 31 Git, 104 Callout, 57 Table and 22 Icons checks, including a live catalog installation. All four suites restored their sessions. The Git fixture points to a missing object store for its unavailable-repository check so Git cannot fall back to an enclosing development-vault repository. Other desktop systems, physical mobile devices, other themes and the native OS context menu were outside this run.
+
 ## Callout interface font and branch verification — 2026-11-24
 
 On Debian with Obsidian 1.15.1, the Community build passed 104 Callout, 57 Table, 31 Git diff and 22 Icons checks. The Callout type field and its open suggestions both followed changes to the interface font. The separate HTML table setting still completed installed font names and applied the selected font to inline code. The Icons suite exercised a live catalog installation. All four suites restored their sessions. Mobile, other desktop platforms and themes, and the native OS context menu were outside this run.

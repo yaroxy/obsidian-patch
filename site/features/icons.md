@@ -16,7 +16,7 @@ In 0.6.0, the picker downloads the latest Simple Icons graphic data from jsDeliv
 
 **Import from Iconize** copies supported file and folder icons, replacing existing assignments for those paths. Emoji and other packs are skipped; disable Iconize afterwards to avoid duplicate icons. **Icons of missing files** lets you clear unused assignments. In 0.5.0, it lists each missing vault-relative path before removal. File and folder assignments appear in the file explorer.
 
-In the development build, a one-time tip explains where to get optional brand logos. Select **Settings → Patches → Patch Icons → Simple Icons → Install** for the first download. The same button then reads **Update**. Patches keeps one compressed copy in its plugin folder. After restarting, both the explorer and [Callout appearance](callouts.md#type-appearance) can search it offline. Before installation, both pickers offer Obsidian’s Lucide icons and previously assigned brand icons. If an update fails, the previous catalog remains usable.
+In 0.7.0, a one-time tip explains where to get optional brand logos. Select **Settings → Patches → Patch Icons → Simple Icons → Install** for the first download. The same button then reads **Update**. Patches keeps one compressed copy in its plugin folder. After restarting, both the explorer and [Callout appearance](callouts.md#type-appearance) can search it offline. Before installation, both pickers offer Obsidian’s Lucide icons and previously assigned brand icons. If an update fails, the previous catalog remains usable.
 
 ## Keyboard and batch editing
 

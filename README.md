@@ -16,6 +16,14 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
+## New in 0.7.0
+
+- Desktop vaults inside a Git working tree automatically show change markers in visible Markdown editors. Click a marker or run **View Git diff for this note** to compare the last commit with your current edits. **Toggle Git change markers for this vault** controls the gutter across the vault. [Git diff guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git)
+- Install the shared **Simple Icons** catalog through **Patch Icons → Simple Icons → Install** to choose brand logos offline for callouts, files and folders. The wider Callout appearance panel includes color swatches and uses the Obsidian interface font for type suggestions. [Callout appearance](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
+- The HTML table code font field suggests installed families on supported devices. [Inline code font](https://yaroxy.github.io/obsidian-patch/features/tables.html#inline-code-font)
+
+![Git gutter showing two modified lines, an addition and a deletion in a watchlist](docs/images/note-git-gutter.png)
+
 ## New in 0.6.0
 
 Convert a standalone HTML table back to Markdown. The preview shows how merged cells and captions will appear before you apply the change. In this watchlist, **Repeat across slots** puts Friday beside both films. [Try the watchlist](https://yaroxy.github.io/obsidian-patch/features/tables.html#convert-an-html-table-to-markdown)
@@ -50,12 +58,6 @@ The groups below match **Settings → Patches**.
 - **PDF Export**
   - [Add PDF navigation](https://yaroxy.github.io/obsidian-patch/features/pdf-export.html) with bookmarks and links to headings in the same note on desktop.
 
-### In development
-
-- Desktop vaults inside a Git working tree automatically show change markers in visible Markdown editors. Click a marker or run **View Git diff for this note** to compare the last commit with your current edits. **Toggle Git change markers for this vault** controls the gutter across the vault. [Git diff guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git)
-- Install the shared **Simple Icons** catalog through **Patch Icons → Simple Icons → Install** to choose brand logos offline for callouts, files and folders. The wider Callout appearance panel includes color swatches and uses the Obsidian interface font for type suggestions. [Callout appearance](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
-- The HTML table code font field suggests installed families on supported devices. [Inline code font](https://yaroxy.github.io/obsidian-patch/features/tables.html#inline-code-font)
-
 ## Installation
 
 Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Directory](https://community.obsidian.md/plugins/patches).
@@ -84,7 +86,7 @@ Other notes keep their global width. See [note properties](https://yaroxy.github
 
 ## Network and privacy
 
-The Community build runs its bundled Mermaid code locally. Version 0.6.0 can contact **jsDelivr** when opening the icon picker, updating Simple Icons or filling missing cached graphics. In the development build, only choosing **Install** or **Update** for Simple Icons downloads the catalog and matching brand-color JSON. Search terms, note contents and file names stay on the device. The desktop Git diff reads local Git objects.
+The Community build runs its bundled Mermaid code locally. Version 0.6.0 can contact **jsDelivr** when opening the icon picker, updating Simple Icons or filling missing cached graphics. In 0.7.0, only choosing **Install** or **Update** for Simple Icons downloads the catalog and matching brand-color JSON. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
 
 The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 

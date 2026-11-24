@@ -174,7 +174,8 @@
     await until(() => marks().some(mark => mark.dataset.kind === "modified"), "reloading the plugin restores the vault's saved marker preference");
     assert(app.commands.executeCommandById(command), "Diff command unavailable after reload");
     await until(() => regions()[0]?.textContent.includes("- Arrival"), "the comparison reopens after a reload");
-    await app.vault.adapter.remove(folder + "/.git");
+    // A broken gitfile stops Git at the fixture even when the development vault has its own repository.
+    await app.vault.adapter.write(folder + "/.git", "gitdir: " + join(context.output, "missing-git-dir") + "\n");
     button("Refresh").click();
     await until(() => el()?.textContent.includes("outside a Git working tree"), "Refresh reports a missing repository without stale lines");
     fs.unlinkSync(join(root, ".git"));

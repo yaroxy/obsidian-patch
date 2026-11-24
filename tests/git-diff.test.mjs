@@ -7,15 +7,22 @@ import { join } from "node:path";
 import { build } from "esbuild";
 
 const result = await build({
-  stdin: { contents: 'export * from "./src/features/git-diff/head"; export * from "./src/features/git-diff/model";', resolveDir: process.cwd() },
+  stdin: { contents: 'export { Platform } from "obsidian"; export * from "./src/features/git-diff/head"; export * from "./src/features/git-diff/model";', resolveDir: process.cwd() },
   bundle: true, write: false, format: "esm", platform: "node",
   plugins: [{ name: "desktop-host", setup(builder) {
     builder.onResolve({ filter: /^obsidian$/ }, () => ({ path: "obsidian", namespace: "host" }));
     builder.onLoad({ filter: /.*/, namespace: "host" }, () => ({ contents: "export const Platform = {isDesktopApp:true}; export class MarkdownView {}" }));
   } }],
-  banner: { js: 'import { createRequire } from "node:module"; const require = createRequire(process.cwd() + "/package.json");' },
+  banner: { js: 'import { createRequire } from "node:module"; const window = { require: createRequire(process.cwd() + "/package.json") };' },
 });
-const { readNoteHead, isGitWorkTree, noteChanges, hunkLines, changedLines } = await import("data:text/javascript;base64," + Buffer.from(result.outputFiles[0].contents).toString("base64"));
+const { Platform, readNoteHead, isGitWorkTree, noteChanges, hunkLines, changedLines } = await import("data:text/javascript;base64," + Buffer.from(result.outputFiles[0].contents).toString("base64"));
+
+test("mobile skips Git discovery and refuses to read desktop Git objects", async t => {
+  Platform.isDesktopApp = false;
+  t.after(() => { Platform.isDesktopApp = true; });
+  assert.equal(await isGitWorkTree(process.cwd()), false);
+  await assert.rejects(readNoteHead("sample.md"), /require the desktop app/);
+});
 
 test("Git features require the vault root to belong to a working tree", async t => {
   const root = mkdtempSync(join(tmpdir(), "patches-vault-git-"));

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-24
+
 ### Added
 
 - Compare one note with its local Git `HEAD` on desktop using **View Git diff for this note**. The stacked view follows unsaved edits and navigates between changes.

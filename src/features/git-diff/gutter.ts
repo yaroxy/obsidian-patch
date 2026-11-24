@@ -11,8 +11,7 @@ class ChangeMark extends GutterMarker {
     return this.change.kind === other.change.kind && this.change.hunk === other.change.hunk && this.change.atEnd === other.change.atEnd;
   }
   override toDOM(view: EditorView): HTMLElement {
-    const el = view.dom.ownerDocument.createElement("span");
-    el.className = "obsidian-patch-git-mark";
+    const el = view.dom.ownerDocument.defaultView!.createSpan({ cls: "obsidian-patch-git-mark" });
     el.dataset.kind = this.change.kind;
     el.toggleClass("is-at-end", !!this.change.atEnd);
     el.title = { added: "Added line", modified: "Modified line", deleted: "Deleted lines" }[this.change.kind] + " · Open Git diff";
