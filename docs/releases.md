@@ -126,6 +126,8 @@ The installable package consists of `main.js`, `manifest.json`, and `styles.css`
 
 Review the title, installation instructions, supported Obsidian version, tested platforms, and attachment versions before publishing. Use the pre-release option when distributing a preview. Publish a regular release when it is ready for the intended release channel, then update the README download instructions to point to it.
 
+For the editor update, replace the README and guide preview labels with the published version and update the homepage’s release highlight. Once the release and guides are public, the [prepared forum reply](forum-editor-updates.md) can be posted in the [existing Patches discussion](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Its screenshots link to the exact revision that contains the captures.
+
 Full remains available through the separate `codex/full` branch and its source-build instructions. The standard release attachments always contain the community build, so Community Directory installation cannot accidentally receive the full build.
 
 See [GitHub release management](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) and [Obsidian's release requirements](https://docs.obsidian.md/plugins/releasing/submit-plugin).
