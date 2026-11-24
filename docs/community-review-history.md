@@ -194,6 +194,8 @@ The table conversion preview now shares the desktop resize grip used by the tabl
 
 The maintainer confirmed the Community branch preview passed for commit `1a64287718438134b8f70c92c7fb777454618378`. The screenshot shows **Completed** and a passing dependency check with no vulnerable dependencies found. The 0.6.0 build reproduces the reviewed `main.js` and `styles.css` byte for byte. The Directory reviews the published assets separately after release. [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/1a64287718438134b8f70c92c7fb777454618378)
 
+The [release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/45359246067) prepared a GitHub draft from tag `0.6.0` at `43d4e846157259fd1fe381ee9cc21d3fe33cc3d2`. Each of the three downloaded attachments matched the clean local build byte for byte. GitHub CLI verified the provenance of each attachment against this commit, tag, and repository release workflow on a GitHub-hosted runner.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

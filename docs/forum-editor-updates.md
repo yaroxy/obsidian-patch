@@ -6,7 +6,7 @@ Place the cursor in the HTML table and run **Patches: Convert HTML tables to Mar
 
 Callouts can have their own icon and color, too. Under **Settings → Patches → Callouts → Type appearance**, I gave `WATCHLIST` a teal clapperboard. Typing `> [!watch` brings up `WATCHLIST`, and pasting several lines of plain text inside the callout keeps them quoted.
 
-![The WATCHLIST type and its teal clapperboard in the editor, with a live preview of the Friday double feature](https://raw.githubusercontent.com/yaroxy/obsidian-patch/026d7d1284f387c0d712afbd0fb77a5074202aee/docs/images/watchlist-callout-editor.png)
+![Choosing the clapperboard icon and a custom teal color for WATCHLIST, then applying them and viewing the result in the note](https://raw.githubusercontent.com/yaroxy/obsidian-patch/8adc9779e4920614f62448f61dab90f858cc0e59/docs/images/callout-type-appearance.gif)
 
 For the earlier question about phones, I tested this movie list on Linux desktop with Obsidian 1.15.1. I haven’t verified table conversion on iOS or Android yet.
 
