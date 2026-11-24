@@ -10,8 +10,8 @@ import {
   type IconizeImport,
   type IconSettings,
 } from "./icons/config";
-import { IconPicker, type IconChoice } from "./icons/picker";
-import { loadSimpleIcons, type SimpleIconSet } from "./icons/simple-icons";
+import { IconPicker, IconSearch, type IconChoice, type IconCatalog } from "./icons/picker";
+import { loadSimpleIcons, readSimpleIconPack, writeSimpleIconPack, type SimpleIconSet } from "./icons/simple-icons";
 import { watchExplorerIcons, type ExplorerIcons, type IconAppearance } from "./icons/explorer";
 import { iconColorCss } from "./icons/color";
 
@@ -25,6 +25,8 @@ export type SimpleIconsStatus =
 
 export interface PatchIconsController {
   setEnabled(enabled: boolean): Promise<void>;
+  chooseCalloutIcon(select: (choice: IconChoice) => void): void;
+  saveUsedIcons(choice?: IconChoice): Promise<void>;
   simpleIconsStatus(): SimpleIconsStatus;
   /** Loads the newest Simple Icons and refreshes the icons in use. */
   updateSimpleIcons(): Promise<SimpleIconsStatus>;
@@ -47,10 +49,12 @@ export function registerIcons(
   plugin: Plugin,
   initial: IconSettings,
   save: (settings: IconSettings) => Promise<void>,
+  calloutIcons: () => string[] = () => [],
 ): PatchIconsController {
   const { app } = plugin;
   let settings = parseIconSettings(initial);
-  let simpleIcons: Promise<SimpleIconSet> | undefined;
+  let catalog: Promise<SimpleIconSet | undefined> | undefined;
+  let installing: Promise<SimpleIconsStatus> | undefined;
   let status: SimpleIconsStatus = { status: "idle" };
   let active = true;
   let iconImages = new Map<string, IconAppearance>();
@@ -88,15 +92,22 @@ export function registerIcons(
 
   const update = async (next: IconSettings): Promise<void> => {
     if (!active) return;
+    const previous = settings;
     settings = next;
     render();
-    await save(next);
+    try { await save(next); }
+    catch (error) {
+      if (settings === next) { settings = previous; render(); }
+      throw error;
+    }
   };
 
-  /** The SVG of each Simple Icon in `paths`, from `set` when it is loaded. */
+  const usedIds = (paths: Record<string, IconId>): Set<IconId> => new Set([...Object.values(paths), ...calloutIcons()]);
+
+  /** Only assigned brand graphics also travel with the vault settings. */
   const usedSvgs = (paths: Record<string, IconId>, set?: SimpleIconSet, chosen?: IconChoice): Record<IconId, string> => {
     const svgs: Record<IconId, string> = {};
-    for (const id of new Set(Object.values(paths))) {
+    for (const id of usedIds(paths)) {
       const icon = parseIconId(id);
       if (icon?.source !== "simple-icons") continue;
       const svg = set?.svg(icon.name) ?? (chosen?.id === id ? chosen.svg() : undefined) ?? settings.svgs[id];
@@ -105,12 +116,12 @@ export function registerIcons(
     return svgs;
   };
 
-  const lacksSvgs = (): boolean => Object.values(settings.paths)
+  const lacksSvgs = (): boolean => [...usedIds(settings.paths)]
     .some((id) => parseIconId(id)?.source === "simple-icons" && settings.svgs[id] === undefined);
 
   const usedBrandColors = (paths: Record<string, IconId>, set?: SimpleIconSet): Record<IconId, string> => {
     const colors: Record<IconId, string> = {};
-    for (const id of new Set(Object.values(paths))) {
+    for (const id of usedIds(paths)) {
       const icon = parseIconId(id);
       if (icon?.source !== "simple-icons") continue;
       const color = set?.color(icon.name) ?? settings.brandColors[id];
@@ -119,30 +130,47 @@ export function registerIcons(
     return colors;
   };
 
-  const loadSet = (force = false): Promise<SimpleIconSet> => {
-    if (simpleIcons !== undefined && (!force || status.status === "loading")) return simpleIcons;
+  const packPath = (id: string): string => normalizePath(`${plugin.manifest.dir ?? app.vault.configDir + "/plugins/" + plugin.manifest.id}/simple-icons-${id}.json.gz`);
+  const installedSet = (): Promise<SimpleIconSet | undefined> => {
+    const pack = settings.installedPack;
+    if (!pack) return Promise.resolve(undefined);
+    if (!catalog) {
+      const read = readSimpleIconPack(app.vault.adapter, packPath(pack.id));
+      catalog = read;
+      void read.catch(() => { if (catalog === read) catalog = undefined; });
+    }
+    return catalog;
+  };
+
+  const refreshUsed = async (): Promise<void> => {
+    const set = await installedSet();
+    if (!set || !active) return;
+    const svgs = usedSvgs(settings.paths, set);
+    const brandColors = usedBrandColors(settings.paths, set);
+    if (!sameEntries(svgs, settings.svgs) || !sameEntries(brandColors, settings.brandColors)) await update({ ...settings, svgs, brandColors });
+  };
+
+  const install = async (): Promise<SimpleIconsStatus> => {
     status = { status: "loading" };
-    const loading = loadSimpleIcons(settings.cachedLatest, (cachedLatest) => {
-      if (active && settings.cachedLatest !== cachedLatest) void update({ ...settings, cachedLatest });
-    });
-    simpleIcons = loading;
-    loading.then(
-      (set) => {
-        if (!active) return;
-        status = { status: "ready", version: set.version };
-        const svgs = usedSvgs(settings.paths, set);
-        const brandColors = usedBrandColors(settings.paths, set);
-        if (!sameEntries(svgs, settings.svgs) || !sameEntries(brandColors, settings.brandColors)) void update({ ...settings, svgs, brandColors });
-      },
-      (error: unknown) => {
-        if (!active) return;
-        status = { status: "error", message: describeError(error) };
-        console.warn("Patches: could not load Simple Icons from jsDelivr", error);
-        // A later picker or update retries instead of reusing the failure.
-        if (simpleIcons === loading) simpleIcons = undefined;
-      },
-    );
-    return loading;
+    const id = crypto.randomUUID();
+    const path = packPath(id);
+    try {
+      const set = await loadSimpleIcons(settings.cachedLatest);
+      if (!active) return status;
+      if (!set.names.length) throw new Error("The downloaded catalog contains no icons");
+      await writeSimpleIconPack(app.vault.adapter, path, set);
+      if (!active) { await app.vault.adapter.remove(path); return status; }
+      const previous = settings.installedPack;
+      await update({ ...settings, installedPack: { id, version: set.version }, cachedLatest: set.packageVersion,
+        svgs: usedSvgs(settings.paths, set), brandColors: usedBrandColors(settings.paths, set) });
+      catalog = Promise.resolve(set);
+      status = { status: "ready", version: set.version };
+      if (previous) await app.vault.adapter.remove(packPath(previous.id)).catch(() => undefined);
+    } catch (error) {
+      status = { status: "error", message: describeError(error) };
+      await app.vault.adapter.remove(path).catch(() => undefined);
+    }
+    return status;
   };
 
   const lucideChoice = (name: string): IconChoice => ({
@@ -157,18 +185,24 @@ export function registerIcons(
     .map((id) => id.slice(LUCIDE_PREFIX.length))
     .sort();
 
-  const choose = (paths: string[]): void => {
-    const recent = [...new Set(Object.values(settings.paths))].flatMap((id): IconChoice[] => {
+  const choices = (): IconCatalog => {
+    const recent = [...usedIds(settings.paths)].flatMap((id): IconChoice[] => {
       const icon = parseIconId(id);
       if (icon === undefined) return [];
       return icon.source === "lucide"
         ? [lucideChoice(icon.name)]
         : [{ id, source: icon.source, name: icon.name, brandColor: settings.brandColors[id], svg: () => settings.svgs[id] }];
     });
+    return { lucide: lucideNames().map(lucideChoice), recent,
+      installed: installing ? installing.then(installedSet) : installedSet() };
+  };
+
+  const choose = (paths: string[]): void => {
+    const catalog = choices();
     const ids = new Set(paths.map(path => settings.paths[path]));
     const colors = new Set(paths.map(path => settings.colors[path]));
-    new IconPicker(app, lucideNames().map(lucideChoice), recent, loadSet(), {
-      current: ids.size === 1 ? recent.find(choice => choice.id === settings.paths[paths[0]!]) : undefined,
+    new IconPicker(app, catalog, {
+      current: ids.size === 1 ? catalog.recent.find(choice => choice.id === settings.paths[paths[0]!]) : undefined,
       color: colors.size === 1 ? settings.colors[paths[0]!] : undefined,
       mixedColors: colors.size > 1,
       count: paths.length,
@@ -247,19 +281,30 @@ export function registerIcons(
   });
   render();
   syncExplorers();
-  // Icons chosen before an offline import have no SVG yet; fetch them once.
+  // Recover missing assignment snapshots from the installed pack without going online.
   app.workspace.onLayoutReady(() => {
     if (!active) return;
     syncExplorers();
-    if (lacksSvgs()) void loadSet();
+    const reminderKey = "patches-simple-icons-install-tip";
+    if (!settings.installedPack && !app.loadLocalStorage(reminderKey)) {
+      app.saveLocalStorage(reminderKey, true);
+      new Notice("Patches includes Lucide icons. For optional brand logos, choose Settings → Patches → Patch Icons → Simple Icons → Install.", 10000);
+    }
+    if (lacksSvgs()) void refreshUsed().catch(error => console.warn("Patches: could not read installed Simple Icons", error));
   });
 
   return {
     setEnabled: (enabled) => update({ ...settings, enabled }),
-    simpleIconsStatus: () => status,
-    async updateSimpleIcons() {
-      await loadSet(true).catch(() => undefined);
-      return status;
+    chooseCalloutIcon: select => new IconSearch(app, choices(), select).open(),
+    saveUsedIcons: async choice => {
+      const brandColors = usedBrandColors(settings.paths);
+      if (choice?.brandColor) brandColors[choice.id] = choice.brandColor;
+      await update({ ...settings, svgs: usedSvgs(settings.paths, undefined, choice), brandColors });
+    },
+    simpleIconsStatus: () => status.status === "idle" && settings.installedPack ? { status: "ready", version: settings.installedPack.version } : status,
+    updateSimpleIcons() {
+      installing ??= install().finally(() => { installing = undefined; });
+      return installing;
     },
     async countIconizeIcons() {
       const data = await readIconize().catch(() => undefined);
@@ -289,9 +334,8 @@ export function registerIcons(
         ` Skipped ${skipped.length}: ${skipped.map(({ path, icon }) => `${icon} (${path})`).join(", ")}.`;
       new Notice(`Imported ${count} icons from Iconize.${skippedText} Disable Iconize so icons are not shown twice.`, 10_000);
       if (lacksSvgs()) {
-        loadSet().catch((error: unknown) => new Notice(
-          `Simple Icons could not be loaded; their icons appear once they can be: ${describeError(error)}`,
-        ));
+        if (!settings.installedPack) new Notice("Select Install under Patch Icons → Simple Icons to download the missing brand icons.");
+        else await refreshUsed().catch(error => new Notice(`Could not read the installed icons: ${describeError(error)}`));
       }
     },
     missingPaths: () => Object.keys(settings.paths).filter((path) => app.vault.getAbstractFileByPath(path) === null),

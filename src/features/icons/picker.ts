@@ -1,7 +1,8 @@
 import { prepareFuzzySearch, renderResults, Scope, SuggestModal, type App, type SearchResult } from "obsidian";
 import { svgUrl, type IconId, type IconSource } from "./config";
 import { type SimpleIconSet } from "./simple-icons";
-import { ICON_PALETTE, iconColorCss, parseIconColor, type IconColor } from "./color";
+import { iconColorCss, type IconColor } from "./color";
+import { IconColorControls } from "./color-controls";
 
 export interface IconChoice {
   id: IconId;
@@ -28,97 +29,44 @@ interface IconSuggestion {
 
 const SOURCE_NAMES: Record<IconSource, string> = { lucide: "Lucide", "simple-icons": "Simple Icons" };
 
-/**
- * Lists Lucide icons at once and adds Simple Icons when the set has loaded,
- * so the picker opens instantly and still works offline.
- */
-export class IconPicker extends SuggestModal<IconSuggestion> {
+export interface IconCatalog {
+  lucide: IconChoice[];
+  recent: IconChoice[];
+  installed: Promise<SimpleIconSet | undefined>;
+}
+
+/** Search the shared local catalog. Selecting a callout icon returns it to the appearance draft. */
+export class IconSearch extends SuggestModal<IconSuggestion> {
   private choices: IconChoice[];
-  private readonly statusEl: HTMLElement;
-  private readonly previewEl: HTMLElement;
-  private readonly previewLabel: HTMLElement;
-  private readonly brandButton: HTMLButtonElement;
-  private readonly applyButton: HTMLButtonElement;
-  private readonly colorButtons = new Map<IconColor | undefined, HTMLButtonElement>();
-  private readonly customInput: HTMLInputElement;
-  private selected?: IconChoice;
-  private color?: IconColor;
-  private colorTouched = false;
+  protected readonly statusEl: HTMLElement;
   private closed = false;
 
-  constructor(
-    app: App,
-    lucide: IconChoice[],
-    private readonly recent: IconChoice[],
-    simpleIcons: Promise<SimpleIconSet>,
-    private readonly options: IconPickerOptions,
-  ) {
+  constructor(app: App, private readonly catalog: IconCatalog, private readonly pick?: (choice: IconChoice) => void) {
     super(app);
-    this.choices = lucide;
-    this.selected = options.current;
-    this.color = options.color ?? (options.count === 1 ? "text" : undefined);
+    const { lucide, recent } = catalog;
+    this.choices = [...lucide, ...recent.filter(choice => choice.source === "simple-icons")];
     this.modalEl.addClass("obsidian-patch-icon-picker");
     this.resultContainerEl.addClass("obsidian-patch-icon-results");
     this.limit = 200;
     this.setPlaceholder("Search Lucide and Simple Icons…");
-    this.statusEl = this.modalEl.createDiv({ cls: "obsidian-patch-icon-picker-status", text: "Loading Simple Icons…" });
-    const controls = this.modalEl.createDiv({ cls: "obsidian-patch-icon-controls" });
-    const preview = controls.createDiv({ cls: "obsidian-patch-icon-selection" });
-    this.previewEl = preview.createSpan({ cls: "obsidian-patch-icon-preview" });
-    this.previewLabel = preview.createSpan();
-    const colors = controls.createDiv({ cls: "obsidian-patch-icon-colors", attr: { "aria-label": "Icon color" } });
-    const addColor = (color: IconColor | undefined, label: string): HTMLButtonElement => {
-      const button = colors.createEl("button", { text: label, attr: { type: "button", "aria-pressed": "false" } });
-      button.addEventListener("click", () => { this.color = color; this.colorTouched = true; this.refreshPreview(); });
-      this.colorButtons.set(color, button);
-      return button;
-    };
-    if (options.mixedColors) addColor(undefined, "Keep colors");
-    addColor("text", "Follow text");
-    this.brandButton = addColor("brand", "Brand color");
-    for (const color of ICON_PALETTE) {
-      const label = color[0]!.toUpperCase() + color.slice(1);
-      const button = addColor(color, "");
-      button.setAttribute("aria-label", label);
-      button.addClass("obsidian-patch-icon-swatch");
-      button.style.setProperty("--obsidian-patch-icon-swatch", `var(--color-${color})`);
-    }
-    const custom = controls.createEl("label", { cls: "obsidian-patch-icon-custom", text: "Custom color" });
-    this.customInput = custom.createEl("input", { type: "color", attr: { "aria-label": "Custom icon color" } });
-    this.customInput.addEventListener("input", () => {
-      this.color = parseIconColor(this.customInput.value);
-      this.colorTouched = true;
-      this.refreshPreview();
-    });
-    const actions = controls.createDiv({ cls: "modal-button-container" });
-    actions.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
-    this.applyButton = actions.createEl("button", { text: "Apply", cls: "mod-cta" });
-    this.applyButton.addEventListener("click", () => { void this.apply(); });
-    // Let footer controls own Enter; search and navigation retain SuggestModal's scope.
-    this.scope = new Scope(this.scope);
-    this.scope.register(null, null, (event) => {
-      const focused = controls.ownerDocument.activeElement;
-      if (event.key !== "Enter" || event.isComposing || !focused || !controls.contains(focused)) return;
-      const button = focused.closest("button");
-      if (button) { button.click(); return false; }
-      return true;
-    });
-    this.refreshPreview();
-    simpleIcons.then(
+    this.statusEl = this.modalEl.createDiv({ cls: "obsidian-patch-icon-picker-status", text: "Reading installed icons…" });
+    catalog.installed.then(
       (set) => {
         if (this.closed) return;
-        this.choices = [...lucide, ...set.names.map((name) => simpleIconChoice(set, name))];
-        this.statusEl.setText(`${lucide.length} Lucide icons and ${set.names.length} Simple Icons ${set.version}.`);
-        if (this.selected?.source === "simple-icons" && set.svg(this.selected.name)) {
-          const fresh = simpleIconChoice(set, this.selected.name);
-          this.selected = { ...fresh, brandColor: fresh.brandColor ?? this.selected.brandColor };
+        if (!set) {
+          this.statusEl.setText("For more brand logos, choose Settings → Patches → Patch Icons → Simple Icons → Install.");
+          return;
         }
-        this.refreshPreview();
+        const installed = set.names.map(name => simpleIconChoice(set, name));
+        const ids = new Set(installed.map(icon => icon.id));
+        this.choices = [...this.choices.filter(icon => !ids.has(icon.id)), ...installed];
+        this.statusEl.setText(`${lucide.length} Lucide icons and ${set.names.length} Simple Icons ${set.version}.`);
+        this.onCatalogLoaded(set);
         this.inputEl.dispatchEvent(new this.inputEl.ownerDocument.defaultView!.Event("input"));
       },
       (error: unknown) => {
         if (this.closed) return;
-        this.statusEl.setText(`Simple Icons could not be loaded, so only Lucide icons are listed: ${describeError(error)}`);
+        this.statusEl.setText(`Simple Icons could not be loaded, showing built-in and saved icons: ${describeError(error)}`);
       },
     );
   }
@@ -126,7 +74,7 @@ export class IconPicker extends SuggestModal<IconSuggestion> {
   override getSuggestions(query: string): IconSuggestion[] {
     const trimmed = query.trim();
     this.emptyStateText = trimmed === "" ? "Type to search icons." : "No icons found.";
-    if (trimmed === "") return this.recent.map((choice) => ({ choice: this.choices.find(item => item.id === choice.id) ?? choice }));
+    if (trimmed === "") return this.catalog.recent.map((choice) => ({ choice: this.choices.find(item => item.id === choice.id) ?? choice }));
     const search = prepareFuzzySearch(trimmed);
     const suggestions: Array<Required<IconSuggestion>> = [];
     for (const choice of this.choices) {
@@ -149,6 +97,57 @@ export class IconPicker extends SuggestModal<IconSuggestion> {
     el.createSpan({ cls: "obsidian-patch-icon-source", text: SOURCE_NAMES[choice.source] });
   }
 
+  override onChooseSuggestion({ choice }: IconSuggestion): void { this.pick?.(choice); }
+  protected onCatalogLoaded(_set: SimpleIconSet): void {}
+  override onClose(): void { this.closed = true; super.onClose(); }
+}
+
+export class IconPicker extends IconSearch {
+  private readonly previewEl: HTMLElement;
+  private readonly previewLabel: HTMLElement;
+  private readonly applyButton: HTMLButtonElement;
+  private readonly palette: IconColorControls;
+  private selected?: IconChoice;
+  private color?: IconColor;
+  private colorTouched = false;
+
+  constructor(app: App, catalog: IconCatalog, private readonly options: IconPickerOptions) {
+    super(app, catalog);
+    this.selected = options.current;
+    this.color = options.color ?? (options.count === 1 ? "text" : undefined);
+    const controls = this.modalEl.createDiv({ cls: "obsidian-patch-icon-controls" });
+    const preview = controls.createDiv({ cls: "obsidian-patch-icon-selection" });
+    this.previewEl = preview.createSpan({ cls: "obsidian-patch-icon-preview" });
+    this.previewLabel = preview.createSpan();
+    this.palette = new IconColorControls(controls, "Icon color", "Follow text", options.mixedColors, color => {
+      this.color = color;
+      this.colorTouched = true;
+      this.refreshPreview();
+    });
+    const actions = controls.createDiv({ cls: "modal-button-container" });
+    actions.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
+    this.applyButton = actions.createEl("button", { text: "Apply", cls: "mod-cta" });
+    this.applyButton.addEventListener("click", () => { void this.apply(); });
+    // Let footer controls own Enter; search and navigation retain SuggestModal's scope.
+    this.scope = new Scope(this.scope);
+    this.scope.register(null, null, (event) => {
+      const focused = controls.ownerDocument.activeElement;
+      if (event.key !== "Enter" || event.isComposing || !focused || !controls.contains(focused)) return;
+      const button = focused.closest("button");
+      if (button) { button.click(); return false; }
+      return true;
+    });
+    this.refreshPreview();
+  }
+
+  protected override onCatalogLoaded(set: SimpleIconSet): void {
+    if (this.selected?.source === "simple-icons" && set.svg(this.selected.name)) {
+      const fresh = simpleIconChoice(set, this.selected.name);
+      this.selected = { ...fresh, brandColor: fresh.brandColor ?? this.selected.brandColor };
+      this.refreshPreview();
+    }
+  }
+
   override selectSuggestion(value: IconSuggestion): void {
     // SuggestModal normally closes after a selection; keep it open for color and Apply.
     this.onChooseSuggestion(value);
@@ -161,8 +160,6 @@ export class IconPicker extends SuggestModal<IconSuggestion> {
     this.refreshPreview();
   }
 
-  override onClose(): void { this.closed = true; super.onClose(); }
-
   private refreshPreview(): void {
     const svg = this.selected?.svg();
     if (svg) this.previewEl.style.setProperty("--obsidian-patch-icon", svgUrl(svg));
@@ -172,9 +169,7 @@ export class IconPicker extends SuggestModal<IconSuggestion> {
     else this.previewEl.style.removeProperty("--obsidian-patch-icon-color");
     this.previewLabel.setText(this.selected ? `${this.selected.name} · ${SOURCE_NAMES[this.selected.source]}${this.selected.source === "simple-icons" && !this.selected.brandColor ? " · Brand color unavailable" : ""}`
       : this.options.allHaveIcons ? `Keep existing icons (${this.options.count} items)` : "Choose an icon");
-    this.brandButton.disabled = !this.selected?.brandColor;
-    for (const [value, button] of this.colorButtons) button.setAttribute("aria-pressed", String(value === this.color));
-    if (this.color?.startsWith("#")) this.customInput.value = this.color;
+    this.palette.update(this.color, this.selected?.brandColor);
     this.applyButton.disabled = !this.selected && !this.options.allHaveIcons;
   }
 

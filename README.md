@@ -50,6 +50,12 @@ The groups below match **Settings → Patches**.
 - **PDF Export**
   - [Add PDF navigation](https://yaroxy.github.io/obsidian-patch/features/pdf-export.html) with bookmarks and links to headings in the same note on desktop.
 
+### In development
+
+- Desktop vaults inside a Git working tree automatically show change markers in visible Markdown editors. Click a marker or run **View Git diff for this note** to compare the last commit with your current edits. **Toggle Git change markers for this vault** controls the gutter across the vault. [Git diff guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git)
+- Install the shared **Simple Icons** catalog through **Patch Icons → Simple Icons → Install** to choose brand logos offline for callouts, files and folders. The wider Callout appearance panel includes color swatches and uses the Obsidian interface font for type suggestions. [Callout appearance](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
+- The HTML table code font field suggests installed families on supported devices. [Inline code font](https://yaroxy.github.io/obsidian-patch/features/tables.html#inline-code-font)
+
 ## Installation
 
 Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Directory](https://community.obsidian.md/plugins/patches).
@@ -78,7 +84,7 @@ Other notes keep their global width. See [note properties](https://yaroxy.github
 
 ## Network and privacy
 
-The Community build runs its bundled Mermaid code locally. The icon picker may contact **jsDelivr** to resolve and download Simple Icons graphic data and matching brand-color JSON. Already-used graphics and available brand colors are cached locally. Missing cached graphics can trigger a download. Icon search text, note contents, and vault file names are not sent in these requests.
+The Community build runs its bundled Mermaid code locally. Version 0.6.0 can contact **jsDelivr** when opening the icon picker, updating Simple Icons or filling missing cached graphics. In the development build, only choosing **Install** or **Update** for Simple Icons downloads the catalog and matching brand-color JSON. Search terms, note contents and file names stay on the device. The desktop Git diff reads local Git objects.
 
 The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 
@@ -120,6 +126,8 @@ Official release testing covers the pinned version. Other versions can change di
 ## Acknowledgments
 
 **Line Width** follows the ideas of [Editor Width Slider](https://github.com/MugishoMp/obsidian-editor-width-slider) by MugishoMp (MIT), and **Patch Icons** follows [Iconize](https://github.com/FlorianWoelki/obsidian-iconize) by Florian Woelki (MIT). Their implementations are written for this plugin; the Iconize importer reads its settings format.
+
+The desktop note comparison uses [jsdiff](https://github.com/kpdecker/jsdiff) (BSD-3-Clause).
 
 Icons come from [Lucide](https://lucide.dev/) (ISC), [Simple Icons](https://simpleicons.org/) (CC0 1.0), and the [Iconify](https://iconify.design/) packs used by Mermaid. Brand icons are trademarks of their respective owners.
 

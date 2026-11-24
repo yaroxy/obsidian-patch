@@ -12,9 +12,9 @@ const bundled = await build({
       export const getIcon = name => ({outerHTML:'<svg data-icon="'+name+'"><path d="M0 0h24v24H0z"/></svg>'});
       export const getIconIds = () => ['lucide-book-open'];
       export const normalizePath = path => path;
-      export class Notice {}
-    ` : path.endsWith("picker") ? "export class IconPicker {}"
-      : 'export function loadSimpleIcons() { return globalThis.__patchesTestLoadIcons(); }' }));
+      export class Notice { constructor(message) { globalThis.__patchesNotices?.push(message); } }
+    ` : path.endsWith("picker") ? "export class IconSearch {} export class IconPicker {}"
+      : 'export function loadSimpleIcons() { return globalThis.__patchesTestLoadIcons(); } export async function writeSimpleIconPack(adapter, path, set) { await adapter.writeBinary(path, set); } export function readSimpleIconPack(adapter, path) { return adapter.readBinary(path); }' }));
   } }],
 });
 const { registerIcons } = await import(`data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].contents).toString("base64")}`);
@@ -106,10 +106,18 @@ function fixture({ documents = [document()], ready = true } = {}) {
   const leaves = documents.map(doc => { const root = new Element(doc); doc.body.append(root); return { view: { containerEl: root } }; });
   const workspace = { ...emitter(), getLeavesOfType(type) { assert.equal(type, "file-explorer"); return leaves; }, onLayoutReady(callback) { this.ready = callback; if (ready) callback(); } };
   const cleanups = [], saved = [], vault = { ...emitter(), getFiles() { throw new Error("Vault enumeration is unnecessary"); }, getMarkdownFiles() { throw new Error("Vault enumeration is unnecessary"); } };
-  const plugin = { app: { workspace, vault }, registerEvent(fn) { cleanups.push(fn); }, register(fn) { cleanups.push(fn); } };
+  const packs = new Map();
+  vault.adapter = {
+    exists: async path => packs.has(path), writeBinary: async (path, data) => { packs.set(path, data); },
+    readBinary: async path => packs.get(path), remove: async path => packs.delete(path),
+  };
+  const local = new Map();
+  const plugin = { manifest: { id: "patches", dir: ".obsidian/plugins/patches" }, app: { workspace, vault,
+    loadLocalStorage: key => local.get(key), saveLocalStorage: (key, value) => local.set(key, value),
+  }, registerEvent(fn) { cleanups.push(fn); }, register(fn) { cleanups.push(fn); } };
   globalThis.document = documents[0];
-  return { documents, leaves, workspace, vault, saved,
-    start(paths, svgs = { "simple-icons:fixture": CACHED_SVG }, extra = {}) { return registerIcons(plugin, { enabled: true, paths, svgs, ...extra }, async settings => { saved.push(settings); }); },
+  return { documents, leaves, workspace, vault, saved, packs,
+    start(paths, svgs = { "simple-icons:fixture": CACHED_SVG }, extra = {}, calloutIds) { return registerIcons(plugin, { enabled: true, paths, svgs, ...extra }, async settings => { saved.push(settings); }, calloutIds); },
     unload() { for (const cleanup of cleanups) cleanup(); },
   };
 }
@@ -118,6 +126,21 @@ function painted(element, expected) {
   if (expected) assert.match(element.style.getPropertyValue(PROPERTY), /^url\("data:image\/svg\+xml,%3Csvg/);
   else assert.equal(element.style.getPropertyValue(PROPERTY), "");
 }
+
+test("the optional install tip appears once per vault/device and skips an installed catalog", t => {
+  const notices = globalThis.__patchesNotices = [];
+  t.after(() => { delete globalThis.__patchesNotices; });
+  const fresh = fixture();
+  fresh.start({});
+  fresh.unload();
+  fresh.start({});
+  fresh.unload();
+  const installed = fixture();
+  installed.start({}, {}, { installedPack: { id: "00000000-0000-0000-0000-000000000001", version: "16.38.1" } });
+  installed.unload();
+  assert.equal(notices.length, 1);
+  assert.match(notices[0], /optional brand logos.*Simple Icons → Install/);
+});
 
 test("updates share an in-flight icon load and can refresh again after it finishes", async t => {
   let loads = 0;
@@ -130,10 +153,30 @@ test("updates share an in-flight icon load and can refresh again after it finish
   const first = controller.updateSimpleIcons();
   const second = controller.updateSimpleIcons();
   assert.equal(loads, 1);
-  pending.resolve({ version: "1", svg: () => CACHED_SVG, color: () => undefined });
+  pending.resolve({ version: "1", names: ["fixture"], packageVersion: "1.2.3", svg: () => CACHED_SVG, color: () => undefined });
   for (const status of await Promise.all([first, second])) assert.deepEqual(status, { status: "ready", version: "1" });
   await controller.updateSimpleIcons();
   assert.equal(loads, 2);
+  assert.equal(f.packs.size, 1);
+  const previous = f.saved.at(-1).installedPack.id;
+  globalThis.__patchesTestLoadIcons = () => Promise.reject(new Error("Offline"));
+  assert.equal((await controller.updateSimpleIcons()).status, "error");
+  assert.equal(f.saved.at(-1).installedPack.id, previous);
+  assert.equal(f.packs.size, 1);
+});
+
+test("clearing file and callout assignments retains each shared brand until its last user goes away", async () => {
+  const f = fixture(), id = "simple-icons:fixture";
+  let ids = [id];
+  const controller = f.start({ "Brand.md": id }, { [id]: CACHED_SVG }, { brandColors: { [id]: "#123456" } }, () => ids);
+  await controller.removeIcons(["Brand.md"]);
+  assert.equal(f.saved.at(-1).svgs[id], CACHED_SVG);
+  assert.equal(f.saved.at(-1).brandColors[id], "#123456");
+  ids = [];
+  await controller.saveUsedIcons();
+  assert.deepEqual(f.saved.at(-1).svgs, {});
+  assert.deepEqual(f.saved.at(-1).brandColors, {});
+  f.unload();
 });
 
 test("explorer rows receive image masks without creating stylesheets or inline SVG", async () => {

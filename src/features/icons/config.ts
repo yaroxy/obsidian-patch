@@ -16,6 +16,7 @@ export interface IconSettings {
   svgs: Record<IconId, string>;
   /** The @iconify-json/simple-icons version that `latest` last resolved to. */
   cachedLatest?: string;
+  installedPack?: { id: string; version: string };
 }
 
 export interface IconizeImport {
@@ -28,6 +29,7 @@ export const DEFAULT_ICON_SETTINGS: IconSettings = { enabled: true, paths: {}, c
 
 export function parseIconSettings(data: unknown): IconSettings {
   const value = isRecord(data) ? data : {};
+  const pack = value.installedPack;
   const paths = stringEntries(value.paths, (path, id) => path !== "" && parseIconId(id) !== undefined);
   const colors: Record<string, IconColor> = {};
   for (const [path, color] of Object.entries(isRecord(value.colors) ? value.colors : {})) {
@@ -40,7 +42,9 @@ export function parseIconSettings(data: unknown): IconSettings {
     colors,
     brandColors: stringEntries(value.brandColors, (id, hex) => parseIconId(id)?.source === "simple-icons" && /^#[0-9a-f]{6}$/i.test(hex)),
     svgs: stringEntries(value.svgs, (id, svg) => parseIconId(id)?.source === "simple-icons" && svg.startsWith("<svg")),
-    cachedLatest: typeof value.cachedLatest === "string" ? value.cachedLatest : undefined,
+    cachedLatest: typeof value.cachedLatest === "string" && /^\d+\.\d+\.\d+$/.test(value.cachedLatest) ? value.cachedLatest : undefined,
+    ...(isRecord(pack) && typeof pack.id === "string" && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(pack.id)
+      && typeof pack.version === "string" ? { installedPack: { id: pack.id, version: pack.version } } : {}),
   };
 }
 

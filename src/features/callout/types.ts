@@ -203,5 +203,7 @@ export function filterCalloutCatalog(catalog: CalloutTypeCatalog, query: string)
 
 /** Renders a Lucide icon safely, skipping raw inline SVG theme values that `setIcon` cannot accept. */
 export function renderChipIcon(el: HTMLElement, icon: string): void {
-  if (icon && !icon.trimStart().startsWith("<")) setIcon(el, icon);
+  if (icon.startsWith('url("data:image/svg+xml,')) {
+    el.createSpan({ cls: "obsidian-patch-icon-preview" }).style.setProperty("--obsidian-patch-icon", icon);
+  } else if (icon && !icon.trimStart().startsWith("<")) setIcon(el, icon);
 }

@@ -80,6 +80,8 @@ If the source table changes while the editor is open, Patches 0.6.0 keeps your d
 
 In Patches 0.6.0 or later, open **Settings → Patches → HTML Tables → Inline code font** and enter an installed family name such as `JetBrains Mono`. Press Enter or leave the field to apply it to inline code in standalone HTML table cells in Reading View, Live Preview and the visual editor. Clear the field to use the theme font again. The font preference is saved in this vault. The font must be installed on each device.
 
+The development build suggests installed font families as you type on devices that expose their font list. Select a family to apply it immediately and see a sample. If the device cannot list its fonts, type the installed family name. Reading View, Live Preview, and the visual editor use it for inline `<code>` in HTML table cells. Markdown pipe tables use the theme’s code font.
+
 ## Related reference
 
 [Table commands](../reference/commands.md) · [Troubleshooting table conversion](../troubleshooting.md#table-conversion-is-unavailable)

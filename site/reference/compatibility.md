@@ -21,7 +21,7 @@ Explorer icons apply to files and folders in the file explorer, independently of
 
 ## Desktop-specific features
 
-The line-width status bar control and enhanced native PDF export are desktop features. Video playback also depends on the platform’s available codecs.
+The line-width status bar control and enhanced native PDF export are desktop features. The development [note Git diff](commands.md#compare-a-note-with-git) requires a desktop vault rooted in a Git working tree and a local Git executable. Video playback also depends on the platform’s available codecs.
 
 ## Appearance and exported documents
 

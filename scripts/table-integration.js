@@ -76,9 +76,27 @@
     const code = codeElement(root, label);
     return code && code.ownerDocument.defaultView.getComputedStyle(code).fontFamily;
   };
+  async function glyphFonts(element) {
+    // The CSS stack can name a missing font. Ask Chromium which family actually painted these glyphs.
+    const client = require("electron").remote.getCurrentWebContents().debugger;
+    const attached = client.isAttached();
+    if (!attached) client.attach("1.3");
+    element.setAttribute("data-patches-font-test", "active");
+    try {
+      await client.sendCommand("DOM.enable");
+      await client.sendCommand("CSS.enable");
+      const { root } = await client.sendCommand("DOM.getDocument");
+      const { nodeId } = await client.sendCommand("DOM.querySelector", { nodeId: root.nodeId, selector: '[data-patches-font-test="active"]' });
+      const { fonts } = await client.sendCommand("CSS.getPlatformFontsForNode", { nodeId });
+      return fonts.filter(font => font.glyphCount > 0).map(font => font.familyName);
+    } finally {
+      element.removeAttribute("data-patches-font-test");
+      if (!attached) client.detach();
+    }
+  }
   let originalFont;
   const selectedFont = () => app.plugins.plugins.patches.settings.appearance.tableCodeFont;
-  async function setTableFont(value) {
+  async function setTableFont(value, chooseSuggestion = false) {
     app.setting.open();
     try {
       app.setting.openTabById("patches");
@@ -95,8 +113,13 @@
       settingsWin.focus();
       input.focus();
       assert(settingsDoc.activeElement === input, "The settings window failed to focus the font field");
-      input.value = value;
+      input.value = chooseSuggestion ? value.slice(0, Math.max(1, value.length - 2)) : value;
       input.dispatchEvent(new settingsWin.Event("input", { bubbles: true }));
+      if (chooseSuggestion) {
+        const match = () => [...settingsDoc.querySelectorAll(".suggestion-item")].find(el => el.textContent === value);
+        await until(match, "a partial font name completes to the installed family");
+        match().click();
+      }
       input.blur();
       assert(selectedFont() === value, `Font field blur did not commit: field=${input.value}, setting=${selectedFont()}`);
     } finally { app.setting.close(); }
@@ -223,10 +246,12 @@
     leaf.view.editor.setCursor({ line: 0, ch: 0 });
     await until(() => leaf.view.contentEl.querySelector(".cm-html-embed > table"), "Live Preview renders the table as a widget");
     const widget = () => leaf.view.contentEl.querySelector(".cm-html-embed > table");
-    const liveFont = codeFont(widget(), "su")?.includes("DejaVu Sans Mono") ? "Courier New" : "DejaVu Sans Mono";
-    await setTableFont(liveFont);
+    const available = new Set((await win.queryLocalFonts()).map(font => font.family));
+    const family = ["JetBrains Mono", "DejaVu Sans Mono", "Menlo", "Consolas", ...available].find(name => available.has(name));
+    assert(family, "The desktop returned no installed fonts");
+    await setTableFont(family, true);
     app.workspace.setActiveLeaf(leaf, { focus: true });
-    await until(() => widget() && codeFont(widget(), "su")?.includes(liveFont), "changing the font in Settings updates inline code in the Live Preview widget");
+    await until(async () => widget() && (await glyphFonts(codeElement(widget(), "su"))).includes(family), `Live Preview paints HTML cell glyphs with ${family}`);
     const embed = leaf.view.contentEl.querySelector(".cm-html-embed");
     embed.querySelector("td").dispatchEvent(new win.MouseEvent("mouseover", { bubbles: true }));
     const actions = Array.from(embed.querySelectorAll(".embed-actions > *"), el => el.getAttribute("aria-label"));
@@ -324,27 +349,32 @@
     leaf.view.editor.undo();
     await until(() => leaf.view.editor.getValue() === crlf.replaceAll("\r\n", "\n"), "one undo restores the CRLF table in the editor");
 
-    const fontNote = original.replace(">す ス<", "><code>HTML code</code><").replace("| a | b |", "| `Pipe code` | b |").replace("Outro.", "`Outside code`");
+    const wrapped = '<div class="watchlist"><table><tr><td><code>Wrapped code</code></td></tr></table></div>';
+    const fontNote = original.replace(">す ス<", "><code>HTML code</code><").replace("| a | b |", "| `Pipe code` | b |").replace("Outro.", wrapped + "\n\n`Outside code`");
     leaf.view.editor.setValue(fontNote);
     await leaf.view.save();
     await reading();
     const preview = leaf.view.previewMode.containerEl;
     await until(() => codeFont(preview, "HTML code") && codeFont(preview, "Pipe code") && codeFont(preview, "Outside code"), "Reading View renders the font comparison cells");
     const pipeFont = codeFont(preview, "Pipe code"), outsideFont = codeFont(preview, "Outside code");
-    const family = codeFont(preview, "HTML code")?.includes("DejaVu Sans Mono") ? "Courier New" : "DejaVu Sans Mono";
-    await setTableFont(family);
+    await setTableFont(family, true);
     await until(() => codeFont(preview, "HTML code")?.includes(family), "Reading View applies the selected HTML table code font", () => {
       const code = codeElement(preview, "HTML code");
       return { selected: selectedFont(), computed: codeFont(preview, "HTML code"), tableParent: code?.closest("table")?.parentElement?.className,
         monospace: code && win.getComputedStyle(code).getPropertyValue("--font-monospace"),
         configuredFont: doc.body.style.getPropertyValue("--obsidian-patch-table-code-font"),
-        matchesSelector: code?.matches(":is(.obsidian-patch-table-host, .cm-html-embed, .obsidian-patch-table-grid) > table :is(th, td) code:not(pre > code)") };
+        htmlTable: code?.closest("table")?.hasClass("obsidian-patch-html-table") };
     });
     assert(codeFont(preview, "Pipe code") === pipeFont && codeFont(preview, "Outside code") === outsideFont, "The HTML table code font leaked into other Markdown");
+    await until(async () => (await glyphFonts(codeElement(preview, "HTML code"))).includes(family), `Reading View paints HTML cell glyphs with ${family}`);
+    await until(async () => {
+      const code = codeElement(preview, "Wrapped code");
+      return code && (await glyphFonts(code)).includes(family);
+    }, "Reading View also applies the chosen font to an HTML table inside a wrapper");
     await openFromReading();
-    assert(codeFont(grid(), "HTML code")?.includes(family), "Table editor ignored the selected code font");
+    await until(async () => (await glyphFonts(codeElement(grid(), "HTML code"))).includes(family), `the visual editor paints HTML cell glyphs with ${family}`);
     button("Cancel").click();
-    checks.push("Reading View and the table editor use the selected font only for inline HTML table code");
+    checks.push("The HTML font leaves Markdown pipe tables and ordinary inline code on their theme font");
   } catch (failure) {
     report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode(), hidden: doc.hidden, modal: !!modal() });
   } finally {

@@ -14,6 +14,7 @@ node scripts/test-math-format.mjs /path/to/dev-vault
 node scripts/test-mermaid.mjs /path/to/dev-vault
 node scripts/test-navigation.mjs /path/to/dev-vault
 node scripts/test-icons.mjs /path/to/dev-vault
+node scripts/test-git-diff.mjs /path/to/dev-vault
 node scripts/test-banner.mjs /path/to/dev-vault --skip-playback
 node scripts/test-runner-recovery.mjs /path/to/dev-vault
 ```
@@ -41,7 +42,7 @@ Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled v
 
 `scripts/lib/integration-runner.mjs` owns CLI selection, preflight, deployment and result polling. `scripts/lib/obsidian-session.js` runs one suite inside Obsidian and owns its temporary tab, timeout and cleanup. A suite receives that tab, a cancellable `wait`, and a shared report; it must not reuse an existing user tab or leave asynchronous work running after returning.
 
-The runner retains the newly deployed plugin build and test fixtures for inspection. The Icons suite removes its unique run folder, probe rows, and temporary popout, and restores the explorer expansion and sidebar state. The shared cleanup restores the original `data.json` bytes (or its absence), the saved sizes of the table editor, callout editor and HTML-to-Markdown preview, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
+The runner retains the newly deployed plugin build and test fixtures for inspection. The Icons suite removes its unique run folder, test catalog, probe rows and temporary popout, and restores the explorer expansion and sidebar state. The Git suite creates its baseline repository in the test output directory, removes its temporary notes and restores the vault’s line-number and note-marker preferences. The shared cleanup restores the original `data.json` bytes (or its absence), the saved sizes of the table editor, callout editor, callout appearance panel and HTML-to-Markdown preview, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
 
 Each output directory contains:
 
@@ -53,6 +54,26 @@ Each output directory contains:
 CLI errors are checked even when Obsidian exits with status zero. Assertion failures and cleanup failures both make the command fail; a cleanup error does not overwrite the original assertion. `SIGINT` and `SIGTERM` request cancellation and wait for the same cleanup path. The in-app timeout interrupts the suite's next cancellable wait or checkpoint.
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
+
+## Callout interface font and branch verification — 2026-11-24
+
+On Debian with Obsidian 1.15.1, the Community build passed 104 Callout, 57 Table, 31 Git diff and 22 Icons checks. The Callout type field and its open suggestions both followed changes to the interface font. The separate HTML table setting still completed installed font names and applied the selected font to inline code. The Icons suite exercised a live catalog installation. All four suites restored their sessions. Mobile, other desktop platforms and themes, and the native OS context menu were outside this run.
+
+Node 22 passed 177 unit tests. The production build, package validation, and documentation check passed for 21 pages and 878 links and assets. Local Obsidian lint reported zero errors and the six previously recorded main-window warnings.
+
+## Vault-wide Git markers and the Simple Icons installation tip — 2026-11-24
+
+On Debian with Obsidian 1.15.1, the Git suite passed 31 checks. It supplied a temporary discovery root during plugin enable and used an isolated local Git object store. An ordinary root exposed neither Git command, even with a repository under the open note. Adding or removing working-tree metadata and refocusing the window updated the commands and gutters. Visible editors showed their own changes by default, the off switch survived a reload, and the manual comparison remained available. After the first committed version was cached, twelve edits and creation of an unopened note started zero additional Git processes for the fixture.
+
+The Icons suite passed 22 checks with live catalog installation, including the settings button changing from **Install** to **Update**. Unit tests covered the one-time tip, skipping the tip when already installed, nested vaults and bare repositories. Both native suites restored their sessions. These checks covered the Community build on Debian.
+
+## Per-note Git markers, shared brand icons and installed fonts — 2026-11-24
+
+The unreleased Community build passed 175 unit tests under Node 22, TypeScript, production package validation and the documentation check for 21 pages and 878 links and assets. The local Obsidian lint run reported zero errors and six existing main-window warnings in Active Line, Callout Code and Mermaid.
+
+On Debian with Obsidian 1.15.1, the Git suite passed 22 checks. Source mode and Live Preview showed added, modified and deleted lines with line numbers visible or hidden. Clicking a marker opened the correct hunk, unsaved edits appeared below their committed version, and the active-line bar had its own space. Marker preferences survived switching notes and reloading the plugin. Returning to the editor picked up a new Git commit. The comparison left the fixture index byte-for-byte intact.
+
+The same build passed 105 Callout, 57 Table and 21 Icons checks. The appearance dialog kept its width, and its type field and suggestions used the selected font. Chromium’s rendered-glyph inspection confirmed JetBrains Mono in HTML table cells in Reading View, Live Preview and the visual editor. The explicit Simple Icons update installed a 2,022,839-byte compressed catalog for version 16.38.1. After a reload the Callout picker found a previously unused brand locally, and its icon and color persisted with file explorer icons disabled. The four suites restored their sessions. Other desktop operating systems, mobile, other themes, the native OS context menu and the Full build were outside this run.
 
 ## Resizable conversion preview — 2026-11-24
 

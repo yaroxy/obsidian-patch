@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { requestUrl, type DataAdapter } from "obsidian";
 
 /**
  * Simple Icons come from Iconify's JSON package of the set, which follows each
@@ -18,6 +18,7 @@ export interface SimpleIconSet {
   names: string[];
   svg(name: string): string | undefined;
   color(name: string): string | undefined;
+  data: { icons: unknown; metadata?: unknown; version: string; packageVersion: string };
 }
 
 interface IconifyIcon {
@@ -36,13 +37,13 @@ interface IconifyIcon {
  */
 export async function loadSimpleIcons(
   cachedLatest: string | undefined,
-  onLatestResolved: (packageVersion: string) => void,
+  onLatestResolved?: (packageVersion: string) => void,
 ): Promise<SimpleIconSet> {
   const packageVersion = await resolveLatestVersion().catch((error: unknown) => {
     if (cachedLatest === undefined) throw error;
     return cachedLatest;
   });
-  onLatestResolved(packageVersion);
+  onLatestResolved?.(packageVersion);
   const [icons, info] = await Promise.all([
     fetchJson(`${CDN_URL}@${packageVersion}/icons.json`),
     fetchJson(`${CDN_URL}@${packageVersion}/info.json`).catch(() => undefined),
@@ -80,6 +81,7 @@ export function parseIconifySet(json: unknown, version: string, packageVersion: 
   return {
     version,
     packageVersion,
+    data: { icons: json, metadata, version, packageVersion },
     names: [...icons].filter(([, icon]) => icon.hidden !== true).map(([name]) => name).sort(),
     color: name => colors.get(aliases.get(name) ?? name),
     svg(name) {
@@ -89,6 +91,21 @@ export function parseIconifySet(json: unknown, version: string, packageVersion: 
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox.join(" ")}">${icon.body}</svg>`;
     },
   };
+}
+
+/** Keep the previous catalog until the new compressed file and its settings pointer are saved. */
+export async function writeSimpleIconPack(adapter: DataAdapter, path: string, set: SimpleIconSet): Promise<void> {
+  const stream = new Blob([JSON.stringify(set.data)]).stream().pipeThrough(new CompressionStream("gzip"));
+  await adapter.writeBinary(path, await new Response(stream).arrayBuffer());
+}
+
+export async function readSimpleIconPack(adapter: DataAdapter, path: string): Promise<SimpleIconSet> {
+  const stream = new Blob([await adapter.readBinary(path)]).stream().pipeThrough(new DecompressionStream("gzip"));
+  const data: unknown = await new Response(stream).json();
+  if (!isRecord(data) || typeof data.version !== "string" || typeof data.packageVersion !== "string") {
+    throw new Error("Invalid installed Simple Icons catalog. Select Update to replace it.");
+  }
+  return parseIconifySet(data.icons, data.version, data.packageVersion, data.metadata);
 }
 
 // Simple Icons' title-to-slug convention (CC0): explicit slugs take precedence.

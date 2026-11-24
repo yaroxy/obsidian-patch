@@ -9,17 +9,28 @@ const bundle = await build({
     builder.onLoad({ filter: /.*/, namespace: "host" }, () => ({ contents: "export function getIcon() {} export function sanitizeHTMLToDom() {}" }));
   } }],
 });
-const { parseAppearanceSettings, registerAppearance } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`);
+const { parseAppearanceSettings, registerAppearance, resolveAppearance } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`);
 
 test("appearance preferences normalize casing and keep independently set colors and icons", () => {
   assert.deepEqual(parseAppearanceSettings(null), { calloutTypes: {}, tableCodeFont: "" });
   const settings = parseAppearanceSettings({
     calloutTypes: { " RESEARCH ": { color: "#39a", icon: "lucide-flask-conical" }, Tip: { color: "cyan" },
       Review: { icon: "lucide-book" }, Reset: {}, Broken: { color: "brand", icon: "unknown" } },
-    tableCodeFont: " Noto Sans Mono ",
+    tableCodeFont: " Noto Sans Mono ", calloutTypeFont: "Old preview preference",
   });
   assert.deepEqual(settings, { calloutTypes: { research: { color: "#3399AA", icon: "lucide-flask-conical" },
     tip: { color: "cyan" }, review: { icon: "lucide-book" } }, tableCodeFont: "Noto Sans Mono" });
+});
+
+test("brand callouts resolve from the shared offline cache and preserve the legacy Lucide format", () => {
+  const settings = parseAppearanceSettings({ calloutTypes: { build: { icon: "simple-icons:github", color: "brand" },
+    local: { icon: "lucide-pencil", color: "brand" }, invalid: { icon: "simple-icons:../bad", color: "brand" } } });
+  assert.deepEqual(settings.calloutTypes, { build: { icon: "simple-icons:github", color: "brand" }, local: { icon: "lucide-pencil" } });
+  const cache = { svgs: { "simple-icons:github": "<svg/>" }, brandColors: { "simple-icons:github": "#123456" } };
+  const resolved = resolveAppearance(settings, cache);
+  assert.match(resolved.calloutTypes.build.icon, /^url\("data:image\/svg\+xml,/);
+  assert.equal(resolved.calloutTypes.build.color, "#123456");
+  assert.equal(settings.calloutTypes.build.color, "brand");
 });
 
 test("font and callout preferences apply and clear on existing and newly opened documents", () => {

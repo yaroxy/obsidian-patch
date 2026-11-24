@@ -1046,18 +1046,44 @@ button.obsidian-patch-callout-alias.is-active {
   padding-block: var(--size-4-2);
 }
 
-.obsidian-patch-callout-appearance-preview > span:first-child,
-.obsidian-patch-callout-icon-option {
-  display: inline-flex;
-  vertical-align: middle;
+.modal.obsidian-patch-callout-appearance {
+  width: min(800px, 94vw);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  container-type: inline-size;
+}
+.obsidian-patch-callout-appearance .setting-item-control { flex-wrap: wrap; min-width: 0; }
+.obsidian-patch-callout-appearance .obsidian-patch-icon-colors { justify-content: flex-end; }
+.obsidian-patch-callout-appearance .obsidian-patch-icon-custom { justify-content: flex-end; margin-bottom: 0; }
+.obsidian-patch-callout-appearance input.obsidian-patch-callout-type-input { width: min(24em, 100%); }
+.obsidian-patch-callout-type-option, input.obsidian-patch-callout-type-input {
+  font-family: var(--font-interface);
+  font-weight: var(--font-normal);
+}
+.obsidian-patch-font-preview { margin-top: var(--size-4-1); color: var(--text-normal); }
+.obsidian-patch-callout-appearance-preview > span:first-child { display: inline-flex; }
+@container (max-width: 520px) {
+  .obsidian-patch-callout-appearance .setting-item { flex-direction: column; align-items: stretch; gap: var(--size-4-2); }
+  .obsidian-patch-callout-appearance .setting-item-control,
+  .obsidian-patch-callout-appearance .obsidian-patch-icon-colors,
+  .obsidian-patch-callout-appearance .obsidian-patch-icon-custom { justify-content: flex-start; }
+  .obsidian-patch-callout-appearance input.obsidian-patch-callout-type-input { width: 100%; }
 }
 
-.obsidian-patch-callout-icon-option {
-  margin-inline-end: var(--size-4-2);
+/* The host owns the native icon, so hiding it preserves per-note overrides and theme restoration. */
+.callout.obsidian-patch-callout-brand-image:is(:not([data-callout-icon]), [data-callout-icon=""]) > .callout-title > .callout-icon::before {
+  content: "";
+  width: var(--icon-size, var(--icon-m));
+  height: var(--icon-size, var(--icon-m));
+  display: inline-block;
+  background: currentColor;
+  mask: var(--obsidian-patch-callout-brand-image) center / contain no-repeat;
 }
+.callout.obsidian-patch-callout-brand-image:is(:not([data-callout-icon]), [data-callout-icon=""]) > .callout-title > .callout-icon > svg { display: none; }
 
-.obsidian-patch-table-code-font :is(.obsidian-patch-table-host, .cm-html-embed, .obsidian-patch-table-grid) > table :is(th, td) code:not(pre > code) {
-  font-family: var(--obsidian-patch-table-code-font), var(--font-monospace);
+body.obsidian-patch-table-code-font :is(.obsidian-patch-html-table, .cm-html-embed table, .obsidian-patch-table-grid table) :is(th, td) code:not(pre code) {
+  --font-monospace: var(--obsidian-patch-table-code-font), monospace;
+  font-family: var(--font-monospace);
 }
 
 body .callout[data-callout].obsidian-patch-callout-type-icon {
@@ -1067,3 +1093,27 @@ body .callout[data-callout].obsidian-patch-callout-type-icon {
 body .callout[data-callout].obsidian-patch-callout-type-color {
   --callout-color: var(--obsidian-patch-callout-type-color);
 }
+
+/* The same Git hunk is shown above and below, with independent scrolling on small screens. */
+.obsidian-patch-git-diff { display: flex; flex-direction: column; gap: var(--size-4-2); }
+.obsidian-patch-git-toolbar, .obsidian-patch-git-navigation { display: flex; align-items: center; flex-wrap: wrap; gap: var(--size-4-2); }
+.obsidian-patch-git-toolbar strong { margin-inline-end: auto; overflow-wrap: anywhere; }
+.obsidian-patch-git-pane { flex: 0 1 auto; display: flex; flex-direction: column; min-height: 6em; }
+.obsidian-patch-git-pane h3 { margin: 0; padding-block: var(--size-4-2); font-size: var(--font-ui-medium); }
+.obsidian-patch-git-lines { overflow: auto; padding: var(--size-4-2); border: 1px solid var(--background-modifier-border); border-radius: var(--radius-s); font-family: var(--font-monospace); }
+.obsidian-patch-git-line { display: grid; grid-template-columns: 5ch 1ch 1fr; gap: 1ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+.obsidian-patch-git-number { text-align: end; color: var(--text-muted); user-select: none; }
+.obsidian-patch-git-line[data-change="-"] { background: color-mix(in srgb, var(--color-red) 15%, transparent); }
+.obsidian-patch-git-line[data-change="+"] { background: color-mix(in srgb, var(--color-green) 15%, transparent); }
+
+.cm-editor.obsidian-patch-git-enabled .cm-gutters { display: flex; }
+.cm-gutter.obsidian-patch-git-gutter { width: 10px; cursor: pointer; }
+.obsidian-patch-git-gutter .cm-gutterElement { position: relative; width: 100%; }
+.obsidian-patch-git-mark { position: absolute; inset-block: 0; inset-inline-start: 3px; width: 3px; }
+.obsidian-patch-git-mark[data-kind="added"] { background-color: var(--color-green); }
+.obsidian-patch-git-mark[data-kind="modified"] { background-color: var(--color-blue); }
+.obsidian-patch-git-mark[data-kind="deleted"] {
+  inset-block: 0 auto; inset-inline-start: 1px; width: 0; height: 0;
+  border-block: 4px solid transparent; border-inline-start: 7px solid var(--color-red);
+}
+.obsidian-patch-git-mark[data-kind="deleted"].is-at-end { inset-block: auto 0; }

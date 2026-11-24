@@ -2,9 +2,11 @@
 
 ## 范围与来源
 
-图标只用于文件浏览器。Lucide 来自 Obsidian 的 `getIcon` / `getIconIds`，提供与宿主一致的通用线框图标；Simple Icons 补充品牌标志。设置页的 Icon sources 说明分工并链接到两个官网；选择面板的每个结果和当前预览都标注来源。
+文件浏览器和开发版的 Callout 类型外观共用图标和配色控件。Lucide 来自 Obsidian 的 `getIcon` / `getIconIds`，提供与宿主一致的通用线框图标；Simple Icons 补充品牌标志。设置页的 Icon sources 说明分工并链接到两个官网；选择面板的每个结果和当前预览都标注来源。
 
 2026-11-17 用户认可把颜色选择合并到 Change icon，并明确保留在线获取和已用图标缓存。Simple Icons 的轮廓来自指定版本的 `@iconify-json/simple-icons` JSON，品牌色来自该包 `info.json` 标注的上游 Simple Icons 版本的 `data/simple-icons.json`；只读取数据，不导入远程 JavaScript。版本解析、请求超时、离线缓存沿用已有策略；品牌色请求失败不阻止使用图标。Simple Icons 的 `hex` 是单色品牌色，不代表完整多色 Logo。
+
+开发版在此设备的库中首次启用且未安装品牌包时提醒一次。用户可在 **Patch Icons → Simple Icons** 点 **Install** 下载全库，安装后同一按钮显示 **Update**。压缩数据保存在插件目录，先写新文件并保存设置里的引用，再清理上一份。启动和打开选择器只读取本地数据。已用 SVG 和品牌色由文件、目录和 Callout 共同引用，清除最后一项分配时释放。Mermaid 使用单独的内置图标包。
 
 ## 交互
 

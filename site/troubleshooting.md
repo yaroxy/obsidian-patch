@@ -21,7 +21,7 @@ With Patches 0.4.0 and Image Converter 1.4.6, hovering can shrink a cover to its
 
 ## Simple Icons cannot load
 
-Check access to jsDelivr, then retry the picker or **Patch Icons → Update**. Lucide icons and already-cached icon graphics remain available offline. In the color picker, unavailable brand metadata does not prevent text, preset, or custom colors. See the [icon guide](features/icons.md) for version availability.
+Check access to jsDelivr and select **Patch Icons → Simple Icons → Update**. In the development build the first download is labeled **Install**, and subsequent downloads are labeled **Update**. Lucide icons and already-cached icon graphics remain available offline. In the color picker, unavailable brand metadata does not prevent text, preset, or custom colors. See the [icon guide](features/icons.md) for version availability.
 
 ## What are “Icons of missing files”?
 

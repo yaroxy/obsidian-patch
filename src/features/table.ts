@@ -2,7 +2,7 @@ import { isolateHistory } from "@codemirror/commands";
 import { ViewPlugin, type EditorView } from "@codemirror/view";
 import {
   editorInfoField, editorLivePreviewField, finishRenderMath, loadMathJax, MarkdownView, Notice, renderMath, setIcon,
-  type Editor, type EditorPosition, type MarkdownPostProcessorContext, type Plugin,
+  type Editor, type EditorPosition, type MarkdownSectionInformation, type Plugin,
 } from "obsidian";
 import { editorLines, sameCheckText } from "./note-check-source";
 import { TableEditor } from "./table/editor";
@@ -78,10 +78,21 @@ export function registerTables(plugin: Plugin): void {
   // Reading View has no editor, so edits go through the vault by line and
   // HTML-to-Markdown conversion switches to edit mode for a single undoable transaction.
   plugin.registerMarkdownPostProcessor((el, ctx) => {
-    if (!el.querySelector(":scope > table") || !locate(el, ctx)) return;
+    const table = el.querySelector("table");
+    if (!table) return;
+    const info = ctx.getSectionInfo(el);
+    if (!info) return;
+    // Wrapped HTML tables can still use the code font even when the standalone editor is unavailable.
+    const lines = editorLines(info.text).split("\n");
+    const firstLine = lines[info.lineStart] ?? "";
+    if (/^\s*<[a-z][\w-]*\b/i.test(firstLine)) {
+      for (const htmlTable of el.querySelectorAll("table")) htmlTable.addClass("obsidian-patch-html-table");
+    }
+    if (table.parentElement !== el || !locate(info, lines)) return;
+    table.addClass("obsidian-patch-html-table");
     el.addClass("obsidian-patch-table-host");
     addButton(el.createEl("button", { cls: "obsidian-patch-table-edit clickable-icon", attr: { type: "button" } }), () => {
-      const found = locate(el, ctx);
+      const found = locate(ctx.getSectionInfo(el));
       const path = ctx.sourcePath;
       const file = app.vault.getFileByPath(path);
       if (!found || !file) {
@@ -284,10 +295,9 @@ function editWidget(plugin: Plugin, view: EditorView, embed: HTMLElement): void 
   );
 }
 
-function locate(el: HTMLElement, ctx: MarkdownPostProcessorContext) {
-  const info = ctx.getSectionInfo(el);
+function locate(info: MarkdownSectionInformation | null, lines?: string[]) {
   if (!info) return undefined;
-  const section = editorLines(info.text).split("\n").slice(info.lineStart, info.lineEnd + 1).join("\n");
+  const section = (lines ?? editorLines(info.text).split("\n")).slice(info.lineStart, info.lineEnd + 1).join("\n");
   const range = tableRanges(section)[0];
   return range && { ...range, noteText: info.text, lineStart: info.lineStart, section, source: section.slice(range.from, range.to) };
 }

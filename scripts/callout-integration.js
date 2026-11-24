@@ -175,8 +175,8 @@
     const probe = doc.body.createSpan();
     let settingsDoc;
     try {
-      const row = () => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
-        .find(el => el.isConnected && el.getClientRects().length && el.querySelector(".setting-item-name")?.textContent === "Type appearance");
+      const row = (name = "Type appearance") => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
+        .find(el => el.isConnected && el.getClientRects().length && el.querySelector(".setting-item-name")?.textContent === name);
       const openSettings = async label => {
         app.setting.open();
         app.setting.openTabById("patches");
@@ -195,26 +195,57 @@
         element.dispatchEvent(new element.ownerDocument.defaultView.Event(event, { bubbles: true }));
       };
       const click = (container, label) => [...container.querySelectorAll("button")].find(el => el.textContent === label).click();
+      assert(!row("Type picker font"), "Callout settings still offer a separate font override");
       const open = async () => {
         click(row(), "Customize");
         await until(panel, "the Callout appearance dialog opens");
         localInput(panel().querySelector("[aria-label='Callout type']"), type);
       };
-      const select = () => panel().querySelector("[aria-label='Callout color']");
+      app.saveLocalStorage("obsidian-patch-callout-appearance-size", null);
       await open();
-      assert(panel().querySelector('datalist option[value="NOTE"]') && panel().querySelector(".obsidian-patch-callout-appearance-preview").textContent === type.toUpperCase(),
-        "Appearance type suggestions and the preview should use uppercase labels");
+      const typeField = () => panel().querySelector("[aria-label='Callout type']");
+      const suggestion = name => [...(settingsDoc.querySelectorAll(".obsidian-patch-callout-type-option")),...doc.querySelectorAll(".obsidian-patch-callout-type-option")]
+        .find(el => el.textContent === name);
+      const view = panel().ownerDocument.defaultView;
+      assert(panel().getBoundingClientRect().width >= Math.min(740, view.innerWidth * 0.90), "Appearance panel did not use the available width");
+      const grip = panel().querySelector(".obsidian-patch-resize-grip");
+      assert(grip, "Appearance panel lacks the desktop grip");
+      const sizeBefore = panel().getBoundingClientRect(), corner = grip.getBoundingClientRect();
+      const drag = (name, x) => grip.dispatchEvent(new view.PointerEvent(name, {
+        bubbles: true, cancelable: true, pointerId: 1, pointerType: "mouse", button: 0, buttons: 1,
+        clientX: corner.left + x, clientY: corner.top,
+      }));
+      drag("pointerdown", 0);
+      drag("pointermove", (480 - sizeBefore.width) / 2);
+      drag("pointerup", (480 - sizeBefore.width) / 2);
+      const savedWidth = panel().getBoundingClientRect().width;
+      assert(savedWidth <= 481 && view.getComputedStyle(panel().querySelector(".setting-item")).flexDirection === "column", "Narrow appearance panel did not stack controls");
+      typeField().focus();
+      localInput(typeField(), "not");
+      await until(() => suggestion("NOTE"), "the styled type list completes uppercase NOTE");
+      for (const control of [typeField(), suggestion("NOTE")]) {
+        // Change the theme variable on these temporary controls without modifying the vault's theme.
+        for (const font of ["serif", "monospace"]) {
+          control.style.setProperty("--font-interface", font);
+          assert(view.getComputedStyle(control).fontFamily === font, "The Callout type control ignored the interface font");
+        }
+        control.style.removeProperty("--font-interface");
+      }
+      checks.push("the Callout type input and its suggestions both follow changes to the interface font");
+      suggestion("NOTE").click();
+      await until(() => typeField().value === "NOTE", "a type suggestion selects and previews its name");
+      localInput(typeField(), type);
+      assert(panel().querySelector(".obsidian-patch-callout-appearance-preview").textContent === type.toUpperCase(), "Preview missing custom type");
       click(panel(), "Choose icon");
-      const search = () => find('input[placeholder="Search Lucide icons…"]');
-      await until(search, "the Lucide icon picker opens");
+      const search = () => find('input[placeholder="Search Lucide and Simple Icons…"]');
+      await until(search, "the shared Lucide and Simple Icons picker opens");
       localInput(search(), "flask-conical");
-      const choice = () => [...search().closest(".prompt").querySelectorAll(".suggestion-item")]
-        .find(el => el.textContent.trim() === "flask-conical");
+      const choice = () => search().closest(".prompt").querySelector('[data-icon-id="lucide:flask-conical"]');
       await until(choice, "typing an icon name finds its exact Lucide match");
       choice().click();
       const chosenIcon = panel().querySelector(".obsidian-patch-callout-appearance-preview svg").innerHTML;
       assert(chosenIcon !== themeIcon, "The picker kept the original theme icon");
-      localInput(select(), "purple", "change");
+      panel().querySelector('[aria-label="Purple"]').click();
       click(panel(), "Apply");
       probe.style.color = "var(--color-purple)";
       await until(() => !panel() && entries()[type]?.icon === "lucide-flask-conical" && entries()[type]?.color === "purple"
@@ -225,10 +256,13 @@
         "a fresh Reading View render also uses the saved icon and theme color");
 
       await open();
-      assert([...panel().querySelectorAll("datalist option")].some(option => option.value === type.toUpperCase()),
-        "The saved custom type is missing its uppercase appearance suggestion");
-      assert(select().value === "purple", "Reopening the dialog lost the palette selection");
-      localInput(select(), "custom", "change");
+      typeField().focus();
+      localInput(typeField(), type);
+      await until(() => suggestion(type.toUpperCase()), "saved custom types reappear in uppercase suggestions");
+      assert(Math.abs(panel().getBoundingClientRect().width - savedWidth) <= 1, "The appearance size was not restored");
+      checks.push("the appearance panel remembers its narrower width and stacks its controls");
+      suggestion(type.toUpperCase()).click();
+      assert(panel().querySelector('[aria-label="Purple"]').getAttribute("aria-pressed") === "true", "Reopening lost the palette selection");
       const custom = panel().querySelector("[aria-label='Custom callout color']");
       assert(!custom.hidden, "Custom color input stayed hidden");
       localInput(custom, "#256b88");
@@ -250,10 +284,10 @@
       button("Cancel").click();
       await openSettings("the custom type remains available in Callouts settings");
       await open();
-      assert(select().value === "custom" && panel().querySelector("[aria-label='Custom callout color']").value === "#256b88",
+      assert(panel().querySelector("[aria-label='Custom callout color']").value === "#256b88",
         "Reopening the dialog lost the custom color");
       click(panel(), "Use theme icon");
-      localInput(select(), "", "change");
+      click(panel(), "Use theme color");
       click(panel(), "Apply");
       await until(() => !panel() && !Object.hasOwn(entries(), type) && shape() === themeIcon && color() === themeColor,
         "restoring both theme defaults removes the type override and restores the rendered appearance");
@@ -543,11 +577,12 @@
 
     // Exercise Obsidian's normal EditorSuggest input transaction with the cursor
     // inside an auto-paired bracket, independent of Electron character-event timing.
-    editor().setValue("> []");
-    editor().setCursor({ line: 0, ch: 3 });
+    await app.workspace.revealLeaf(leaf);
+    app.workspace.setActiveLeaf(leaf, { focus: true });
     win.focus();
     editor().focus();
-    await until(() => editor().hasFocus() && editor().getCursor().ch === 3, "the source cursor sits inside the paired callout brackets");
+    editor().setValue("> []");
+    editor().setCursor({ line: 0, ch: 3 });
     const suggestItems = () => [...doc.querySelectorAll(".suggestion-container .obsidian-patch-callout-suggest-item")];
     const suggestState = error => {
       const manager = app.workspace.editorSuggest;
@@ -557,6 +592,7 @@
         choices: [...doc.querySelectorAll(".suggestion-container .suggestion-item")].map(el => el.textContent).slice(0, 15),
       }));
     };
+    await until(() => editor().hasFocus() && editor().getCursor().ch === 3, "the source cursor sits inside the paired callout brackets").catch(suggestState);
     editor().replaceSelection("!", "input.type");
     await until(() => suggestItems().length > 1, "typing ! inside the brackets opens the callout type suggestions").catch(suggestState);
     editor().replaceSelection("war", "input.type");

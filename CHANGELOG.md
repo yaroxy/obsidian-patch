@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Compare one note with its local Git `HEAD` on desktop using **View Git diff for this note**. The stacked view follows unsaved edits and navigates between changes.
+- Automatically show Git change markers in visible Markdown editors when the desktop vault belongs to a working tree. Click a marker to open its change. **Toggle Git change markers for this vault** controls all editors on this device. Git commands appear only in eligible vaults.
+- Choose Simple Icons for callout types, apply their brand color, and select theme or custom colors directly from swatches.
+- The HTML table inline code font field suggests installed families on supported devices and shows a sample.
+
+### Changed
+
+- A one-time tip points to the optional brand catalog. Choose **Install** under **Patch Icons → Simple Icons** for the first download, then **Update** for later releases. Callouts, files and folders share one compressed catalog that can be searched offline after restarting Obsidian. Existing assignments work before installation.
+- The Callout appearance panel opens wider, stacks controls in narrow windows and remembers its desktop size separately from the callout editor. The type field and its suggestions follow the Obsidian interface font.
+- The inline code font also applies inside HTML table wrappers in Reading View and Live Preview.
+
 ## [0.6.0] - 2026-11-24
 
 ### Added

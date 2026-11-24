@@ -1,10 +1,11 @@
 import { getIcon, sanitizeHTMLToDom, type Plugin } from "obsidian";
 import { isValidCalloutType } from "./callout/model";
 import { iconColorCss, parseIconColor, type IconColor } from "./icons/color";
+import { parseIconId, svgUrl, type IconSettings } from "./icons/config";
 
 export interface CalloutAppearance {
   icon?: string;
-  color?: Exclude<IconColor, "brand" | "text">;
+  color?: Exclude<IconColor, "text">;
 }
 
 export interface AppearanceSettings {
@@ -24,9 +25,10 @@ export function parseAppearanceSettings(value: unknown): AppearanceSettings {
     if (!isValidCalloutType(type) || /\p{Cc}/u.test(type)) continue;
     const { icon, color } = record(value);
     const entry: CalloutAppearance = {};
-    if (typeof icon === "string" && /^lucide-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(icon)) entry.icon = icon;
+    const brand = typeof icon === "string" && parseIconId(icon)?.source === "simple-icons";
+    if (typeof icon === "string" && (brand || /^lucide-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(icon))) entry.icon = icon;
     const parsedColor = parseIconColor(color);
-    if (parsedColor && parsedColor !== "brand" && parsedColor !== "text") entry.color = parsedColor;
+    if (parsedColor && parsedColor !== "text" && (parsedColor !== "brand" || brand)) entry.color = parsedColor;
     if (entry.icon || entry.color) entries.push([type, entry]);
   }
   const font = stored.tableCodeFont;
@@ -36,8 +38,20 @@ export function parseAppearanceSettings(value: unknown): AppearanceSettings {
   };
 }
 
+/** Resolve stored brand IDs to inert CSS images for notes, type chips and completion. */
+export function resolveAppearance(settings: AppearanceSettings, icons: IconSettings): AppearanceSettings {
+  const calloutTypes = Object.fromEntries(Object.entries(settings.calloutTypes).map(([type, entry]): [string, CalloutAppearance] => {
+    if (!entry.icon?.startsWith("simple-icons:")) return [type, entry];
+    const svg = icons.svgs[entry.icon];
+    const color = entry.color === "brand" ? parseIconColor(icons.brandColors[entry.icon]) : entry.color;
+    return [type, { icon: svg ? svgUrl(svg) : undefined, color: color === "text" ? undefined : color }];
+  }));
+  return { ...settings, calloutTypes };
+}
+
 const FONT = "obsidian-patch-table-code-font";
 const ICON = "obsidian-patch-callout-type-icon";
+const BRAND = "obsidian-patch-callout-brand-image";
 const COLOR = "obsidian-patch-callout-type-color";
 const CALLOUT = ".callout[data-callout]";
 
@@ -48,9 +62,13 @@ function setPreference(el: HTMLElement, name: string, value: string | undefined)
   else el.style.removeProperty("--" + name);
 }
 
-function setTableFont(body: HTMLElement, font: string): void {
+export function cssFontFamily(font: string): string {
   // A family name is a single CSS string token, including when it contains quotes or commas.
-  setPreference(body, FONT, font ? '"' + font.replace(/["\\]/g, "\\$&") + '"' : undefined);
+  return '"' + font.replace(/["\\]/g, "\\$&") + '"';
+}
+
+function setTableFont(body: HTMLElement, font: string): void {
+  setPreference(body, FONT, font ? cssFontFamily(font) : undefined);
 }
 
 /** Obsidian's default icon may be a Lucide ID or an SVG supplied by a theme. */
@@ -79,19 +97,22 @@ export function registerAppearance(plugin: Plugin, initial: AppearanceSettings):
     const entry = name && Object.prototype.hasOwnProperty.call(types, name) ? types[name] : undefined;
     const hadIcon = callout.hasClass(ICON);
     const hadColor = callout.hasClass(COLOR);
-    if (!entry && !hadIcon && !hadColor) return;
+    if (!entry && !hadIcon && !hadColor && !callout.hasClass(BRAND)) return;
     setPreference(callout, COLOR, iconColorCss(entry?.color));
-    setPreference(callout, ICON, entry?.icon);
-    if ((!hadIcon && !entry?.icon) || callout.getAttribute("data-callout-icon")) return;
+    const brand = entry?.icon?.startsWith("url(");
+    const icon = brand ? undefined : entry?.icon;
+    setPreference(callout, BRAND, brand ? entry?.icon : undefined);
+    setPreference(callout, ICON, icon);
+    if ((!hadIcon && !icon) || callout.getAttribute("data-callout-icon")) return;
     const container = callout.querySelector<HTMLElement>(":scope > .callout-title > .callout-icon");
     if (!container) return;
     const previous = icons.get(container);
-    if (entry?.icon) {
-      if (previous?.id === entry.icon && previous.svg === container.firstElementChild) return;
-      const svg = getIcon(entry.icon);
+    if (icon) {
+      if (previous?.id === icon && previous.svg === container.firstElementChild) return;
+      const svg = getIcon(icon);
       if (svg) {
         container.replaceChildren(svg);
-        icons.set(container, { id: entry.icon, svg });
+        icons.set(container, { id: icon, svg });
       }
     } else {
       icons.delete(container);
@@ -114,7 +135,7 @@ export function registerAppearance(plugin: Plugin, initial: AppearanceSettings):
         const ancestor = target.closest<HTMLElement>(CALLOUT);
         if (ancestor) changed.add(ancestor);
         // A recycled widget can lose its old type before receiving its new one.
-        if (record.type === "attributes" && (target.hasClass(ICON) || target.hasClass(COLOR))) changed.add(target);
+        if (record.type === "attributes" && (target.hasClass(ICON) || target.hasClass(COLOR) || target.hasClass(BRAND))) changed.add(target);
         for (const node of record.addedNodes) {
           if (node.nodeType !== 1) continue;
           const added = node as HTMLElement;
@@ -131,7 +152,7 @@ export function registerAppearance(plugin: Plugin, initial: AppearanceSettings):
     windows.get(doc)?.disconnect();
     windows.delete(doc);
     setTableFont(doc.body, "");
-    for (const callout of doc.querySelectorAll<HTMLElement>(`.${ICON}, .${COLOR}`)) apply(callout, {});
+    for (const callout of doc.querySelectorAll<HTMLElement>(`.${ICON}, .${COLOR}, .${BRAND}`)) apply(callout, {});
   };
   attach(plugin.app.workspace.containerEl.ownerDocument);
   plugin.app.workspace.iterateAllLeaves(leaf => attach(leaf.view.containerEl.ownerDocument));

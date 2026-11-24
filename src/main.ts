@@ -1,3 +1,6 @@
+import { registerNoteDiff } from "./features/git-diff/view";
+import { renderFontSetting } from "./ui/font-setting";
+import type { IconChoice } from "./features/icons/picker";
 import { Plugin, PluginSettingTab, type Setting, type SettingDefinition, type SettingDefinitionGroup, type SliderComponent, type TextComponent } from "obsidian";
 import {
   registerPatchMermaid,
@@ -20,7 +23,7 @@ import { DEFAULT_HEADING_LEVELS_ENABLED, registerHeadingLevels } from "./feature
 import { parsePdfExportSettings, registerPdfExport, type PdfExportSettings } from "./features/pdf-export";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { CalloutAppearanceModal } from "./features/callout/appearance-modal";
-import { parseAppearanceSettings, registerAppearance, type AppearanceSettings } from "./features/appearance";
+import { parseAppearanceSettings, registerAppearance, resolveAppearance, type AppearanceSettings } from "./features/appearance";
 import { registerTables } from "./features/table";
 import { MATH_INDENTS, parseMathFormatSettings, registerMathFormat, type MathFormatSettings } from "./features/math-format";
 import { GITHUB_PROPERTY, parseCalloutSettings, registerCallouts, type CalloutSettings } from "./features/callout";
@@ -69,6 +72,7 @@ export default class PatchesPlugin extends Plugin {
   settings: PatchesSettings = parseSettings(null);
   mermaid?: PatchMermaidController;
   icons?: PatchIconsController;
+  private resolvedAppearance = this.settings.appearance;
   private applyAppearance?: (settings: AppearanceSettings) => void;
   private applyCalloutCode?: (enabled: boolean) => void;
   private applyActiveLine?: (enabled: boolean) => void;
@@ -98,19 +102,27 @@ export default class PatchesPlugin extends Plugin {
         }
       },
     });
-    this.applyAppearance = registerAppearance(this, this.settings.appearance);
+    this.resolvedAppearance = resolveAppearance(this.settings.appearance, this.settings.icons);
+    this.applyAppearance = registerAppearance(this, this.resolvedAppearance);
     this.applyCalloutCode = registerCalloutCode(this, this.settings.calloutCode);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyHeadingLevels = registerHeadingLevels(this, this.settings.headingLevels);
     registerPdfExport(this, () => this.settings.pdfExport);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
+    await registerNoteDiff(this);
     registerMathFormat(this, () => this.settings.mathFormat);
-    this.refreshCalloutStatus = registerCallouts(this, () => this.settings.callouts, () => this.settings.appearance.calloutTypes);
+    this.refreshCalloutStatus = registerCallouts(this, () => this.settings.callouts, () => this.resolvedAppearance.calloutTypes);
     this.icons = registerIcons(this, this.settings.icons, async (icons) => {
+      const previous = this.settings.icons;
       this.settings.icons = icons;
-      await this.saveData(this.settings);
-    });
+      try { await this.saveData(this.settings); }
+      catch (error) {
+        if (this.settings.icons === icons) this.settings.icons = previous;
+        throw error;
+      }
+      this.refreshAppearance();
+    }, () => Object.values(this.settings.appearance.calloutTypes).flatMap(entry => entry.icon?.startsWith("simple-icons:") ? [entry.icon] : []));
     this.applyLineWidth = registerLineWidth(this, this.settings.lineWidth, (lineWidth) => this.setLineWidth(lineWidth));
     this.addSettingTab(new PatchesSettingTab(this));
   }
@@ -138,10 +150,26 @@ export default class PatchesPlugin extends Plugin {
     this.applyCalloutCode?.(calloutCode);
   }
 
-  async setAppearance(appearance: AppearanceSettings): Promise<void> {
-    this.settings.appearance = parseAppearanceSettings(appearance);
-    this.applyAppearance?.(this.settings.appearance);
-    await this.saveData(this.settings);
+  private refreshAppearance(): void {
+    this.resolvedAppearance = resolveAppearance(this.settings.appearance, this.settings.icons);
+    this.applyAppearance?.(this.resolvedAppearance);
+  }
+
+  async setAppearance(appearance: AppearanceSettings, choice?: IconChoice): Promise<void> {
+    const previous = this.settings.appearance;
+    const next = parseAppearanceSettings(appearance);
+    this.settings.appearance = next;
+    try {
+      if (this.icons && appearance.calloutTypes !== previous.calloutTypes) await this.icons.saveUsedIcons(choice);
+      else {
+        await this.saveData(this.settings);
+        this.refreshAppearance();
+      }
+    } catch (error) {
+      if (this.settings.appearance === next) this.settings.appearance = previous;
+      this.refreshAppearance();
+      throw error;
+    }
   }
 
   async setActiveLine(activeLine: boolean): Promise<void> {
@@ -213,18 +241,8 @@ class PatchesSettingTab extends PluginSettingTab {
       { type: "group", heading: "HTML Tables", items: [{
         name: "Inline code font",
         desc: "Installed font family for inline code in HTML table cells. Leave empty to use the theme font.",
-        render: (setting) => {
-          setting.addText(text => {
-            const current = () => this.plugin.settings.appearance;
-            text.setPlaceholder("e.g. JetBrains Mono").setValue(current().tableCodeFont);
-            const commit = (): void => {
-              const tableCodeFont = text.getValue().trim();
-              if (tableCodeFont !== current().tableCodeFont) void this.plugin.setAppearance({ ...current(), tableCodeFont });
-            };
-            text.inputEl.addEventListener("blur", commit);
-            text.inputEl.addEventListener("keydown", event => { if (event.key === "Enter") text.inputEl.blur(); });
-          });
-        },
+        render: setting => renderFontSetting(setting, this.plugin.app, this.plugin.settings.appearance.tableCodeFont,
+          tableCodeFont => this.plugin.setAppearance({ ...this.plugin.settings.appearance, tableCodeFont }), "text · conversation · content"),
       }] },
       { type: "group", heading: "Line Width", items: this.lineWidthDefinitions() },
       { type: "group", heading: "Callouts", items: this.calloutDefinitions() },
@@ -325,14 +343,17 @@ class PatchesSettingTab extends PluginSettingTab {
     return [
       {
         name: "Type appearance",
-        desc: "Choose a Lucide icon, theme palette color or custom color for a callout type in this vault.",
+        desc: "Choose a Lucide or installed Simple Icons graphic and a color for each callout type.",
         render: setting => {
           setting.addButton(button => button.setButtonText("Customize").onClick(() => {
-            new CalloutAppearanceModal(this.plugin.app, this.plugin.settings.appearance.calloutTypes, async (type, entry) => {
-              const current = this.plugin.settings.appearance;
-              const calloutTypes = { ...current.calloutTypes, [type]: entry };
-              await this.plugin.setAppearance({ ...current, calloutTypes });
-            }).open();
+            const icons = this.plugin.icons;
+            if (!icons) return;
+            new CalloutAppearanceModal(this.plugin.app, this.plugin.settings.appearance.calloutTypes, this.plugin.settings.icons,
+              select => icons.chooseCalloutIcon(select), async (type, entry, choice) => {
+                const current = this.plugin.settings.appearance;
+                const calloutTypes = { ...current.calloutTypes, [type]: entry };
+                await this.plugin.setAppearance({ ...current, calloutTypes }, choice);
+              }).open();
           }));
         },
       },
@@ -405,7 +426,7 @@ class PatchesSettingTab extends PluginSettingTab {
       },
       {
         name: "Simple Icons",
-        desc: "The newest release is downloaded from jsDelivr when you choose an icon. Icons in use are saved with these settings, so they display offline.",
+        desc: "Optional download from jsDelivr. Once installed, you can search brand logos offline for callouts, files and folders.",
         render: (setting) => this.renderSimpleIcons(setting),
       },
       {
@@ -453,19 +474,24 @@ class PatchesSettingTab extends PluginSettingTab {
     const icons = this.plugin.icons;
     const status = setting.descEl.createDiv({ cls: "obsidian-patch-setting-status" });
     const showStatus = (state: SimpleIconsStatus): void => {
-      status.setText(state.status === "ready" ? `In use: Simple Icons ${state.version}, from jsDelivr.`
+      status.setText(state.status === "ready" ? `Installed: Simple Icons ${state.version}.`
         : state.status === "loading" ? "Loading…"
-          : state.status === "error" ? `Could not load Simple Icons: ${state.message}` : "Not loaded yet in this session.");
+          : state.status === "error" ? `Could not load Simple Icons: ${state.message}` : "Optional catalog not installed.");
     };
     showStatus(icons?.simpleIconsStatus() ?? { status: "idle" });
-    setting.addButton((button) => button.setButtonText("Update")
-      .setTooltip("Load the newest Simple Icons and refresh the icons in use").onClick(async () => {
+    setting.addButton(button => {
+      const label = (): void => {
+        button.setButtonText(this.plugin.settings.icons.installedPack ? "Update" : "Install");
+      };
+      label();
+      button.setTooltip("Download the latest Simple Icons catalog from jsDelivr").onClick(async () => {
         if (!icons) return;
         button.setDisabled(true);
         showStatus({ status: "loading" });
         try { showStatus(await icons.updateSimpleIcons()); }
-        finally { button.setDisabled(false); }
-      }));
+        finally { label(); button.setDisabled(false); }
+      });
+    });
   }
 
   private lineWidthDefinitions(): SettingDefinition[] {

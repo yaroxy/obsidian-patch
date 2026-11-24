@@ -17,6 +17,7 @@ async function iconsIntegration(app, context) {
   let notePath = `${projectPath}/Launch checklist.md`;
   const cachedPath = `${rootPath}/Reference links.md`;
   const simpleId = "simple-icons:test-brand";
+  let installedTestPack;
   const cachedSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM7 7v10h10V7z"/></svg>';
   const selector = ".nav-file-title[data-path],.nav-folder-title[data-path]";
   const iconClass = "obsidian-patch-icons-has-icon", iconProperty = "--obsidian-patch-icon";
@@ -321,8 +322,21 @@ async function iconsIntegration(app, context) {
     pass("Closing the test popout clears its rows while the main explorer remains decorated");
 
     if (context.options.remote) {
-      const remote = await plugin().icons.updateSimpleIcons();
-      assert(remote.status === "ready", `Live Simple Icons load failed: ${JSON.stringify(remote)}`);
+      app.setting.open();
+      try {
+        app.setting.openTabById("patches");
+        const packButton = () => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
+          .find(el => el.querySelector(".setting-item-name")?.textContent === "Simple Icons" && el.getClientRects().length)?.querySelector("button");
+        await until(() => packButton()?.textContent === "Install", "first-time catalog install button");
+        packButton().click();
+        await until(() => plugin().icons.simpleIconsStatus().status === "ready" && packButton()?.textContent === "Update", "installed catalog update button");
+        pass("the first installation uses Install, then offers Update in the same settings row");
+      } finally { app.setting.close(); }
+      const remote = plugin().icons.simpleIconsStatus();
+      assert(remote.status === "ready", `Live Simple Icons install failed: ${JSON.stringify(remote)}`);
+      installedTestPack = plugin().manifest.dir + "/simple-icons-" + plugin().settings.icons.installedPack.id + ".json.gz";
+      const packBytes = (await app.vault.adapter.stat(installedTestPack))?.size;
+      assert(packBytes > 0, "The optional catalog was not installed");
       openPicker([notePath]);
       await until(() => picker(), "live-brand picker");
       const search = picker().querySelector("input[type=search], input.prompt-input, input:not([type=color])");
@@ -337,9 +351,64 @@ async function iconsIntegration(app, context) {
       const hex = plugin().settings.icons.brandColors["simple-icons:obsidian"];
       assert(/^#[0-9A-F]{6}$/.test(hex) && row(main.view, notePath).style.getPropertyValue(colorProperty) === hex, "Live color not cached or rendered");
       await reload();
-      assert(plugin().icons.simpleIconsStatus().status === "idle", "Reload fetched a fully cached brand icon");
+      assert(plugin().icons.simpleIconsStatus().version === remote.version, "Reload lost the installed collection");
       await until(() => row(main.view, notePath)?.style.getPropertyValue(colorProperty) === hex, "cached live brand color after reload");
-      report.icons.remote = { version: remote.version, icon: "simple-icons:obsidian", hex };
+      // Use a brand that has never been assigned to any path. After reload it must come from the local pack.
+      const type = Object.hasOwn(plugin().settings.appearance.calloutTypes, "python-notes") ? "python-" + context.runId : "python-notes";
+      const id = "simple-icons:python";
+      assert(!plugin().settings.icons.svgs[id], "Expected a fresh brand icon");
+      await plugin().icons.setEnabled(false);
+      const note = app.vault.getFileByPath(notePath);
+      await app.vault.modify(note, `> [!${type}] Python notes
+> A \`str\` value.
+`);
+      await leaf.openFile(note, { state: { mode: "preview" } });
+      const callout = () => leaf.view.contentEl.querySelector(`.callout[data-callout="${type}"]`);
+      await until(callout, "Reading View test callout");
+      app.setting.open();
+      try {
+        app.setting.openTabById("patches");
+        await wait(400);
+        const appearance = [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")].find(el => el.querySelector(".setting-item-name")?.textContent === "Type appearance" && el.getClientRects().length);
+        const settingsDoc = appearance.ownerDocument;
+        settingsDoc.defaultView.focus();
+        const find = selector => settingsDoc.querySelector(selector) ?? document.querySelector(selector);
+        const click = (root, label) => [...root.querySelectorAll("button")].find(b => b.textContent === label).click();
+        const enter = (el, text) => { el.value = text; el.dispatchEvent(new el.ownerDocument.defaultView.Event("input", { bubbles: true })); };
+        click(appearance, "Customize");
+        const panel = () => find(".obsidian-patch-callout-appearance");
+        await until(panel, "brand appearance settings");
+        enter(panel().querySelector('[aria-label="Callout type"]'), type.toUpperCase());
+        click(panel(), "Choose icon");
+        const search = () => find(".obsidian-patch-icon-picker input.prompt-input");
+        await until(search, "brand picker");
+        enter(search(), "python");
+        const brand = () => find('[data-icon-id="simple-icons:python"]');
+        await until(brand, "a previously unused brand from the installed pack");
+        brand().click();
+        click(panel(), "Brand color");
+        assert(!plugin().settings.appearance.calloutTypes[type], "Selecting a logo changed the saved draft before Apply");
+        await until(() => !search(), "brand search has closed");
+        await wait(300);
+        const window = panel().ownerDocument.defaultView;
+        const rect = panel().getBoundingClientRect();
+        const contents = window === document.defaultView ? require("electron").remote.getCurrentWebContents() : window.electron.remote.getCurrentWebContents();
+        const capture = await contents.capturePage({ x: Math.floor(rect.x), y: Math.floor(rect.y), width: Math.ceil(rect.width), height: Math.ceil(rect.height) });
+        fs.writeFileSync(path.join(context.output, "callout-brand-appearance.png"), capture.toPNG());
+        click(panel(), "Apply");
+        await until(() => !panel() && plugin().settings.appearance.calloutTypes[type]?.color === "brand", "brand appearance saved");
+      } finally { app.setting.close(); }
+      const paintedBrand = () => {
+        const icon = callout()?.querySelector(":scope > .callout-title > .callout-icon");
+        return icon && icon.ownerDocument.defaultView.getComputedStyle(icon, "::before").maskImage.includes("data:image/svg+xml,")
+          && callout().style.getPropertyValue("--obsidian-patch-callout-type-color") === plugin().settings.icons.brandColors[id];
+      };
+      await until(paintedBrand, "brand mask and matching color rendered");
+      assert(plugin().settings.icons.svgs[id] && plugin().settings.appearance.calloutTypes[type].icon === id, "Missing saved brand assignment");
+      await reload();
+      await until(paintedBrand, "brand callout after reload with explorer icons disabled");
+      pass("Callouts choose an unused brand from the installed offline catalog, apply its color and survive a reload independently of explorer icons");
+      report.icons.remote = { version: remote.version, packBytes, icon: "simple-icons:obsidian", hex };
       pass("Live graphic and version-matched brand metadata load, apply, and survive reload without another request");
     }
     assert(capturedErrors.length === 0, `Native errors occurred: ${capturedErrors.join("; ")}`);
@@ -353,6 +422,7 @@ async function iconsIntegration(app, context) {
       try { await fn(); report.icons.cleanup[name] = true; }
       catch (error) { report.icons.cleanup[name] = String(error.stack ?? error); report.error ??= `Icons cleanup failed: ${name}`; }
     };
+    if (installedTestPack) await clean("installedTestPack", () => app.vault.adapter.remove(installedTestPack));
     await clean("probeRows", () => { probe?.remove(); detachedProbe?.remove(); });
     await clean("popout", () => { popout?.detach(); });
     await clean("fixture", async () => {
