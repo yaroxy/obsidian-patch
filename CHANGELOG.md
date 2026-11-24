@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Choose an installed font for inline code in HTML table cells under **HTML Tables → Inline code font**.
 - Set a Lucide icon and color for each callout type under **Callouts → Type appearance**. Choose one of the eight theme colors or a custom color. The existing code background follows the chosen color.
 - Convert standalone HTML tables back to Markdown pipe tables (`Convert HTML tables to Markdown` command, editor context menu, and **Convert to Markdown** inside `Edit HTML table`), auditing source-DOM losses, offering merged-cell / headerless / caption options, verifying every table through Obsidian's Markdown renderer, and supporting single-step undo across Source, Live Preview, and Reading View.
+- Resize the HTML-to-Markdown preview from its bottom-right corner on desktop. Each vault remembers the preview size separately from the table and callout editors. Double-click the corner to restore the default.
 - Suggest callout types inline when typing `> [!` in the editor, prioritizing GitHub alerts on GitHub-tracked notes.
 - Prefix multi-line plain-text pastes inside a callout body with the callout's blockquote markers automatically in a single undoable edit.
 
@@ -23,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Show each demo once in the Active Line and Heading Levels guides.
 - Preserve and verify literal inline code in HTML table captions, headers and body cells during Markdown conversion, including repeated spaces and line breaks.
 - Preserve existing line endings when saving a table in Reading View and allow unchanged CRLF tables to convert to Markdown with one-step undo.
 - Keep callout and HTML table drafts open when saving conflicts with a concurrent edit, including a new paragraph appended to a callout in another pane. Callout conversion also retains its draft after a failed write.

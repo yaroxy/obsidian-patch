@@ -4,14 +4,15 @@ Edit a callout's type, title, fold state, metadata, and content side by side wit
 
 ![Editing a travel reminder and checking its live preview before saving](../../docs/images/callout-editor.gif)
 
-- **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**, or run **Patches: Edit callout** inside its source. Visually identical aliases are grouped together with inline alias pills and a live filter box for searching or entering a custom type.
-- **Type completion and smart paste:** type `> [!` in the editor for grouped inline type suggestions, and paste multi-line plain text inside a callout body to keep every line prefixed with the callout's `>` markers.
+- **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**, or run **Patches: Edit callout** inside its source.
 - **Insert:** run **Patches: Insert callout** to choose a header and insert a callout at the cursor or wrap selected lines.
 - **Unwrap:** choose **Convert to text** or **Convert to blockquote** in the editor.
 
-You can search in lowercase. For example, type `> [!tip` and accept the suggestion to insert `> [!TIP]`. Patches also writes uppercase markers when you insert a callout, wrap a selection, or choose a built-in type, alias, or custom type in the callout editor. Reselecting the type of an existing `[!tip]` changes it to `[!TIP]`. A custom name whose uppercase form would resolve to a different Obsidian type keeps its spelling.
+## Type completion and paste
 
-When you edit the title, content, fold state, or metadata without selecting a type, the marker keeps its original spelling. Header-only edits preserve the body byte for byte. Saving checks for conflicting edits and keeps the draft open if the source has changed. The command palette and editor context menu also offer editing and conversion when the cursor is in the callout's source.
+In the next release, type `> [!tip` in the editor and choose **TIP** to insert `> [!TIP]`. In the callout editor, search by name or alias, or enter a new type. Aliases with the same appearance share a group. Pasting multiline plain text inside the body adds the callout’s `>` markers to each line.
+
+Patches writes uppercase markers when you insert a callout, wrap a selection, or choose a type. Reselecting an existing `[!tip]` changes it to `[!TIP]`. A custom name whose uppercase form would resolve to a different Obsidian type keeps its spelling. Editing only the title or fold state preserves both the marker’s spelling and the original body. If another edit changes the callout while the dialog is open, saving keeps your draft open.
 
 ## GitHub compatibility
 
@@ -38,7 +39,9 @@ In 0.5.0, the command reads the saved note in Reading view and includes unsaved 
 
 ## Type appearance
 
-In the upcoming release, open **Settings → Patches → Callouts → Type appearance → Customize**. Choose a built-in type or enter a new name such as `research`. Use **Choose icon** to search Obsidian’s built-in Lucide icons, for example `microscope`. Choose a theme color such as **Cyan**, or **Custom color** for a fixed shade. Click **Apply**. Both `> [!RESEARCH]` and a hand-typed `> [!research]` use this appearance. Each type has its own settings, including built-in aliases. To return to the theme defaults, select **Use theme icon** and **Use theme color** and apply. These vault preferences leave the note’s Markdown portable.
+In the upcoming release, open **Settings → Patches → Callouts → Type appearance → Customize**. To reproduce the movie-night example, enter `watchlist`, choose the `clapperboard` icon and set **Custom color** to `#327771`. Click **Apply**. Both `> [!WATCHLIST]` and a hand-typed `> [!watchlist]` use this appearance. You can also pick one of eight theme colors. Each type has its own settings, including built-in aliases. To reset it, select **Use theme icon** and **Use theme color** and apply.
+
+![The filtered WATCHLIST type and the preview of Friday double feature share a teal clapperboard icon. The inline code queued has a matching tint.](../../docs/images/watchlist-callout-editor.png)
 
 GitHub supports the five alert markers `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` and `[!CAUTION]` and supplies their visual appearance.
 

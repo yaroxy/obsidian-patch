@@ -60,7 +60,7 @@ src/features/
 - **写回前核对源码。** 表格源码与打开时不一致时只提示重新打开，不覆盖并发修改。阅读视图按 section 行号经 `vault.process` 写回；Live Preview 用 CodeMirror 事务；命令用 `Editor.replaceRange`。
 - **按键。** 弹窗使用以原 scope 为父级的子 `Scope`。单元格内 Escape 只退出单元格，单元格外 Escape 关闭并放弃修改；Mod+Enter 保存；Mod+Z 与 Mod+Shift+Z 撤销和重做，结构操作与每个单元格的一次输入各为一步。
 - **菜单**使用 Obsidian 的 `Menu`，遵循用户的原生菜单设置。
-- **窗口大小。** 弹窗右下角有调整大小的把手，与 callout 编辑器共用 `src/ui/resizable-modal.ts`：多出的空间给表格网格，尺寸按库记住，双击把手恢复默认。保存和取消按钮固定在底部，表格在中间滚动。
+- **窗口大小。** 桌面端的表格编辑器、HTML 转 Markdown 预览和 Callout 编辑器共用 `src/ui/resizable-modal.ts`。拖动右下角调整大小，双击恢复默认。三种面板分别按库保存尺寸。表格编辑器将可用空间交给网格，转换预览将空间交给源码和渲染结果，窄面板中结果移到源码下方。操作按钮固定在底部。
 
 ## Markdown 转换
 

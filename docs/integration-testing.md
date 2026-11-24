@@ -41,7 +41,7 @@ Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled v
 
 `scripts/lib/integration-runner.mjs` owns CLI selection, preflight, deployment and result polling. `scripts/lib/obsidian-session.js` runs one suite inside Obsidian and owns its temporary tab, timeout and cleanup. A suite receives that tab, a cancellable `wait`, and a shared report; it must not reuse an existing user tab or leave asynchronous work running after returning.
 
-The runner retains the newly deployed plugin build and test fixtures for inspection. The Icons suite removes its unique run folder, probe rows, and temporary popout, and restores the explorer expansion and sidebar state. It restores the original `data.json` bytes (or its absence), the two editor-size localStorage entries, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
+The runner retains the newly deployed plugin build and test fixtures for inspection. The Icons suite removes its unique run folder, probe rows, and temporary popout, and restores the explorer expansion and sidebar state. The shared cleanup restores the original `data.json` bytes (or its absence), the saved sizes of the table editor, callout editor and HTML-to-Markdown preview, the previous active tab, and the window's original background-throttling value. Existing tabs keep their notes and view modes. Math and Callout tests set their required options explicitly, then the shared cleanup restores the user's options.
 
 Each output directory contains:
 
@@ -53,6 +53,12 @@ Each output directory contains:
 CLI errors are checked even when Obsidian exits with status zero. Assertion failures and cleanup failures both make the command fail; a cleanup error does not overwrite the original assertion. `SIGINT` and `SIGTERM` request cancellation and wait for the same cleanup path. The in-app timeout interrupts the suite's next cancellable wait or checkpoint.
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
+
+## Resizable conversion preview — 2026-11-24
+
+On Debian with Obsidian 1.15.1, the Community build with `main.js` SHA-256 `74b7f0ee55611bfc04003f95101a336a9cc73fe2c9a9ceae558074f3069de399` passed 32 Table conversion, 52 Table, 99 Callout, 32 Mermaid and 20 Icons checks. A native desktop mouse drag resized the conversion preview to 600 × 400 CSS pixels. The source and rendered table stacked vertically, a 40-row table scrolled with the footer in view, and the visual editor opened the preview at the dimensions saved through the standalone command. Double-clicking the grip restored the default size on reopening and preserved the visual editor’s independent size. All five suites restored their sessions. The runner also restored settings and size preferences after success, intentional failure and timeout. Mobile, Full, other desktop platforms and themes, and the native icon context menu were outside this run.
+
+The documentation check covered 21 built pages. Chrome loaded the Active Line and Heading Levels illustrations once per guide and displayed the two watchlist screenshots within the page at viewport widths of 390 and 1280 pixels. The narrow browser check covers the documentation layout.
 
 ## Editor updates branch candidate — 2026-11-24
 

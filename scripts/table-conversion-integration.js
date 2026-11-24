@@ -55,6 +55,88 @@
       return [...container.querySelectorAll("table")].map(t => t.cloneNode(true));
     } finally { component.unload(); }
   }
+  async function checkPreviewResize(openReverse) {
+    const previewKey = "obsidian-patch-table-markdown-preview-size";
+    const editorKey = "obsidian-patch-table-editor-size";
+    const editorSize = { width: Math.min(740, win.innerWidth - 32), height: Math.min(500, win.innerHeight - 32) };
+    const matches = (a, b) => a && b && Math.abs(a.width - b.width) <= 2 && Math.abs(a.height - b.height) <= 2;
+    const grip = () => mdModal()?.querySelector(":scope > .obsidian-patch-resize-grip");
+    const rows = Array.from({ length: 40 }, (_, i) => `<tr><td>Movie ${i + 1}</td></tr>`).join("\n");
+    const html = `<table><thead><tr><th>Watchlist</th></tr></thead>\n<tbody>\n${rows}\n</tbody></table>`;
+    app.saveLocalStorage(editorKey, editorSize);
+    app.saveLocalStorage(previewKey, null);
+    await source(html);
+    await openReverse();
+    assert(grip() && !mdModal().style.width, "The desktop conversion preview needs its own grip and default width");
+    await until(() => {
+      const rect = grip().getBoundingClientRect();
+      const hit = doc.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return hit === grip() && Math.abs(mdModal().getBoundingClientRect().width - mdModal().offsetWidth) <= 1;
+    }, "the preview grip is under the pointer after the opening animation");
+    const before = mdModal().getBoundingClientRect(), corner = grip().getBoundingClientRect();
+    const target = { width: Math.min(600, win.innerWidth - 48), height: Math.min(400, win.innerHeight - 48) };
+    const x = Math.round(corner.left + corner.width / 2), y = Math.round(corner.top + corner.height / 2);
+    const toX = x + Math.round((target.width - before.width) / 2), toY = y + Math.round((target.height - before.height) / 2);
+    const wc = require("electron").remote.getCurrentWebContents(), debugger_ = wc.debugger;
+    const hit = doc.elementFromPoint(x, y)?.className;
+    const events = [];
+    const track = event => events.push([event.type, event.target?.className, event.clientX, event.clientY, event.buttons]);
+    const tracked = ["pointerdown", "pointermove", "pointerup", "pointercancel", "gotpointercapture", "lostpointercapture", "dragstart"];
+    for (const event of tracked) doc.addEventListener(event, track, true);
+    const owned = !debugger_.isAttached();
+    try {
+      if (owned) debugger_.attach("1.3");
+      await debugger_.sendCommand("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", buttons: 1, clickCount: 1 });
+      for (let step = 1; step <= 5; step++) {
+        await debugger_.sendCommand("Input.dispatchMouseEvent", { type: "mouseMoved", button: "left", buttons: 1,
+          x: x + (toX - x) * step / 5, y: y + (toY - y) * step / 5 });
+      }
+      await debugger_.sendCommand("Input.dispatchMouseEvent", { type: "mouseReleased", x: toX, y: toY, button: "left", clickCount: 1 });
+      await until(() => matches(mdModal().getBoundingClientRect(), target) && matches(app.loadLocalStorage(previewKey), target),
+        "a drag resizes the centered preview and saves its dimensions");
+    } catch (error) {
+      const preview = mdModal(), css = preview && win.getComputedStyle(preview);
+      const geometry = { x, y, toX, toY, hit, before, corner, target, actual: preview?.getBoundingClientRect(),
+        stored: app.loadLocalStorage(previewKey), inlineStyle: preview?.style.cssText,
+        computed: css && [css.width, css.height, css.maxWidth, css.maxHeight, css.minWidth, css.minHeight],
+        viewport: [win.innerWidth, win.innerHeight], zoom: wc.getZoomFactor(), dpr: win.devicePixelRatio, events };
+      throw new Error(error.message + "\nPreview drag: " + JSON.stringify(geometry));
+    } finally {
+      for (const event of tracked) doc.removeEventListener(event, track, true);
+      if (owned && debugger_.isAttached()) debugger_.detach();
+    }
+    const panes = mdModal().querySelector(".obsidian-patch-table-md-panes").children;
+    assert(panes[1].getBoundingClientRect().top >= panes[0].getBoundingClientRect().bottom - 1,
+      "The narrow preview should stack Markdown source above the rendered table");
+    const scroll = [".obsidian-patch-table-md-source", ".obsidian-patch-table-md-preview", ".modal-content"]
+      .map(selector => mdModal().querySelector(selector))
+      .find(el => el.clientHeight > 0 && el.scrollHeight > el.clientHeight + 1 && /auto|scroll/.test(win.getComputedStyle(el).overflowY));
+    assert(scroll, "A long converted table has no scrollable content");
+    scroll.scrollTop = scroll.scrollHeight;
+    const footer = mdModal().querySelector(":scope > .modal-button-container").getBoundingClientRect();
+    const bounds = mdModal().getBoundingClientRect();
+    assert(scroll.scrollTop > 0 && footer.height > 0 && footer.top >= bounds.top && footer.bottom <= Math.min(bounds.bottom, win.innerHeight) + 1,
+      "Scrolling the small preview should keep its actions visible");
+    pass("dragging the desktop conversion preview saves its size, stacks narrow panes, and keeps long tables and actions reachable");
+    mdButton("Cancel").click();
+    app.commands.executeCommandById("patches:edit-html-table");
+    await until(() => grid() && matches(modal().getBoundingClientRect(), editorSize),
+      "the table editor retains its own dimensions after resizing the conversion preview");
+    button("Convert to Markdown").click();
+    await until(() => grip() && matches(mdModal().getBoundingClientRect(), target) && !mdConfirm().disabled,
+      "the preview opens from the table editor at the size saved by the standalone command");
+    pass("the table editor keeps its own size and reopens the conversion preview at the saved dimensions");
+    grip().dispatchEvent(new win.MouseEvent("dblclick", { bubbles: true }));
+    assert(!mdModal().style.width && !mdModal().style.height && app.loadLocalStorage(previewKey) === null
+      && matches(app.loadLocalStorage(editorKey), editorSize), "Resetting the preview should clear only its own size");
+    mdButton("Cancel").click();
+    button("Cancel").click();
+    await openReverse();
+    await until(() => matches(mdModal().getBoundingClientRect(), before), "the reset preview reopens at its original default size");
+    mdButton("Cancel").click();
+    assert(editor().getValue() === html, "Resizing the preview changed the source table");
+    pass("double-click resets only the conversion preview and a new command uses its original dimensions");
+  }
   async function screenshot(name, target) {
     const wc = require("electron").remote.getCurrentWebContents();
     const debugger_ = wc.debugger, owned = !debugger_.isAttached();
@@ -273,6 +355,7 @@
       await until(() => mdModal()?.querySelector(".obsidian-patch-table-md-preview table") && !mdConfirm().disabled,
         "reverse conversion modal verifies output");
     };
+    await checkPreviewResize(openReverse);
 
     await source(rich); selectAll(); await open(); confirm();
     const richHtml = editor().getValue().replace("<code>a\\|b</code>", "<code>a\\|b</code> &amp; <code>c|d</code>");

@@ -1,4 +1,5 @@
 import { Component, DropdownComponent, MarkdownRenderer, Modal, Notice, Scope, setIcon, type App } from "obsidian";
+import { makeResizable } from "../../ui/resizable-modal";
 import { tableReferences } from "./markdown";
 import {
   auditHtmlTable, convertHtmlTableToMarkdown, DEFAULT_HTML_TO_MARKDOWN_OPTIONS, verifyRenderedMarkdownTable,
@@ -134,6 +135,7 @@ export class HtmlToMarkdownModal extends Modal {
     this.confirmButton = footer.createEl("button", { text: label, cls: "mod-cta", attr: { type: "button" } });
     this.confirmButton.disabled = true;
     this.confirmButton.addEventListener("click", () => { void this.commit(); });
+    makeResizable(this, "obsidian-patch-table-markdown-preview-size", { margin: { x: 16, y: 24 } });
 
     this.scope = new Scope(this.scope);
     this.scope.register(["Mod"], "Enter", () => {

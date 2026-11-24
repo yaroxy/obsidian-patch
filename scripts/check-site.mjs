@@ -25,6 +25,12 @@ async function checkSiteLink(label, attr, value, url) {
   }
 }
 for (const [file, html] of contents) {
+  const article = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)?.[1] ?? html;
+  const images = new Set();
+  for (const [, src] of article.matchAll(/<img\b[^>]*?\ssrc="([^"]+)"/g)) {
+    if (images.has(src)) failures.push(`${relative(root, file)}: repeated image ${src}`);
+    images.add(src);
+  }
   for (const [, attr, value] of html.matchAll(/\b(href|src)="([^"]+)"/g)) {
     if (!value || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(value)) continue;
     const url = new URL(value.replaceAll('&amp;', '&'), `https://local.invalid${base}${relative(root, file).replaceAll('\\', '/')}`);

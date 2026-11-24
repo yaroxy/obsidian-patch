@@ -17,6 +17,8 @@ Requires **Obsidian 1.15.0 or later**.
 Version **0.5.1** preserves inline formulas when converting Markdown tables to HTML. [Table example](features/tables.md#convert-tables-with-inline-formulas) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
 :::
 
+The next release adds the [reverse conversion from HTML to Markdown](features/tables.md#convert-an-html-table-to-markdown) and [callout type suggestions in the editor](features/callouts.md#type-completion-and-paste).
+
 ## Try one improvement
 
 | If you want to… | Start here |

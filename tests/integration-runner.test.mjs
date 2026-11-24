@@ -41,7 +41,10 @@ function fixture(t, reloadFailure = false) {
   const settings = join(vault, ".obsidian/plugins/patches/data.json");
   const original = '{\n  "custom": "preserve whitespace too"\n}\n';
   writeFileSync(settings, original); writeFileSync(join(output, "settings-before.json"), original);
-  const storage = new Map([["test-obsidian-patch-table-editor-size", '{"width":900}']]);
+  const storage = new Map([
+    ["test-obsidian-patch-table-editor-size", '{"width":900}'],
+    ["test-obsidian-patch-table-markdown-preview-size", '{"width":640,"height":480}'],
+  ]);
   let throttled = false; // Preserve a caller's false as well as the usual true.
   const previous = { parent: {}, view: {} };
   const leaf = { parent: {}, view: { save: async () => {} }, detach() { this.parent = null; } };
@@ -61,12 +64,18 @@ function fixture(t, reloadFailure = false) {
   });
   return { app, leaf, session, settings, storage,
     config: { runId: "test", vault, output, timeoutMs: 1000, settingsExisted: true },
-    mutate() { writeFileSync(settings, '{"changed":true}'); storage.set("test-obsidian-patch-table-editor-size", "changed"); storage.set("test-obsidian-patch-callout-editor-size", "new"); },
+    mutate() {
+      writeFileSync(settings, '{"changed":true}');
+      storage.set("test-obsidian-patch-table-editor-size", "changed");
+      storage.set("test-obsidian-patch-table-markdown-preview-size", "changed");
+      storage.set("test-obsidian-patch-callout-editor-size", "new");
+    },
     result: () => JSON.parse(readFileSync(join(output, "results.json"), "utf8")),
     restored() {
       assert.equal(readFileSync(settings, "utf8"), original);
       assert.equal(active, previous); assert.equal(leaf.parent, null); assert.equal(throttled, false);
       assert.equal(storage.get("test-obsidian-patch-table-editor-size"), '{"width":900}');
+      assert.equal(storage.get("test-obsidian-patch-table-markdown-preview-size"), '{"width":640,"height":480}');
       assert.equal(storage.has("test-obsidian-patch-callout-editor-size"), false);
     },
   };

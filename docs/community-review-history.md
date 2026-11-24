@@ -186,6 +186,10 @@ Both optional downloads would contain only versioned icon data. Local gzip cache
 
 Local ESLint using the recommended `eslint-plugin-obsidianmd` 0.6.0 configuration on all 51 TypeScript source files reported zero errors and the six previously recorded `prefer-active-doc` warnings in Active Line, Callout Code and Mermaid. Callout appearance and table fonts now use static CSS rules and element-level custom properties. The historical forbidden-element error for creating a stylesheet was absent. The standard offline Mermaid renderer and both icon packs remain bundled, so the 5 MB Sync Standard warning is still expected. The maintainer's Directory preview for this candidate is pending. [Candidate build and native verification](integration-testing.md#editor-updates-branch-candidate--2026-11-24)
 
+## Resizable preview follow-up — local verification, 2026-11-24
+
+The table conversion preview now shares the desktop resize grip used by the table and callout editors and stores its dimensions separately. The updated default build passed the [native conversion and editor checks](integration-testing.md#resizable-conversion-preview--2026-11-24). Local recommended ESLint on all 51 TypeScript source files reported zero errors and the same six `prefer-active-doc` warnings. The public Directory entry still listed 0.5.1 on this date. An official branch preview result for this change is pending.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

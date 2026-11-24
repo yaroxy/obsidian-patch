@@ -29,7 +29,7 @@ async function obsidianSession(app, config, suite) {
     wc = require("electron").remote.getCurrentWebContents();
     throttle = wc.getBackgroundThrottling();
     previous = app.workspace.getMostRecentLeaf();
-    sizes = Object.fromEntries(["obsidian-patch-table-editor-size", "obsidian-patch-callout-editor-size"]
+    sizes = Object.fromEntries(["obsidian-patch-table-editor-size", "obsidian-patch-table-markdown-preview-size", "obsidian-patch-callout-editor-size"]
       .map(key => [key, localStorage.getItem(`${app.appId}-${key}`)]));
     wc.setBackgroundThrottling(false);
     leaf = app.workspace.getLeaf("tab");

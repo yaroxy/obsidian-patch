@@ -33,7 +33,9 @@ This setting selects local vault folders, including their subfolders, for GitHub
 
 ## Table conversion is unavailable
 
-Place the cursor inside a standalone Markdown table, or select complete tables. Tables inside code blocks, lists, or callouts are excluded. Images, embeds, footnotes, and extra cells are rejected before conversion writes to the note. For tables with inline formulas, use Patches 0.5.1 or later. [Inline formula example](features/tables.md#convert-tables-with-inline-formulas)
+For **Convert Markdown tables to HTML**, place the cursor inside a standalone Markdown table, or select complete tables. Tables inside code blocks, lists, or callouts are excluded. Images, embeds, footnotes, and extra cells are rejected before conversion writes to the note. For tables with inline formulas, use Patches 0.5.1 or later. [Inline formula example](features/tables.md#convert-tables-with-inline-formulas)
+
+**Convert HTML tables to Markdown** is in the next release. In that build, place the cursor inside a standalone HTML table or choose **Convert to Markdown** in its visual editor. If the note changes while the preview is open, reopen the conversion so Patches can check the current table and its links. [HTML-to-Markdown guide](features/tables.md#convert-an-html-table-to-markdown)
 
 ## A Mermaid example does not render
 

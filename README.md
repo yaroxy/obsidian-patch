@@ -20,14 +20,21 @@ One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/ob
 
 Convert Markdown tables to HTML and keep inline LaTeX rendered in Reading View and Live Preview. [See the converted table](docs/images/inline-math-table.png) · [Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
 
+## Next release preview
+
+- **Tables.** Convert a standalone HTML table back to Markdown. On desktop, resize the preview to compare wide tables with their Markdown source. Choose an installed font for inline code in HTML table cells.
+- **Callouts.** Type `> [!tip` and choose `TIP` to insert `> [!TIP]`. Multiline plain-text pastes keep their quote markers. Give each callout type a Lucide icon and a preset or custom color.
+
+[Full list of unreleased changes](CHANGELOG.md#unreleased)
+
 ## Features
 
-Find each group under **Settings → Patches**. Open a feature guide for examples.
+These features are available in 0.5.1. Open a feature guide for examples.
 
 <table>
 <thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
 <tbody>
-<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, live-preview, and unwrap callouts. Type <code>&gt; [!tip</code> and select <code>TIP</code> to insert <code>&gt; [!TIP]</code>. Keep multi-line pastes quoted, check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>, and customize each type’s icon and color with matching code backgrounds.</td></tr>
+<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and unwrap callouts. Match code backgrounds to their callout and check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>.</td></tr>
 </tbody>
 <tbody>
 <tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/active-line.html">Active line</a></td><td>Mark the current line in the margin and highlight its line number.</td></tr>
@@ -40,7 +47,7 @@ Find each group under **Settings → Patches**. Open a feature guide for example
 <tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
 <tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. Check all diagrams in a note and jump to syntax errors.</td></tr>
 <tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
-<tr><th scope="row">HTML Tables</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Visually edit merged cells, grouped headers, and captions. Set the font for inline code in cells. Convert between Markdown and HTML tables with one-step undo in the source note.</td></tr>
+<tr><th scope="row">No settings required</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Convert Markdown tables to HTML, then edit merged cells, grouped headers, and captions visually.</td></tr>
 </tbody>
 </table>
 
@@ -78,7 +85,7 @@ The optional Full build can download and execute Mermaid/ELK JavaScript from jsD
 
 ## Help
 
-Start with [troubleshooting](https://yaroxy.github.io/obsidian-patch/troubleshooting.html). When [reporting a bug](https://github.com/yaroxy/obsidian-patch/issues), include Obsidian/Patches versions, OS, theme, view mode, reproduction steps, and a small example or recording.
+For questions or examples from your own notes, join the [Patches forum discussion](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). For a reproducible problem, include your Obsidian and Patches versions, OS, theme, view mode, steps, and a small example or recording. [Troubleshooting](https://yaroxy.github.io/obsidian-patch/troubleshooting.html) · [Report a bug](https://github.com/yaroxy/obsidian-patch/issues)
 
 ## Development
 

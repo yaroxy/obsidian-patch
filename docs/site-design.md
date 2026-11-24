@@ -16,6 +16,8 @@ Markdown pages reference the original images in `docs/images/`; Vite processes t
 
 The README and homepage highlight the current patch. The [table guide](../site/features/tables.md#convert-tables-with-inline-formulas) has a copyable example and a real Reading View screenshot for 0.5.1. The homepage keeps the icon, line-width, and code-background gallery labeled with its original 0.4.0 release.
 
+The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
+
 ## Community Directory screenshots
 
 The gallery shows five features available in 0.4.0. Each upload is a 1200 × 800 PNG made from a real Obsidian capture. The images retain their aspect ratio and include the full controls. Use this order in the Directory’s screenshot editor.

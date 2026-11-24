@@ -478,6 +478,12 @@ body {
   overflow: hidden;
 }
 
+/* Keep the preview within its padded container as the window or zoom changes. */
+.modal.obsidian-patch-table-md-modal.is-resized {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .obsidian-patch-table-md-modal > .modal-header,
 .obsidian-patch-table-md-modal > .modal-button-container { flex: none; }
 
