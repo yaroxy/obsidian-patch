@@ -7,6 +7,7 @@ Open Obsidian’s command palette and search for **Patches:**. Context-sensitive
 | **Insert HTML table** | Create a table with the visual editor. |
 | **Edit HTML table** | Edit the HTML table at the cursor. |
 | **Convert Markdown tables to HTML** | Convert the table at the cursor or a selection of complete tables. |
+| **Convert HTML tables to Markdown** | Preview options and round-trip verification before converting standalone HTML tables to Markdown. |
 | **Insert callout** | Insert a callout or wrap selected lines. |
 | **Edit callout** | Edit the callout at the cursor. |
 | **Convert callout to text** | Remove its callout/blockquote wrapper. |

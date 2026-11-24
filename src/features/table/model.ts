@@ -1,3 +1,5 @@
+import { maskInline, scanLines } from "./markdown";
+
 /**
  * HTML tables in the form that renders well in Obsidian: no blank lines inside
  * the block, an explicit `align` on every new cell, `vertical-align:middle` on
@@ -31,18 +33,18 @@ export interface Rect {
   right: number;
 }
 
-export interface Placed {
-  cell: Cell;
+export interface Placed<T = Cell> {
+  cell: T;
   row: number;
   col: number;
 }
 
-export interface Layout {
+export interface Layout<T = Cell> {
   width: number;
   height: number;
-  placed: Placed[];
+  placed: Placed<T>[];
   /** The cell covering each slot. */
-  grid: (Placed | undefined)[][];
+  grid: (Placed<T> | undefined)[][];
 }
 
 export type Align = "left" | "center" | "right";
@@ -50,7 +52,24 @@ export type Align = "left" | "center" | "right";
 export const CAPTION_STYLE = "caption-side:top; text-align:center; font-weight:600; padding:0 0 4px";
 const FIRST_COLUMN_WIDTH = 20;
 
+// The editor materializes missing cells and the Markdown preview renders every slot.
+const MAX_GRID_SLOTS = 50_000;
+
+export class TableSizeError extends Error {
+  constructor() { super(`This table exceeds the limit of ${MAX_GRID_SLOTS.toLocaleString("en-US")} expanded grid slots.`); }
+}
+
+export function checkTableSize(height: number, width: number): void {
+  if (height * Math.max(1, width) > MAX_GRID_SLOTS) throw new TableSizeError();
+}
+
+/** Use the browser's reflected spans. A zero rowSpan extends to the end of this row group. */
+export function cellSpans(cell: Pick<HTMLTableCellElement, "rowSpan" | "colSpan">, rowsRemaining: number): Pick<Cell, "rowspan" | "colspan"> {
+  return { rowspan: Math.min(cell.rowSpan || rowsRemaining, rowsRemaining), colspan: cell.colSpan };
+}
+
 export function createTable(rows: number, cols: number): Table {
+  checkTableSize(rows, cols);
   const table: Table = {
     attrs: [["style", "width:100%"]],
     rows: Array.from({ length: rows }, (_, row) => Array.from({ length: cols }, () => ({
@@ -64,18 +83,24 @@ export function createTable(rows: number, cols: number): Table {
 export function parseTable(html: string): Table | undefined {
   const table = new DOMParser().parseFromString(html, "text/html").querySelector("table");
   if (!table) return undefined;
+  checkTableSize(table.rows.length, 1);
   const attrs = (el: Element): Attrs => Array.from(el.attributes)
     .filter(({ name }) => name !== "rowspan" && name !== "colspan")
     .map(({ name, value }) => [name, value]);
-  const rows = Array.from(table.rows, (row) => Array.from(row.cells, (cell): Cell => ({
-    header: cell.tagName === "TH",
-    rowspan: Math.max(1, cell.rowSpan),
-    colspan: Math.max(1, cell.colSpan),
-    attrs: attrs(cell),
-    html: cell.innerHTML,
-  })));
+  let group: Element | null = null;
+  let groupEnd = 0;
+  const rows = Array.from(table.rows, (row, index) => {
+    // Rows parsed from HTML belong to a thead, tbody (possibly implicit), or tfoot.
+    const section = row.parentElement as HTMLTableSectionElement;
+    if (section !== group) {
+      group = section;
+      groupEnd = index + section.rows.length;
+    }
+    return Array.from(row.cells, (cell): Cell => ({
+      header: cell.tagName === "TH", ...cellSpans(cell, groupEnd - index), attrs: attrs(cell), html: cell.innerHTML,
+    }));
+  });
   const { width, height, placed, grid } = layout(rows);
-  for (const { cell, row } of placed) cell.rowspan = Math.min(cell.rowspan, height - row);
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       if (!grid[row]?.[col]) placed.push({ cell: fresh(grid[row]?.[col - 1]?.cell), row, col });
@@ -89,8 +114,18 @@ export function parseTable(html: string): Table | undefined {
 }
 
 export function toHtml(table: Table): string {
+  return serializeTable(table, inline);
+}
+
+/** A conversion draft goes directly to the DOM, so literal line breaks in code can survive. */
+export function draftTableElement(table: Table): HTMLTableElement | null {
+  const html = serializeTable(table, (content) => content);
+  return new DOMParser().parseFromString(html, "text/html").querySelector("table");
+}
+
+function serializeTable(table: Table, formatContent: (content: string) => string): string {
   const out = [`<table${attrsHtml(table.attrs)}>`];
-  if (table.caption) out.push(`  <caption${attrsHtml(table.caption.attrs)}>${inline(table.caption.html)}</caption>`);
+  if (table.caption) out.push(`  <caption${attrsHtml(table.caption.attrs)}>${formatContent(table.caption.html)}</caption>`);
   const head = headRows(table.rows);
   for (const [tag, rows] of [["thead", table.rows.slice(0, head)], ["tbody", table.rows.slice(head)]] as const) {
     if (rows.length === 0) continue;
@@ -100,7 +135,7 @@ export function toHtml(table: Table): string {
       for (const cell of row) {
         const name = cell.header ? "th" : "td";
         const spans = (cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : "") + (cell.colspan > 1 ? ` colspan="${cell.colspan}"` : "");
-        out.push(`      <${name}${spans}${attrsHtml(cell.attrs)}>${inline(cell.html)}</${name}>`);
+        out.push(`      <${name}${spans}${attrsHtml(cell.attrs)}>${formatContent(cell.html)}</${name}>`);
       }
       out.push("    </tr>");
     }
@@ -111,10 +146,14 @@ export function toHtml(table: Table): string {
 }
 
 /** Leading rows made only of header cells, none of which spans past them. */
-export function headRows(rows: Cell[][]): number {
+export function headRows(rows: Pick<Cell, "header" | "rowspan">[][]): number {
   let head = 0;
-  while (head < rows.length && rows[head]!.every((cell) => cell.header)) head++;
-  while (head > 0 && rows.slice(0, head).some((row, index) => row.some((cell) => index + cell.rowspan > head))) head--;
+  let spanEnd = 0;
+  for (const [index, row] of rows.entries()) {
+    if (row.some(cell => !cell.header)) break;
+    for (const cell of row) spanEnd = Math.max(spanEnd, index + cell.rowspan);
+    if (spanEnd <= index + 1) head = index + 1;
+  }
   return head;
 }
 
@@ -123,32 +162,44 @@ export function tableRanges(text: string): { from: number; to: number }[] {
   const ranges: { from: number; to: number }[] = [];
   let depth = 0;
   let from = 0;
-  for (const match of text.matchAll(/<(\/?)table\b[^>]*>/gi)) {
-    if (!match[1]) {
-      if (depth++ === 0) from = match.index;
-    } else if (depth > 0 && --depth === 0) {
-      ranges.push({ from, to: match.index + match[0].length });
+  for (const line of scanLines(text)) {
+    if (line.nonMarkdown) {
+      // Blank or container lines end an unclosed CommonMark HTML block; drop orphaned depth.
+      if (!line.text.trim()) depth = 0;
+      continue;
+    }
+    if (!line.text.trim()) depth = 0;
+    const masked = maskInline(line.text, depth === 0);
+    for (const match of masked.matchAll(/<(\/?)table\b[^>]*>/gi)) {
+      if (!match[1]) {
+        if (depth++ === 0) from = line.from + match.index;
+      } else if (depth > 0 && --depth === 0) {
+        ranges.push({ from, to: line.from + match.index + match[0].length });
+      }
     }
   }
   return ranges;
 }
 
 /** Places cells on the grid with the HTML table algorithm. */
-export function layout(rows: Cell[][]): Layout {
+export function layout<T extends Pick<Cell, "rowspan" | "colspan">>(rows: T[][]): Layout<T> {
   const height = rows.length;
-  const grid: (Placed | undefined)[][] = rows.map(() => []);
-  const placed: Placed[] = [];
+  checkTableSize(height, 1);
+  const grid: (Placed<T> | undefined)[][] = rows.map(() => []);
+  const placed: Placed<T>[] = [];
   let width = 0;
   rows.forEach((cells, row) => {
     let col = 0;
     for (const cell of cells) {
       while (grid[row]![col]) col++;
-      const at: Placed = { cell, row, col };
+      const right = col + cell.colspan;
+      checkTableSize(height, right);
+      const at = { cell, row, col };
       placed.push(at);
       for (let y = row; y < Math.min(row + cell.rowspan, height); y++) {
-        for (let x = col; x < col + cell.colspan; x++) grid[y]![x] ??= at;
+        for (let x = col; x < right; x++) grid[y]![x] ??= at;
       }
-      col += cell.colspan;
+      col = right;
       width = Math.max(width, col);
     }
   });
@@ -186,6 +237,7 @@ export function inside(at: Placed, rect: Rect): boolean {
 export function insertRow(table: Table, at: number): Table {
   const next = clone(table);
   const { width, height, placed, grid } = layout(next.rows);
+  checkTableSize(height + 1, width);
   const spanned = new Set<number>();
   for (const cell of placed) {
     if (cell.row >= at) cell.row++;
@@ -202,7 +254,8 @@ export function insertRow(table: Table, at: number): Table {
 
 export function insertColumn(table: Table, at: number): Table {
   const next = clone(table);
-  const { height, placed, grid } = layout(next.rows);
+  const { width, height, placed, grid } = layout(next.rows);
+  checkTableSize(height, width + 1);
   const spanned = new Set<number>();
   for (const cell of placed) {
     if (cell.col >= at) cell.col++;

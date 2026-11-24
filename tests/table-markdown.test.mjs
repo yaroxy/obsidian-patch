@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { build } from "esbuild";
 
 const bundle = await build({ entryPoints: ["src/features/table/markdown.ts"], bundle: true, write: false, format: "esm", platform: "node" });
-const { markdownTables, selectMarkdownTables, tableReferences, tableReplacement } = await import(
+const { markdownTables, replaceSavedTable, selectHtmlTables, selectMarkdownTables, tableReferences, tableReplacement } = await import(
   `data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`);
 const simple = "| A | B |\n| --- | --- |\n| x | y |";
 
@@ -52,6 +52,23 @@ test("mismatched delimiters are ignored; excess body cells are retained for vali
   assert.equal(markdownTables(simple + "\n| a | b | c |")[0].rows.at(-1).length, 3);
 });
 
+test("literal comment markers in code spans do not hide subsequent HTML tables, pipe tables or references", () => {
+  const html = "<table><tr><td>Visible</td></tr></table>";
+  const hiddenHtml = html.replace("Visible", "Hidden");
+  const reference = "[visible]: https://example.com";
+  for (const [opening, closing] of [["<!--", "-->"], ["%%", "%%"]]) {
+    const literal = `Use \`${opening}\` or \`\`a\` ${opening}\`\` here.`;
+    const visible = `${html}\n\n${simple}\n\n${reference}`;
+    const comment = `${literal} ${opening}\n\n${hiddenHtml}\n\n${simple}\n\n[hidden]: /private\n${closing}`;
+    for (const prefix of [literal, comment]) {
+      const note = `${prefix}\n\n${visible}`;
+      assert.deepEqual(selectHtmlTables(note, 0, note.length).map(table => table.source), [html]);
+      assert.deepEqual(markdownTables(note).map(table => table.from), [note.lastIndexOf(simple)]);
+      assert.equal(tableReferences(note), reference + "\n");
+    }
+  }
+});
+
 test("a cursor picks one table; a selection includes whole tables and rejects partial ones", () => {
   const text = "Before\n\n" + simple + "\n\nBetween\n\n" + simple + "\n\nAfter";
   const tables = markdownTables(text);
@@ -76,4 +93,17 @@ test("CRLF offsets and replacements preserve surrounding bytes and required bloc
 test("reference definitions retain destinations and titles but exclude code and footnotes", () => {
   const text = '[site]: https://example.com "Title"\n\n[multi]:\n  https://example.com\n  "Title"\n\n```\n[no]: https://invalid.example\n```\n\n[^foot]: text';
   assert.equal(tableReferences(text), '[site]: https://example.com "Title"\n\n[multi]:\n  https://example.com\n  "Title"\n');
+});
+
+test("Reading View edits preserve raw delimiters, concurrent changes outside the section, and same-line neighbors", () => {
+  const table = "<table>\n<tr><td>old</td></tr>\n</table>";
+  const section = "  " + table + "<!-- keep -->";
+  const found = { lineStart: 2, section, from: 2, to: 2 + table.length };
+  for (const [first, second] of [["\r\n", "\r\n"], ["\r\n", "\n"], ["\n", "\r"], ["\r", "\n"]]) {
+    const text = "edited heading\n\r\n  <table>" + first + "<tr><td>old</td></tr>" + second + "</table><!-- keep -->\r\nAfter\n";
+    assert.equal(replaceSavedTable(text, found, table.replace("old", "new")), text.replace("old", "new"));
+    assert.equal(replaceSavedTable(text, found, "<table>\na\nb\n</table>"), text.replace("<tr><td>old</td></tr>" + second, "a" + second + "b" + first));
+    assert.equal(replaceSavedTable(text.replace("old", "external"), found, table), undefined);
+    assert.equal(replaceSavedTable(text.replace("keep", "external"), found, table), undefined);
+  }
 });

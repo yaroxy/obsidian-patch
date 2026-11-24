@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Choose an installed font for inline code in HTML table cells under **HTML Tables → Inline code font**.
+- Set a Lucide icon and color for each callout type under **Callouts → Type appearance**. Choose one of the eight theme colors or a custom color. The existing code background follows the chosen color.
+- Convert standalone HTML tables back to Markdown pipe tables (`Convert HTML tables to Markdown` command, editor context menu, and **Convert to Markdown** inside `Edit HTML table`), auditing source-DOM losses, offering merged-cell / headerless / caption options, verifying every table through Obsidian's Markdown renderer, and supporting single-step undo across Source, Live Preview, and Reading View.
+- Suggest callout types inline when typing `> [!` in the editor, prioritizing GitHub alerts on GitHub-tracked notes.
+- Prefix multi-line plain-text pastes inside a callout body with the callout's blockquote markers automatically in a single undoable edit.
+
+### Changed
+
+- Reduce the Community bundle size by using Mermaid 12’s built-in ELK layouts. The complete offline icon packs remain available.
+- Share an in-progress Simple Icons download between the picker and the settings update button.
+- Group visually identical callout aliases in the type picker and support filtering, choosing an alias, and entering a custom type. Header-only edits preserve the body byte for byte.
+- Write newly inserted, selected, or reselected callout types in uppercase, including custom types. Editing other fields preserves the existing marker spelling. Types whose uppercase form would identify a different Obsidian type keep their spelling.
+
+### Fixed
+
+- Preserve and verify literal inline code in HTML table captions, headers and body cells during Markdown conversion, including repeated spaces and line breaks.
+- Preserve existing line endings when saving a table in Reading View and allow unchanged CRLF tables to convert to Markdown with one-step undo.
+- Keep callout and HTML table drafts open when saving conflicts with a concurrent edit, including a new paragraph appended to a callout in another pane. Callout conversion also retains its draft after a failed write.
+- Give rich-text pastes in callouts to Obsidian and keep the latest callout preview when a slower render finishes.
+- Keep the following callout paragraph at its original quote depth when pasting at the start of a line.
+- Recheck the whole note before converting an HTML table to Markdown, including links to table IDs added in another pane while the preview was open. The preview reports discarded HTML comments and inline attributes.
+- Keep merged cells in their original columns when converting HTML tables to Markdown through the visual editor, including cells that span to the end of a row group.
+- Limit table editing and conversion to 50,000 expanded grid slots so a wide or sparsely filled table can be refused before allocating the full grid.
+- Keep the conversion draft open if its Reading View tab closes or changes notes. A successful conversion can be undone in the source note.
+- Preserve mixed line endings when editing a callout in Reading View. Changing its title leaves every other line byte-for-byte intact.
+- Exclude HTML `<table>` tags inside YAML frontmatter, fenced or indented code, inline code, comments, display math, callouts, and list items when locating tables for editing or conversion, and avoid adding an extra trailing blank line at EOF.
+- Keep tables and reference links available after an inline code example containing a literal comment opener such as `<!--` or `%%`.
+- Render the callout live preview into an off-screen DOM buffer with per-render `Component` cleanup to eliminate white flicker, stale async overwrites, and leaked child components.
+
 ## [0.5.1] - 2026-11-19
 
 ### Fixed

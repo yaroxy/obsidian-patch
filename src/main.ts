@@ -19,6 +19,8 @@ import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/acti
 import { DEFAULT_HEADING_LEVELS_ENABLED, registerHeadingLevels } from "./features/heading-levels";
 import { parsePdfExportSettings, registerPdfExport, type PdfExportSettings } from "./features/pdf-export";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
+import { CalloutAppearanceModal } from "./features/callout/appearance-modal";
+import { parseAppearanceSettings, registerAppearance, type AppearanceSettings } from "./features/appearance";
 import { registerTables } from "./features/table";
 import { MATH_INDENTS, parseMathFormatSettings, registerMathFormat, type MathFormatSettings } from "./features/math-format";
 import { GITHUB_PROPERTY, parseCalloutSettings, registerCallouts, type CalloutSettings } from "./features/callout";
@@ -46,6 +48,7 @@ interface PatchesSettings {
   mermaidVersion: MermaidVersionChoice;
   /** The version that `latest` last resolved to, for offline startups. */
   mermaidCachedLatest?: string;
+  appearance: AppearanceSettings;
   calloutCode: boolean;
   callouts: CalloutSettings;
   activeLine: boolean;
@@ -66,6 +69,7 @@ export default class PatchesPlugin extends Plugin {
   settings: PatchesSettings = parseSettings(null);
   mermaid?: PatchMermaidController;
   icons?: PatchIconsController;
+  private applyAppearance?: (settings: AppearanceSettings) => void;
   private applyCalloutCode?: (enabled: boolean) => void;
   private applyActiveLine?: (enabled: boolean) => void;
   private applyBanner?: (settings: BannerSettings) => void;
@@ -94,6 +98,7 @@ export default class PatchesPlugin extends Plugin {
         }
       },
     });
+    this.applyAppearance = registerAppearance(this, this.settings.appearance);
     this.applyCalloutCode = registerCalloutCode(this, this.settings.calloutCode);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyHeadingLevels = registerHeadingLevels(this, this.settings.headingLevels);
@@ -101,7 +106,7 @@ export default class PatchesPlugin extends Plugin {
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
     registerMathFormat(this, () => this.settings.mathFormat);
-    this.refreshCalloutStatus = registerCallouts(this, () => this.settings.callouts);
+    this.refreshCalloutStatus = registerCallouts(this, () => this.settings.callouts, () => this.settings.appearance.calloutTypes);
     this.icons = registerIcons(this, this.settings.icons, async (icons) => {
       this.settings.icons = icons;
       await this.saveData(this.settings);
@@ -131,6 +136,12 @@ export default class PatchesPlugin extends Plugin {
     this.settings.calloutCode = calloutCode;
     await this.saveData(this.settings);
     this.applyCalloutCode?.(calloutCode);
+  }
+
+  async setAppearance(appearance: AppearanceSettings): Promise<void> {
+    this.settings.appearance = parseAppearanceSettings(appearance);
+    this.applyAppearance?.(this.settings.appearance);
+    await this.saveData(this.settings);
   }
 
   async setActiveLine(activeLine: boolean): Promise<void> {
@@ -199,6 +210,22 @@ class PatchesSettingTab extends PluginSettingTab {
       { type: "group", heading: "Patch Mermaid", items: this.mermaidDefinitions() },
       { type: "group", heading: "Patch Banner", items: this.bannerDefinitions() },
       { type: "group", heading: "Patch Icons", items: this.iconDefinitions() },
+      { type: "group", heading: "HTML Tables", items: [{
+        name: "Inline code font",
+        desc: "Installed font family for inline code in HTML table cells. Leave empty to use the theme font.",
+        render: (setting) => {
+          setting.addText(text => {
+            const current = () => this.plugin.settings.appearance;
+            text.setPlaceholder("e.g. JetBrains Mono").setValue(current().tableCodeFont);
+            const commit = (): void => {
+              const tableCodeFont = text.getValue().trim();
+              if (tableCodeFont !== current().tableCodeFont) void this.plugin.setAppearance({ ...current(), tableCodeFont });
+            };
+            text.inputEl.addEventListener("blur", commit);
+            text.inputEl.addEventListener("keydown", event => { if (event.key === "Enter") text.inputEl.blur(); });
+          });
+        },
+      }] },
       { type: "group", heading: "Line Width", items: this.lineWidthDefinitions() },
       { type: "group", heading: "Callouts", items: this.calloutDefinitions() },
       { type: "group", heading: "Math Format", items: this.mathDefinitions() },
@@ -296,6 +323,19 @@ class PatchesSettingTab extends PluginSettingTab {
   private calloutDefinitions(): SettingDefinition[] {
     const settings = (): CalloutSettings => this.plugin.settings.callouts;
     return [
+      {
+        name: "Type appearance",
+        desc: "Choose a Lucide icon, theme palette color or custom color for a callout type in this vault.",
+        render: setting => {
+          setting.addButton(button => button.setButtonText("Customize").onClick(() => {
+            new CalloutAppearanceModal(this.plugin.app, this.plugin.settings.appearance.calloutTypes, async (type, entry) => {
+              const current = this.plugin.settings.appearance;
+              const calloutTypes = { ...current.calloutTypes, [type]: entry };
+              await this.plugin.setAppearance({ ...current, calloutTypes });
+            }).open();
+          }));
+        },
+      },
       this.toggle("Code background", "Tints inline code and code block backgrounds with the callout's own color, preserving syntax highlighting. Code in a callout title takes the title's color. Applies to Reading View and Live Preview.",
         () => this.plugin.settings.calloutCode, (value) => this.plugin.setCalloutCode(value)),
       this.toggle("GitHub compatibility", "Shows in the callout editor whether GitHub renders the callout as an alert, with a button that makes it one. Edit a callout from its hover button, the editor menu, or Edit callout in the command palette.",
@@ -539,6 +579,7 @@ function parseSettings(data: unknown): PatchesSettings {
       ? record.mermaidSecurityLevel
       : DEFAULT_MERMAID_SECURITY_LEVEL,
     ...parseMermaidSettings(record),
+    appearance: parseAppearanceSettings(record.appearance),
     banner: parseBannerSettings(record.banner),
     icons: parseIconSettings(record.icons),
     lineWidth: parseLineWidthSettings(record.lineWidth),

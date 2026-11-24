@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
-import { after, beforeEach, test } from "node:test";
+import { after, test } from "node:test";
 import { build } from "esbuild";
 
-const state = {
-  calls: [],
-  bundled: { registerLayoutLoaders(layouts) { state.calls.push(["layouts", layouts]); } },
-};
+const state = { bundled: {} };
 globalThis.__patchesMermaidRuntimeTest = state;
 after(() => {
   delete globalThis.__patchesMermaidRuntimeTest;
@@ -27,8 +24,7 @@ async function load(entryPoint) {
         builder.onLoad({ filter: /.*/, namespace: "runtime-test" }, ({ path }) => {
           const prefix = "const state = globalThis.__patchesMermaidRuntimeTest;";
           if (path === "mermaid") return { contents: `${prefix} export default state.bundled;` };
-          if (path === "@mermaid-js/layout-elk") return { contents: 'export default ["elk"];' };
-          throw new Error(`Community runtime must not load a network dependency: ${path}`);
+          throw new Error(`Unexpected Community runtime dependency: ${path}`);
         });
       },
     }],
@@ -38,10 +34,6 @@ async function load(entryPoint) {
 }
 
 const community = await load("src/features/mermaid-runtime.ts");
-
-beforeEach(() => {
-  state.calls.length = 0;
-});
 
 test("directory runtime has no full adapter, remote loader or Obsidian network dependency", () => {
   assert.equal(community.module.REMOTE_MERMAID_ENABLED, false);
@@ -57,12 +49,11 @@ test("directory settings discard remote choices and cached versions", () => {
   assert.equal(community.module.isMermaidVersionChoice("bundled"), true);
 });
 
-test("directory runtime uses bundled Mermaid and ELK even when called with a remote choice", async () => {
+test("directory runtime uses bundled Mermaid even when called with a remote choice", async () => {
   for (const choice of ["bundled", "latest", "12.1.0"]) {
     const runtime = await community.module.loadMermaidRuntime(choice, "12.0.0", () => assert.fail("directory build resolved a remote version"));
     assert.equal(runtime.origin, "bundled");
     assert.equal(runtime.version, "12.3.0");
     assert.equal(runtime.mermaid, state.bundled);
   }
-  assert.deepEqual(state.calls, Array.from({ length: 3 }, () => ["layouts", ["elk"]]));
 });

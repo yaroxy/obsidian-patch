@@ -1,7 +1,15 @@
-import { Component, DropdownComponent, MarkdownRenderer, Modal, Scope, TextComponent, setIcon, setTooltip, type App } from "obsidian";
+import { Component, DropdownComponent, MarkdownRenderer, Modal, Notice, Scope, TextComponent, setIcon, setTooltip, type App } from "obsidian";
+import type { AppearanceSettings } from "../appearance";
 import { CheckReportModal } from "../../ui/check-report";
 import { makeResizable } from "../../ui/resizable-modal";
-import { calloutLines, defaultTitle, githubIssues, toGitHub, type CalloutHeader, type Fold, type GitHubIssue } from "./model";
+import {
+  calloutLines, defaultTitle, displayCalloutType, githubIssues, isValidCalloutMetadata, isValidCalloutType, toGitHub,
+  type CalloutHeader, type Fold, type GitHubIssue,
+} from "./model";
+import {
+  discoverCalloutTypes, filterCalloutCatalog, groupCalloutTypes, renderChipIcon,
+  type CalloutType, type CalloutTypeCatalog, type CalloutTypeGroup,
+} from "./types";
 
 export interface CalloutDraft {
   header: CalloutHeader;
@@ -17,87 +25,44 @@ export interface CalloutEditorOptions {
   placement: { indent: string; depth: number };
   sourcePath: string;
   showGitHub: boolean;
-  save(draft: CalloutDraft, changed: { header: boolean; body: boolean }): void;
+  prioritizeGitHub: boolean;
+  appearances: AppearanceSettings["calloutTypes"];
+  save(draft: CalloutDraft, changed: { header: boolean; body: boolean }): void | Promise<void>;
   /**
    * Given for an existing callout: the editor then offers to convert it, and
    * saving it unchanged writes nothing. A new callout is always written.
    */
-  convert?(draft: CalloutDraft, to: Conversion): void;
-}
-
-export interface CalloutType {
-  name: string;
-  icon: string;
-  /** A CSS color. Obsidian 1.14 gives `--callout-color` as hex; older versions and some themes as an `r, g, b` triple. */
-  color: string;
-}
-
-const cssColor = (value: string): string => (/^\d+\s*,\s*\d+\s*,\s*\d+$/.test(value) ? `rgb(${value})` : value);
-
-/** Rules from every stylesheet, including those nested in media queries. */
-function* styleRules(doc: Document): Generator<CSSStyleRule> {
-  const walk = function* (rules: CSSRuleList): Generator<CSSStyleRule> {
-    for (const rule of Array.from(rules)) {
-      if (rule instanceof CSSStyleRule) yield rule;
-      else if (rule instanceof CSSGroupingRule) yield* walk(rule.cssRules);
-    }
-  };
-  for (const sheet of Array.from(doc.styleSheets)) {
-    let rules: CSSRuleList;
-    try {
-      rules = sheet.cssRules;
-    } catch {
-      continue; // A cross-origin sheet hides its rules.
-    }
-    yield* walk(rules);
-  }
-}
-
-/**
- * The callout types the loaded styles define, in their order: Obsidian's own
- * with their aliases, then any from the theme and CSS snippets. Each type's
- * icon and color come from the same variables Obsidian draws callouts with.
- */
-export function calloutTypes(doc: Document): CalloutType[] {
-  const names = ["note"];
-  for (const rule of styleRules(doc)) {
-    for (const match of rule.selectorText.matchAll(/\.callout\[data-callout=["']?([^"'\]]+)["']?\]/g)) {
-      const name = match[1];
-      if (name && !names.includes(name)) names.push(name);
-    }
-  }
-  const probe = doc.body.createDiv({ cls: "callout", attr: { style: "display: none" } });
-  const types = names.map((name) => {
-    probe.dataset.callout = name;
-    const style = getComputedStyle(probe);
-    return { name, icon: style.getPropertyValue("--callout-icon").trim(), color: cssColor(style.getPropertyValue("--callout-color").trim()) };
-  });
-  probe.remove();
-  return types;
+  convert?(draft: CalloutDraft, to: Conversion): void | Promise<void>;
 }
 
 const FOLDS: [Fold, string][] = [["", "Not foldable"], ["+", "Foldable, expanded"], ["-", "Foldable, collapsed"]];
 
 /**
- * Edits a callout's type, title, fold state and content, with a rendered
- * preview and, when asked for, how GitHub would show it. The header controls
- * span the modal; only the content and its preview sit side by side, since
- * those are what one compares while typing.
+ * Edits a callout's type, title, fold state, metadata, and content, with a
+ * flicker-free live preview and GitHub compatibility checks. Header controls
+ * span the modal; only the content and its preview sit side by side.
  */
 export class CalloutEditor extends Modal {
   private header: CalloutHeader;
   private body: string;
   private readonly initial?: string;
-  private readonly component = new Component();
-  private readonly chips = new Map<string, HTMLElement>();
-  private readonly otherType: TextComponent;
+  private readonly catalog: CalloutTypeCatalog;
+  private readonly byLower: Map<string, CalloutType>;
+  private readonly filterInput: HTMLInputElement;
+  private readonly typePicker: HTMLElement;
   private readonly titleText: TextComponent;
   private readonly foldDropdown: DropdownComponent;
   private readonly metadataText: TextComponent;
   private readonly bodyArea: HTMLTextAreaElement;
+  private readonly previewWrap: HTMLElement;
   private readonly preview: HTMLElement;
   private readonly github?: HTMLElement;
+  private readonly saveButton: HTMLButtonElement;
+  private previewComponent?: Component;
   private renderTimer = 0;
+  private renderSeq = 0;
+  private closed = false;
+  private lastMarkdown?: string;
 
   constructor(app: App, private readonly options: CalloutEditorOptions) {
     super(app);
@@ -108,28 +73,23 @@ export class CalloutEditor extends Modal {
     this.modalEl.addClass("obsidian-patch-callout-modal");
     const { contentEl } = this;
 
-    const types = contentEl.createDiv({ cls: "obsidian-patch-callout-section" });
-    types.createDiv({ cls: "obsidian-patch-callout-label", text: "Type" });
-    const grid = types.createDiv({ cls: "obsidian-patch-callout-types" });
-    for (const type of calloutTypes(contentEl.doc)) {
-      const chip = grid.createEl("button", { cls: "obsidian-patch-callout-chip", attr: { type: "button", "aria-label": type.name } });
-      if (type.color) chip.style.setProperty("--obsidian-patch-chip-color", type.color);
-      const icon = chip.createSpan({ cls: "obsidian-patch-callout-chip-icon" });
-      if (type.icon) setIcon(icon, type.icon);
-      chip.createSpan({ text: type.name });
-      chip.addEventListener("click", () => {
-        this.otherType.setValue("");
-        this.update({ type: type.name });
-      });
-      this.chips.set(type.name.toLowerCase(), chip);
-    }
-    // Any other name goes at the end of the chips, as one more choice of type.
-    this.otherType = new TextComponent(grid).setPlaceholder("Other type").onChange((value) => {
-      if (value.trim()) this.update({ type: value.trim() });
+    this.catalog = groupCalloutTypes(discoverCalloutTypes(contentEl.doc, options.appearances));
+    this.byLower = new Map(this.catalog.all.map((type) => [type.name.toLowerCase(), type]));
+
+    const typesSection = contentEl.createDiv({ cls: "obsidian-patch-callout-section" });
+    const typeHead = typesSection.createDiv({ cls: "obsidian-patch-callout-type-head" });
+    typeHead.createSpan({ cls: "obsidian-patch-callout-label", text: "Type" });
+    this.filterInput = typeHead.createEl("input", {
+      cls: "obsidian-patch-callout-filter",
+      attr: { type: "search", placeholder: "Filter or enter custom type…", "aria-label": "Filter callout types" },
     });
-    this.otherType.inputEl.addClass("obsidian-patch-callout-other");
-    setTooltip(this.otherType.inputEl, "Any type name. Types without styles look like note.");
-    if (!this.chips.has(this.header.type.toLowerCase())) this.otherType.setValue(this.header.type);
+    this.filterInput.addEventListener("input", () => this.renderTypePicker());
+    this.filterInput.addEventListener("keydown", (evt) => {
+      if (evt.key !== "Enter" || evt.isComposing) return;
+      evt.preventDefault();
+      this.typePicker.querySelector<HTMLButtonElement>("button.obsidian-patch-callout-chip")?.click();
+    });
+    this.typePicker = typesSection.createDiv({ cls: "obsidian-patch-callout-type-picker" });
 
     const fields = contentEl.createDiv({ cls: "obsidian-patch-callout-fields" });
     const field = (name: string): HTMLElement => {
@@ -147,6 +107,14 @@ export class CalloutEditor extends Modal {
       .onChange((value) => this.update({ metadata: value.trim() }));
     setTooltip(this.metadataText.inputEl, "Text after | in the brackets, which some themes and snippets read.");
 
+    for (const input of [this.titleText.inputEl, this.metadataText.inputEl]) {
+      input.addEventListener("keydown", (evt) => {
+        if (evt.key !== "Enter" || evt.isComposing) return;
+        evt.preventDefault();
+        void this.commit();
+      });
+    }
+
     const panes = contentEl.createDiv({ cls: "obsidian-patch-callout-panes" });
     const source = panes.createEl("label", { cls: "obsidian-patch-callout-pane" });
     source.createSpan({ cls: "obsidian-patch-callout-label", text: "Content" });
@@ -161,7 +129,9 @@ export class CalloutEditor extends Modal {
     });
     const result = panes.createDiv({ cls: "obsidian-patch-callout-pane" });
     result.createSpan({ cls: "obsidian-patch-callout-label", text: "Preview" });
-    this.preview = result.createDiv({ cls: "obsidian-patch-callout-preview markdown-rendered" });
+    this.previewWrap = result.createDiv({ cls: "obsidian-patch-callout-preview-wrap" });
+    this.preview = this.previewWrap.createDiv({ cls: "obsidian-patch-callout-preview markdown-rendered" });
+
     // Below both panes, so a long list of issues does not squeeze the preview.
     if (options.showGitHub) this.github = contentEl.createDiv({ cls: "obsidian-patch-callout-github" });
 
@@ -172,30 +142,33 @@ export class CalloutEditor extends Modal {
       const convert = (text: string, tooltip: string, to: Conversion): void => {
         const button = group.createEl("button", { text });
         setTooltip(button, tooltip);
-        button.addEventListener("click", () => this.convert(to));
+        button.addEventListener("click", () => { void this.commit(to); });
       };
       convert("Convert to text", "Replace the callout with its content as normal text, with the title as a bold first line.", "text");
       convert("Convert to blockquote", "Keep the content as a plain blockquote, with the title as a bold first line.", "blockquote");
     }
     footer.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
-    footer.createEl("button", { text: "Save", cls: "mod-cta" }).addEventListener("click", () => this.commit());
+    this.saveButton = footer.createEl("button", { text: "Save", cls: "mod-cta" });
+    this.saveButton.addEventListener("click", () => { void this.commit(); });
     makeResizable(this, "obsidian-patch-callout-editor-size");
 
     this.scope = new Scope(this.scope);
     this.scope.register(["Mod"], "Enter", () => {
-      this.commit();
+      void this.commit();
       return false;
     });
   }
 
   override onOpen(): void {
-    this.component.load();
-    this.render();
+    void this.render();
   }
 
   override onClose(): void {
-    window.clearTimeout(this.renderTimer);
-    this.component.unload();
+    this.closed = true;
+    this.renderSeq++;
+    this.modalEl.win.clearTimeout(this.renderTimer);
+    this.previewComponent?.unload();
+    this.previewComponent = undefined;
   }
 
   private update(change: Partial<CalloutHeader>): void {
@@ -203,35 +176,170 @@ export class CalloutEditor extends Modal {
     this.refresh();
   }
 
-  /** Re-renders the preview shortly after typing stops. */
-  private refresh(): void {
-    window.clearTimeout(this.renderTimer);
-    this.renderTimer = window.setTimeout(() => this.render(), 150);
-    this.showType();
+  private selectType(chosen: string): void {
+    this.update({ type: displayCalloutType(chosen) });
+  }
+
+  private syncHeader(): void {
+    this.renderTypePicker();
+    this.titleText.setPlaceholder(defaultTitle(this.header.type));
+    const metaValid = isValidCalloutMetadata(this.header.metadata);
+    const typeValid = isValidCalloutType(this.header.type);
+    this.metadataText.inputEl.toggleClass("obsidian-patch-input-invalid", !metaValid);
+    this.saveButton.disabled = !metaValid || !typeValid;
     this.showGitHubIssues();
   }
 
-  /** Marks the chosen type, and shows in the empty title what Obsidian shows instead. */
-  private showType(): void {
-    const type = this.header.type.toLowerCase();
-    for (const [name, chip] of this.chips) {
-      chip.toggleClass("is-active", name === type);
-      chip.setAttribute("aria-pressed", String(name === type));
-    }
-    this.otherType.inputEl.toggleClass("is-active", !this.chips.has(type));
-    this.titleText.setPlaceholder(defaultTitle(this.header.type));
+  /** Re-renders the preview shortly after typing stops. */
+  private refresh(): void {
+    this.modalEl.win.clearTimeout(this.renderTimer);
+    const seq = ++this.renderSeq;
+    this.renderTimer = this.modalEl.win.setTimeout(() => { void this.render(seq); }, 150);
+    this.syncHeader();
   }
 
   private lines(): string[] {
     return this.body === "" ? [] : this.body.split("\n");
   }
 
-  private render(): void {
-    this.showType();
-    this.showGitHubIssues();
-    this.preview.empty();
+  private async render(seq = ++this.renderSeq): Promise<void> {
+    this.modalEl.win.clearTimeout(this.renderTimer);
+    this.syncHeader();
+    if (this.closed) return;
     const markdown = calloutLines("", 1, this.header, this.lines()).join("\n");
-    void MarkdownRenderer.render(this.app, markdown, this.preview, this.options.sourcePath, this.component);
+    if (markdown === this.lastMarkdown && this.previewComponent) return;
+    const nextComponent = new Component();
+    nextComponent.load();
+    const buffer = this.previewWrap.createDiv({ cls: "obsidian-patch-callout-preview-buffer markdown-rendered" });
+    try {
+      await MarkdownRenderer.render(this.app, markdown, buffer, this.options.sourcePath, nextComponent);
+    } catch {
+      nextComponent.unload();
+      buffer.remove();
+      return;
+    }
+    if (this.closed || seq !== this.renderSeq) {
+      nextComponent.unload();
+      buffer.remove();
+      return;
+    }
+    const { scrollTop, scrollLeft } = this.preview;
+    this.preview.replaceChildren(...Array.from(buffer.childNodes));
+    buffer.remove();
+    this.previewComponent?.unload();
+    this.previewComponent = nextComponent;
+    this.lastMarkdown = markdown;
+    this.preview.scrollTop = scrollTop;
+    this.preview.scrollLeft = scrollLeft;
+  }
+
+  private renderTypePicker(): void {
+    this.typePicker.empty();
+    const activeLower = this.header.type.toLowerCase();
+    const query = this.filterInput.value;
+
+    const groupTooltip = (group: CalloutTypeGroup): string | undefined => group.aliases.length > 1
+      ? `${displayCalloutType(group.primary)} (aliases: ${group.aliases.slice(1).map(displayCalloutType).join(", ")})` : undefined;
+    const makeChip = (
+      parent: HTMLElement,
+      type: CalloutType,
+      active: boolean,
+      tooltip: string | undefined,
+      onClick: () => void,
+    ): HTMLButtonElement => {
+      const label = displayCalloutType(type.name);
+      const chip = parent.createEl("button", {
+        cls: "obsidian-patch-callout-chip",
+        attr: { type: "button", "data-callout-type": type.name.toLowerCase(), "aria-label": label, "aria-pressed": String(active) },
+      });
+      if (active) chip.addClass("is-active");
+      if (type.color) chip.style.setProperty("--obsidian-patch-chip-color", type.color);
+      const icon = chip.createSpan({ cls: "obsidian-patch-callout-chip-icon" });
+      renderChipIcon(icon, type.icon);
+      chip.createSpan({ text: label });
+      if (tooltip) setTooltip(chip, tooltip);
+      chip.addEventListener("click", onClick);
+      return chip;
+    };
+
+    if (query.trim() === "") {
+      if (this.options.prioritizeGitHub) {
+        this.typePicker.createDiv({ cls: "obsidian-patch-callout-group-label", text: "GitHub alerts" });
+        const ghGrid = this.typePicker.createDiv({ cls: "obsidian-patch-callout-types" });
+        for (const type of this.catalog.github) {
+          makeChip(ghGrid, type, activeLower === type.name.toLowerCase(), undefined, () => this.selectType(type.name));
+        }
+        this.typePicker.createDiv({ cls: "obsidian-patch-callout-group-label", text: "Built-in" });
+      }
+
+      const grid = this.typePicker.createDiv({ cls: "obsidian-patch-callout-types" });
+      let activeGroup: CalloutTypeGroup | undefined;
+      for (const group of this.catalog.builtin) {
+        const isGroupActive = group.aliases.some((alias) => alias.toLowerCase() === activeLower);
+        if (isGroupActive) activeGroup = group;
+        makeChip(grid, { name: group.primary, icon: group.icon, color: group.color }, isGroupActive, groupTooltip(group),
+          () => this.selectType(group.primary));
+      }
+
+      if (this.catalog.custom.length > 0) {
+        this.typePicker.createDiv({ cls: "obsidian-patch-callout-group-label", text: "Custom types" });
+        const customGrid = this.typePicker.createDiv({ cls: "obsidian-patch-callout-types" });
+        for (const group of this.catalog.custom) {
+          const isGroupActive = group.aliases.some((alias) => alias.toLowerCase() === activeLower);
+          if (isGroupActive && !activeGroup) activeGroup = group;
+          makeChip(customGrid, { name: group.primary, icon: group.icon, color: group.color }, isGroupActive, groupTooltip(group),
+            () => this.selectType(group.primary));
+        }
+      }
+
+      if (!this.byLower.has(activeLower) && this.header.type.trim() !== "") {
+        this.typePicker.createDiv({ cls: "obsidian-patch-callout-group-label", text: "Current type" });
+        const unknownGrid = this.typePicker.createDiv({ cls: "obsidian-patch-callout-types" });
+        makeChip(unknownGrid, { name: this.header.type, icon: "", color: "" }, true, undefined,
+          () => this.selectType(this.header.type));
+      }
+
+      if (activeGroup && activeGroup.aliases.length > 1) {
+        const row = this.typePicker.createDiv({ cls: "obsidian-patch-callout-aliases" });
+        row.createSpan({ text: "Aliases:" });
+        for (const alias of activeGroup.aliases) {
+          const active = alias.toLowerCase() === activeLower;
+          const button = row.createEl("button", {
+            cls: "obsidian-patch-callout-alias",
+            text: displayCalloutType(alias),
+            attr: { type: "button", "aria-pressed": String(active) },
+          });
+          if (active) button.addClass("is-active");
+          button.addEventListener("click", () => this.selectType(alias));
+        }
+      }
+      return;
+    }
+
+    const trimmed = query.trim();
+    const { directMatches, canUseCustom, customError } = filterCalloutCatalog(this.catalog, trimmed);
+    if (customError) {
+      this.typePicker.createDiv({ cls: "obsidian-patch-callout-error", text: customError });
+      return;
+    }
+    const grid = this.typePicker.createDiv({ cls: "obsidian-patch-callout-types" });
+    for (const type of directMatches) {
+      makeChip(grid, type, type.name.toLowerCase() === activeLower, undefined, () => {
+        this.filterInput.value = "";
+        this.selectType(type.name);
+      });
+    }
+    if (canUseCustom) {
+      const custom = grid.createEl("button", {
+        cls: "obsidian-patch-callout-chip obsidian-patch-callout-custom-chip",
+        text: `Use "${displayCalloutType(trimmed)}"`,
+        attr: { type: "button" },
+      });
+      custom.addEventListener("click", () => {
+        this.filterInput.value = "";
+        this.selectType(trimmed);
+      });
+    }
   }
 
   private showGitHubIssues(): void {
@@ -258,30 +366,34 @@ export class CalloutEditor extends Modal {
     const { header, body } = toGitHub(this.header, this.lines());
     this.header = header;
     this.body = body.join("\n");
+    this.bodyArea.value = this.body;
     this.titleText.setValue("");
     this.foldDropdown.setValue("");
     this.metadataText.setValue("");
-    this.otherType.setValue(this.chips.has(header.type.toLowerCase()) ? "" : header.type);
-    this.bodyArea.value = this.body;
-    this.render();
+    this.filterInput.value = "";
+    void this.render();
   }
 
-  private commit(): void {
-    const current = JSON.stringify([this.header, this.body]);
-    if (current !== this.initial) {
-      const [header, body] = this.initial ? (JSON.parse(this.initial) as [CalloutHeader, string]) : [undefined, undefined];
-      this.options.save(
-        { header: this.header, body: this.lines() },
-        { header: JSON.stringify(header) !== JSON.stringify(this.header), body: body !== this.body },
-      );
+  /** Close only after the selected operation successfully writes this draft. */
+  private async commit(to?: Conversion): Promise<void> {
+    if (this.closed || this.modalEl.inert) return;
+    if (!to && (!isValidCalloutType(this.header.type) || !isValidCalloutMetadata(this.header.metadata))) return;
+    const draft = { header: this.header, body: this.lines() };
+    this.modalEl.inert = true;
+    try {
+      if (to) {
+        await this.options.convert?.(draft, to);
+        this.shouldRestoreSelection = false;
+      } else if (JSON.stringify([this.header, this.body]) !== this.initial) {
+        const [header, body] = this.initial ? JSON.parse(this.initial) as [CalloutHeader, string] : [undefined, undefined];
+        await this.options.save(draft, { header: JSON.stringify(this.header) !== JSON.stringify(header), body: this.body !== body });
+      }
+      if (!this.closed) this.close();
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : String(error));
+    } finally {
+      this.modalEl.inert = false;
     }
-    this.close();
-  }
-
-  /** Converts the callout as it stands in the editor, edits included. */
-  private convert(to: Conversion): void {
-    this.options.convert?.({ header: this.header, body: this.lines() }, to);
-    this.close();
   }
 }
 

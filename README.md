@@ -27,7 +27,7 @@ Find each group under **Settings → Patches**. Open a feature guide for example
 <table>
 <thead><tr><th>Settings group</th><th>Feature</th><th>What you can do</th></tr></thead>
 <tbody>
-<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, preview, and convert callouts. Choose <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders to check for GitHub</a> and match code backgrounds.</td></tr>
+<tr><th scope="row">Callouts</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html">Callout editor</a></td><td>Edit, live-preview, and unwrap callouts. Type <code>&gt; [!tip</code> and select <code>TIP</code> to insert <code>&gt; [!TIP]</code>. Keep multi-line pastes quoted, check <a href="https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders">folders for GitHub</a>, and customize each type’s icon and color with matching code backgrounds.</td></tr>
 </tbody>
 <tbody>
 <tr><th rowspan="2" scope="rowgroup">Editor</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/active-line.html">Active line</a></td><td>Mark the current line in the margin and highlight its line number.</td></tr>
@@ -40,7 +40,7 @@ Find each group under **Settings → Patches**. Open a feature guide for example
 <tr><th scope="row">Patch Icons</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/icons.html">File and folder icons</a></td><td>Choose Lucide icons or brand marks and set their colors.</td></tr>
 <tr><th scope="row">Patch Mermaid</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/mermaid.html#number-the-steps-in-a-flowchart">Diagrams</a></td><td>Number flowchart steps and watch the arrows play in order. Check all diagrams in a note and jump to syntax errors.</td></tr>
 <tr><th scope="row">PDF Export</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/pdf-export.html">PDF navigation</a></td><td>Add heading bookmarks and same-note heading links to desktop exports.</td></tr>
-<tr><th scope="row">No settings required</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Visually edit merged cells, grouped headers, and captions. Convert Markdown tables.</td></tr>
+<tr><th scope="row">HTML Tables</th><td><a href="https://yaroxy.github.io/obsidian-patch/features/tables.html">HTML tables</a></td><td>Visually edit merged cells, grouped headers, and captions. Set the font for inline code in cells. Convert between Markdown and HTML tables with one-step undo in the source note.</td></tr>
 </tbody>
 </table>
 
@@ -51,6 +51,8 @@ Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Di
 1. Open **Settings → Community plugins → Browse**.
 2. Search for **Patches**, then select **Install** and **Enable**.
 3. Open **Settings → Patches** to choose your settings.
+
+With Obsidian Sync Standard, install Patches on each device. Its bundled diagram renderer and icon packs make `main.js` larger than the plan’s 5 MB per-file limit.
 
 For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 

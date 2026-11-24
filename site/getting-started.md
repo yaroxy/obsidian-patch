@@ -31,6 +31,8 @@ The [feature overview](features/index.md) lists all available tools. Commands ap
 
 ## Updates
 
+With Obsidian Sync Standard, install Patches on each device. The bundled `main.js` exceeds the plan’s 5 MB per-file limit.
+
 Use **Settings → Community plugins → Check for updates** to install released versions.
 
 ## Manual installation

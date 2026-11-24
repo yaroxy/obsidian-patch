@@ -5,12 +5,12 @@
   const doc = leaf.view.contentEl.ownerDocument;
   const win = doc.defaultView;
   const assert = (value, message) => { if (!value) throw new Error(message); };
-  async function until(check, label) {
+  async function until(check, label, describe) {
     for (let i = 0; i < 100; i++) {
       if (await check()) { checks.push(label); return; }
       await wait(50);
     }
-    throw new Error(`Timed out: ${label}`);
+    throw new Error(`Timed out: ${label}${describe ? "\n" + JSON.stringify(describe()) : ""}`);
   }
   // Canonical output, so an untouched table must round-trip byte for byte.
   const table = [
@@ -32,7 +32,7 @@
     "    <tr>",
     '      <td align="center">si</td>',
     '      <td align="center">shi</td>',
-    '      <td align="center">su</td>',
+    '      <td align="center"><code>su</code></td>',
     "    </tr>",
     "    <tr>",
     '      <th rowspan="2" align="center" style="vertical-align:middle">や行</th>',
@@ -70,6 +70,36 @@
   async function openFromReading() {
     leaf.view.previewMode.containerEl.querySelector(".obsidian-patch-table-edit").click();
     await until(() => grid(), "edit button opens the table editor");
+  }
+  const codeElement = (root, label) => [...root.querySelectorAll("code")].find(el => el.textContent === label);
+  const codeFont = (root, label) => {
+    const code = codeElement(root, label);
+    return code && code.ownerDocument.defaultView.getComputedStyle(code).fontFamily;
+  };
+  let originalFont;
+  const selectedFont = () => app.plugins.plugins.patches.settings.appearance.tableCodeFont;
+  async function setTableFont(value) {
+    app.setting.open();
+    try {
+      app.setting.openTabById("patches");
+      // Obsidian may transfer the settings tab to its own desktop window.
+      await wait(400);
+      const tab = app.setting.activeTab;
+      const input = [...tab.containerEl.querySelectorAll(".setting-item")]
+        .filter(el => el.querySelector(".setting-item-name")?.textContent === "Inline code font")
+        .map(el => el.querySelector("input")).find(el => el?.isConnected && el.getClientRects().length);
+      assert(input && tab.getSettingDefinitions().some(group => group.heading === "HTML Tables" && group.items.some(item => item.name === "Inline code font")), "Visible HTML Tables font setting missing");
+      const settingsDoc = input.ownerDocument, settingsWin = settingsDoc.defaultView;
+      originalFont ??= input.value;
+      input.scrollIntoView({ block: "center" });
+      settingsWin.focus();
+      input.focus();
+      assert(settingsDoc.activeElement === input, "The settings window failed to focus the font field");
+      input.value = value;
+      input.dispatchEvent(new settingsWin.Event("input", { bubbles: true }));
+      input.blur();
+      assert(selectedFont() === value, `Font field blur did not commit: field=${input.value}, setting=${selectedFont()}`);
+    } finally { app.setting.close(); }
   }
   try {
     app.saveLocalStorage("obsidian-patch-table-editor-size", null);
@@ -192,6 +222,11 @@
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: false } });
     leaf.view.editor.setCursor({ line: 0, ch: 0 });
     await until(() => leaf.view.contentEl.querySelector(".cm-html-embed > table"), "Live Preview renders the table as a widget");
+    const widget = () => leaf.view.contentEl.querySelector(".cm-html-embed > table");
+    const liveFont = codeFont(widget(), "su")?.includes("DejaVu Sans Mono") ? "Courier New" : "DejaVu Sans Mono";
+    await setTableFont(liveFont);
+    app.workspace.setActiveLeaf(leaf, { focus: true });
+    await until(() => widget() && codeFont(widget(), "su")?.includes(liveFont), "changing the font in Settings updates inline code in the Live Preview widget");
     const embed = leaf.view.contentEl.querySelector(".cm-html-embed");
     embed.querySelector("td").dispatchEvent(new win.MouseEvent("mouseover", { bubbles: true }));
     const actions = Array.from(embed.querySelectorAll(".embed-actions > *"), el => el.getAttribute("aria-label"));
@@ -203,6 +238,12 @@
     await until(() => grid(), "Live Preview button opens the editor");
     assert(leaf.view.editor.getCursor().line === 0, "Pressing the button moved the cursor into the source");
     type(cell("ゆ ユ"), "ゆ ユ!");
+    const widgetConflict = original.replace(">ゆ ユ<", ">Concurrent widget edit<");
+    leaf.view.editor.setValue(widgetConflict);
+    button("Save").click();
+    await until(() => modal() && !modal().inert && cell("ゆ ユ!") && leaf.view.editor.getValue() === widgetConflict,
+      "a stale Live Preview save keeps the cell draft and the concurrent editor change");
+    leaf.view.editor.setValue(original);
     button("Save").click();
     await until(() => leaf.view.editor.getValue() === original.replace(">ゆ ユ<", ">ゆ ユ!<"), "Live Preview saves through the editor");
 
@@ -211,6 +252,16 @@
     const lines = original.split("\n");
     leaf.view.editor.setCursor({ line: lines.findIndex(line => line.includes(">yi<")), ch: 10 });
     assert(command.editorCheckCallback(true, leaf.view.editor, leaf.view), "Edit command unavailable inside the table");
+    command.editorCheckCallback(false, leaf.view.editor, leaf.view);
+    await until(() => grid(), "Edit HTML table opens the source-backed draft");
+    type(cell("yi"), "Source draft");
+    const commandConflict = original.replace(">yi<", ">Concurrent source edit<");
+    leaf.view.editor.setValue(commandConflict);
+    button("Save").click();
+    await until(() => modal() && !modal().inert && cell("Source draft") && leaf.view.editor.getValue() === commandConflict,
+      "a stale command save keeps the cell draft and the concurrent editor change");
+    button("Cancel").click();
+    leaf.view.editor.setValue(original);
     leaf.view.editor.setCursor({ line: 2, ch: 0 });
     assert(!command.editorCheckCallback(true, leaf.view.editor, leaf.view), "Edit command available outside a table");
     checks.push("Edit HTML table is offered only with the cursor in a table");
@@ -228,10 +279,78 @@
     assert(leaf.view.editor.getValue().includes("</table>\n\n<table"), "No blank line after the inserted table");
     checks.push("a new table is followed by a blank line");
     leaf.view.editor.setValue(original);
+    await leaf.view.save();
+    await reading();
+    const mixed = "# Before\n\r\n" + table.replaceAll("\n", "\r\n").replace("す ス", "Mixed EOL").replace("</thead>\r\n", "</thead>\n") + "\r\n\r\nAfter\n";
+    await app.vault.modify(file(), mixed);
+    const rendered = () => leaf.view.previewMode.containerEl.querySelector(".obsidian-patch-table-host")?.textContent ?? "";
+    await until(() => rendered().includes("Mixed EOL"), "Reading View renders the mixed-ending note");
+    await openFromReading();
+    type(cell("Mixed EOL"), "Saved cell");
+    button("Save").click();
+    await until(async () => (await app.vault.read(file())) === mixed.replace("Mixed EOL", "Saved cell"),
+      "Reading View cell edits preserve every other byte of a mixed-ending note");
+    await until(() => rendered().includes("Saved cell"), "Reading View displays the saved mixed-ending table");
+    await openFromReading();
+    type(cell("Saved cell"), "Unsaved draft");
+    const concurrent = mixed.replace("Mixed EOL", "Concurrent edit");
+    await app.vault.modify(file(), concurrent);
+    button("Save").click();
+    assert(modal()?.inert, "Reading View closed the draft before the vault write finished");
+    button("Save").click();
+    await until(() => modal() && !modal().inert && cell("Unsaved draft") &&
+      [...doc.querySelectorAll(".notice")].some(el => el.textContent.includes("The table changed while it was being edited")),
+    "an unsuccessful Reading View save unlocks the draft with its edited cell intact");
+    assert(await app.vault.read(file()) === concurrent, "A stale table draft overwrote the concurrent edit");
+    button("Cancel").click();
+
+    const block = "<table>\r\n<thead><tr><th>H</th></tr></thead>\r\n<tbody><tr><td>CRLF item</td></tr></tbody>\r\n</table>";
+    const crlf = "Before\r\n\r\n" + block + "\r\n\r\nAfter\r\n";
+    await app.vault.modify(file(), crlf);
+    await until(() => rendered().includes("CRLF item"), "Reading View renders the CRLF note");
+    await openFromReading();
+    button("Convert to Markdown").click();
+    const mdModal = () => doc.querySelector(".obsidian-patch-table-md-modal");
+    await until(() => mdModal()?.querySelector(".obsidian-patch-table-md-preview table") && !mdModal().querySelector(".mod-cta").disabled,
+      "Reading View verifies the CRLF table conversion");
+    mdModal().querySelector(".mod-cta").click();
+    const converted = crlf.replace(block, "| H |\r\n| --- |\r\n| CRLF item |");
+    await until(() => leaf.view.getMode() === "source" && leaf.view.editor.getValue() === converted.replaceAll("\r\n", "\n"),
+      "Reading View converts the CRLF table at the correct editor positions");
+    await leaf.view.save();
+    const saved = await app.vault.read(file());
+    assert(saved === converted || saved === converted.replaceAll("\r\n", "\n"), "Saving the converted table changed its surroundings or mixed line endings");
+    checks.push(saved === converted ? "native editor save preserves CRLF after reverse conversion" : "native editor save uses LF throughout after reverse conversion");
+    leaf.view.editor.undo();
+    await until(() => leaf.view.editor.getValue() === crlf.replaceAll("\r\n", "\n"), "one undo restores the CRLF table in the editor");
+
+    const fontNote = original.replace(">す ス<", "><code>HTML code</code><").replace("| a | b |", "| `Pipe code` | b |").replace("Outro.", "`Outside code`");
+    leaf.view.editor.setValue(fontNote);
+    await leaf.view.save();
+    await reading();
+    const preview = leaf.view.previewMode.containerEl;
+    await until(() => codeFont(preview, "HTML code") && codeFont(preview, "Pipe code") && codeFont(preview, "Outside code"), "Reading View renders the font comparison cells");
+    const pipeFont = codeFont(preview, "Pipe code"), outsideFont = codeFont(preview, "Outside code");
+    const family = codeFont(preview, "HTML code")?.includes("DejaVu Sans Mono") ? "Courier New" : "DejaVu Sans Mono";
+    await setTableFont(family);
+    await until(() => codeFont(preview, "HTML code")?.includes(family), "Reading View applies the selected HTML table code font", () => {
+      const code = codeElement(preview, "HTML code");
+      return { selected: selectedFont(), computed: codeFont(preview, "HTML code"), tableParent: code?.closest("table")?.parentElement?.className,
+        monospace: code && win.getComputedStyle(code).getPropertyValue("--font-monospace"),
+        configuredFont: doc.body.style.getPropertyValue("--obsidian-patch-table-code-font"),
+        matchesSelector: code?.matches(":is(.obsidian-patch-table-host, .cm-html-embed, .obsidian-patch-table-grid) > table :is(th, td) code:not(pre > code)") };
+    });
+    assert(codeFont(preview, "Pipe code") === pipeFont && codeFont(preview, "Outside code") === outsideFont, "The HTML table code font leaked into other Markdown");
+    await openFromReading();
+    assert(codeFont(grid(), "HTML code")?.includes(family), "Table editor ignored the selected code font");
+    button("Cancel").click();
+    checks.push("Reading View and the table editor use the selected font only for inline HTML table code");
   } catch (failure) {
     report.error = (failure.stack ?? String(failure)) + "\n" + JSON.stringify({ file: leaf.view.file?.path, mode: leaf.view.getMode(), hidden: doc.hidden, modal: !!modal() });
   } finally {
+    doc.querySelector(".obsidian-patch-table-md-modal .modal-button-container button:not(.mod-cta)")?.click();
     for (const el of doc.querySelectorAll(".obsidian-patch-table-modal button")) if (el.textContent === "Cancel") el.click();
+    if (originalFont !== undefined && selectedFont() !== originalFont) await setTableFont(originalFont);
     if (file()) {
       if (leaf.view.getMode?.() === "source") leaf.view.editor.setValue(original);
       await leaf.view.save?.();

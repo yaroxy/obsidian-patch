@@ -147,6 +147,45 @@ The Directory marked the release scan **Completed** and listed **0.5.0** as the 
 
 The maintainer reported that the Community **Review branch** scan completed and approved proceeding with release. The preview branch pointed to `f62d1bc66b7dfd7a1fcd3b599a80ff41b47f2d38`. The release preparation retains that plugin implementation and advances version metadata and publication documentation. The published package receives its own Directory scan. [Reviewed candidate](https://github.com/yaroxy/obsidian-patch/commit/f62d1bc66b7dfd7a1fcd3b599a80ff41b47f2d38)
 
+## 0.5.1 release disclosures — 2026-11-24
+
+The maintainer supplied a Directory screenshot for the published 0.5.1 asset. It shows a 5 MB size warning, 28 network calls, runtime Base64 use and vault enumeration. Malware, obfuscation and network-request scans are marked unavailable. The screenshot supplies no result for those three scans. [Release](https://github.com/yaroxy/obsidian-patch/releases/tag/0.5.1)
+
+The downloaded `main.js` is 10,813,900 bytes (SHA-256 `a90423d4a58790bd5be386a33db0157afbbe4303224d1eef56ee981b33cd6dd1`). It contains 27 calls to KaTeX’s parser method `.fetch()` and one definition of that method, which reads the next TeX token. This matches the displayed count numerically. The report supplies no per-call locations. Patches uses Obsidian’s `requestUrl` for the Simple Icons version lookup, graphics and color metadata. The installed package includes two local gzip/Base64 Mermaid icon packs. The banner picker enumerates vault files to find media, and the GitHub folder setting enumerates folders for completion. [Network and privacy](../site/privacy.md)
+
+In the local working tree based on `a98b4ff`, the Community bundle went from 10,852,696 to 10,298,183 bytes after removing the duplicate ELK adapter and sharing concurrent Simple Icons loads. Mermaid 12 supplies all seven ELK layout names itself. The two icon packs still account for 4,701,930 bytes of the new bundle, which exceeds the Sync Standard per-file limit. These are local measurements of an unreleased build. [Mermaid layouts](https://mermaid.js.org/config/layouts.html) · [Obsidian Sync limits](https://obsidian.md/sync)
+
+### Local distribution comparison — 2026-11-24
+
+After the [table and callout fixes](integration-testing.md#table-and-callout-review-fixes--2026-11-24), the production Community `main.js` measured 10,297,850 bytes. Temporary builds used the same entry point, production minification and Mermaid 12.3.0. For Tiny, the upstream IIFE export was bound to the plugin module. The sizes below are raw file bytes, excluding any future icon download or import UI.
+
+| Renderer bundled with Patches | Diagram icon data in the build | Bytes in `main.js` |
+| --- | --- | ---: |
+| Standard Mermaid | Neither pack | 5,595,942 |
+| Mermaid Tiny | Neither pack | 3,158,951 |
+| Mermaid Tiny | `material-icon-theme` as plain JSON | 4,013,140 |
+| Mermaid Tiny with the official ELK adapter 1.0.2 | Neither pack | 5,653,491 |
+
+The current Logos JSON is 8,735,991 bytes. The repository's existing gzip compressor produced 3,252,754 bytes of binary data for that pack. An optional versioned download could cache those bytes directly and decompress them locally, keeping that file below the same Sync limit. A local file import could use the same format.
+
+The plain-JSON candidate had zero literal `.fetch(` calls and still contained two `atob(` and two `btoa(` calls. Simple Icons still uses Obsidian's `requestUrl`. Tiny omits mind maps, architecture diagrams, diagram KaTeX and built-in ELK. These experiments measured packaging only. The production renderer and icon distribution still match the standard offline build, and the Directory has not scanned these alternatives. [Mermaid Tiny](https://mermaid.js.org/config/usage.html#tiny-mermaid) · [Directory policies](https://docs.obsidian.md/community-directory/developer-policies) · [Plugin installation assets](https://docs.obsidian.md/plugins/releasing/submit-plugin)
+
+### Optional icon storage with the standard renderer — 2026-11-24
+
+Local builds retained standard Mermaid 12.3.0 and varied only the two embedded data payloads. The final column adds one binary gzip cache file for each omitted pack. All sizes count raw bytes for `main.js` plus those caches. The manifest and stylesheet are common to every case. A future download interface and cache metadata would add some overhead.
+
+| Icon data installed with Patches | Initial bytes | Bytes after caching both packs in total |
+| --- | ---: | ---: |
+| Logos and Material bundled | 10,297,850 | 10,297,850 |
+| Material bundled, Logos optional | 5,960,842 | 9,213,596 |
+| Both packs optional | 5,595,942 | 9,122,370 |
+
+Both optional downloads would contain only versioned icon data. Local gzip caches would occupy 3,252,754 bytes for Logos and 273,674 bytes for Material. The current production build still includes both packs offline. The exercise introduced no release or Directory scan. [Single-plugin validation](integration-testing.md#single-plugin-candidate-and-editor-findings--2026-11-24)
+
+## Editor updates branch candidate — local verification, 2026-11-24
+
+Local ESLint using the recommended `eslint-plugin-obsidianmd` 0.6.0 configuration on all 51 TypeScript source files reported zero errors and the six previously recorded `prefer-active-doc` warnings in Active Line, Callout Code and Mermaid. Callout appearance and table fonts now use static CSS rules and element-level custom properties. The historical forbidden-element error for creating a stylesheet was absent. The standard offline Mermaid renderer and both icon packs remain bundled, so the 5 MB Sync Standard warning is still expected. The maintainer's Directory preview for this candidate is pending. [Candidate build and native verification](integration-testing.md#editor-updates-branch-candidate--2026-11-24)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

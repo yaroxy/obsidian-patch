@@ -2,19 +2,49 @@ import { isolateHistory } from "@codemirror/commands";
 import { EditorState } from "@codemirror/state";
 import { Component, MarkdownRenderer, Notice, type Editor, type MarkdownFileInfo, type Plugin } from "obsidian";
 import { TableEditor } from "./editor";
-import { selectMarkdownTables, tableReferences, tableReplacement, type MarkdownTable } from "./markdown";
-import { createTable, type Table } from "./model";
+import { selectHtmlTables, selectMarkdownTables, tableReferences, tableReplacement, type MarkdownTable } from "./markdown";
+import { HtmlToMarkdownModal, type HtmlToMarkdownEntry } from "./markdown-modal";
+import { checkTableSize, createTable, type Table } from "./model";
+import { auditHtmlTable } from "./to-markdown";
 
 const EVENT = "obsidian-patch.convert-tables";
+const REVERSE_EVENT = "obsidian-patch.convert-html-tables";
 const NAME = "Convert Markdown tables to HTML";
+const REVERSE_NAME = "Convert HTML tables to Markdown";
 const STALE = "The note changed while the preview was open. Cancel and open the conversion again.";
+
+/** Opens the audited HTML-to-Markdown confirmation modal or aborts immediately on blocking elements. */
+export function openHtmlToMarkdownConversion(
+  plugin: Plugin,
+  entries: HtmlToMarkdownEntry[],
+  sourcePath: string,
+  noteText: string,
+  title: string,
+  onConfirm: (markdowns: string[]) => Promise<boolean | void> | boolean | void,
+): boolean {
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i]!;
+    const audit = auditHtmlTable(entry.tableEl, noteText);
+    const blockers = entry.extraAudit
+      ? Array.from(new Set([...entry.extraAudit.blocking, ...audit.blocking]))
+      : audit.blocking;
+    if (blockers.length > 0) {
+      const prefix = entries.length > 1 ? `Table ${i + 1}: ` : "";
+      const suffix = entries.length > 1 ? " No tables were converted." : "";
+      new Notice(`${prefix}${blockers[0]}${suffix}`);
+      return false;
+    }
+  }
+  new HtmlToMarkdownModal(plugin.app, { entries, sourcePath, noteText, title, onConfirm }).open();
+  return true;
+}
 
 /** Cursor/selection conversion always goes through a draft and one editor transaction. */
 export function registerTableConversion(plugin: Plugin): void {
   // Editor.transaction passes its origin as the CM user event. Isolate the
   // conversion from typing immediately before and after it as well as from itself.
   plugin.registerEditorExtension(EditorState.transactionExtender.of(transaction =>
-    transaction.isUserEvent(EVENT) ? { annotations: isolateHistory.of("full") } : null));
+    transaction.isUserEvent(EVENT) || transaction.isUserEvent(REVERSE_EVENT) ? { annotations: isolateHistory.of("full") } : null));
 
   const pending = new WeakSet<Editor>();
   const open = async (editor: Editor, info: MarkdownFileInfo): Promise<void> => {
@@ -50,13 +80,48 @@ export function registerTableConversion(plugin: Plugin): void {
     finally { pending.delete(editor); }
   };
 
+  const openReverse = (editor: Editor, info: MarkdownFileInfo): void => {
+    try {
+      if (editor.listSelections().length !== 1) throw new Error("Use one cursor or one selection to convert tables.");
+      const text = editor.getValue();
+      const ranges = selectHtmlTables(text, editor.posToOffset(editor.getCursor("from")), editor.posToOffset(editor.getCursor("to")));
+      if (!ranges.length) throw new Error("Place the cursor in a standalone HTML table, or select complete HTML tables.");
+      const file = info.file, path = file?.path ?? "";
+      const current = (): boolean => info.file === file && (file?.path ?? "") === path && editor.getValue() === text;
+      const entries: HtmlToMarkdownEntry[] = ranges.map((range, index) => {
+        const parsed = new DOMParser().parseFromString(range.source, "text/html").querySelector("table");
+        if (!parsed) throw new Error(`Table ${index + 1}: Could not parse the HTML table.`);
+        return { tableEl: parsed };
+      });
+      openHtmlToMarkdownConversion(plugin, entries, path, text, "Convert HTML to Markdown", (markdowns) => {
+        if (!current()) { new Notice(STALE); return false; }
+        const changes = ranges.map((range, i) => ({
+          from: editor.offsetToPos(range.from),
+          to: editor.offsetToPos(range.to),
+          text: tableReplacement(text, range, markdowns[i]!),
+        }));
+        editor.transaction({ changes }, REVERSE_EVENT);
+        return true;
+      });
+    } catch (error) { new Notice(message(error)); }
+  };
+
   plugin.addCommand({ id: "convert-markdown-tables", name: NAME, icon: "table-2",
     editorCallback: (editor, info) => { void open(editor, info); } });
+  plugin.addCommand({ id: "convert-html-tables-to-markdown", name: REVERSE_NAME, icon: "table-2",
+    editorCallback: (editor, info) => { openReverse(editor, info); } });
   plugin.registerEvent(plugin.app.workspace.on("editor-menu", (menu, editor, info) => {
-    let found = false;
-    try { found = selectMarkdownTables(editor.getValue(), editor.posToOffset(editor.getCursor("from")), editor.posToOffset(editor.getCursor("to"))).length > 0; }
-    catch { found = true; } // Keep the action discoverable; clicking explains a partial selection.
-    if (found) menu.addItem(item => item.setTitle(NAME).setIcon("table-2").onClick(() => { void open(editor, info); }));
+    const text = editor.getValue();
+    const from = editor.posToOffset(editor.getCursor("from")), to = editor.posToOffset(editor.getCursor("to"));
+    let foundMd = false;
+    try { foundMd = selectMarkdownTables(text, from, to).length > 0; }
+    catch { foundMd = true; } // Keep the action discoverable; clicking explains a partial selection.
+    if (foundMd) menu.addItem(item => item.setTitle(NAME).setIcon("table-2").onClick(() => { void open(editor, info); }));
+
+    let foundHtml = false;
+    try { foundHtml = selectHtmlTables(text, from, to).length > 0; }
+    catch { foundHtml = true; }
+    if (foundHtml) menu.addItem(item => item.setTitle(REVERSE_NAME).setIcon("table-2").onClick(() => { openReverse(editor, info); }));
   }));
 }
 
@@ -66,6 +131,7 @@ export const INLINE_MATH = "span.math.math-inline";
 
 async function renderTable(plugin: Plugin, source: MarkdownTable, text: string, references: string, path: string, component: Component): Promise<Table> {
   const width = source.align.length;
+  checkTableSize(source.rows.length, width);
   if (source.rows.some(row => row.length > width)) throw new Error("A row has more cells than the header; fix it before converting.");
   if (/\[\^/.test(source.source)) throw new Error("Footnotes are not supported in HTML conversion yet.");
   const container = createDiv();

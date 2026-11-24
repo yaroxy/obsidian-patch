@@ -1,16 +1,18 @@
 # Callout 编辑器设计
 
-状态：已实现。验证范围见文末。
+状态：已实现（2026-11-22 已还原可调大小的双栏实时预览编辑器并优化类型选择、无闪白双缓冲与原生编辑器辅助）。验证范围见文末。
 
 ## 范围
 
-callout 是每一行都要带 `>` 的引用块，手工调整结构很繁琐：换类型、加标题、把一段正文包进 callout，或者反过来拆出来。本功能提供可视化编辑器，并检查 callout 在 GitHub 上能否显示为 alert。
+callout 是每一行都要带 `>` 的引用块，手工修改和嵌套很繁琐。本功能提供带实时预览的可视化双栏编辑器、编辑器内类型补全与多行智能粘贴、向正文或普通引用块的转换，并检查 callout 在 GitHub 上能否显示为 alert。
 
 入口：
 
-- 命令 **Insert callout**：有选区时包裹所选的整行，没有选区时在光标处插入一个空 callout。
-- 命令 **Edit callout**：光标位于 callout 内时可用，编辑最内层的那个 callout。
-- 编辑器底部的 **Convert to text** 和 **Convert to blockquote** 按钮，按编辑器中当前的内容转换。同样的转换也有命令 **Convert callout to text** 和 **Convert callout to blockquote**。
+- 命令 **Insert callout**：在光标处插入新 callout；有选区时包裹所选的整行。空 callout 插入后会停在正文第一行继续输入。
+- 命令 **Edit callout**：光标位于 callout 内时可用，编辑最内层的 callout。
+- 在编辑器内输入 `> [!` 后，原生 `EditorSuggest` 按不区分大小写的查询列出类型。输入 `> [!tip` 并接受 `TIP` 会得到 `> [!TIP]`。GitHub 笔记优先显示 5 个 alert。
+- 编辑器多行智能粘贴（`workspace.on("editor-paste")`）：在 callout 正文内粘贴多行纯文本时自动补齐所属 `indent` 与 `depth` 的 `>` 前缀，保留空行标记、代码块与嵌套引用，可通过单步撤销撤回。
+- 编辑器底部的 **Convert to text** 和 **Convert to blockquote** 按钮；两种转换也有命令 **Convert callout to text** 和 **Convert callout to blockquote**。
 - 命令 **Check callouts for GitHub**：列出整篇笔记中每个 callout 在 GitHub 上的问题，并可跳转到对应行。
 - **Callouts on GitHub** 报告与 Mermaid 检查共用居中布局。顶部统计 alert 与普通引用的数量，每项默认一行，列出笔记行号、callout 表头和渲染结果。只有附带解释的条目显示 **Details** 和条数，包括可以显示为 alert 但有语法或配色差异的条目。详情独立展开，长列表在摘要下方滚动，窄窗口允许操作按钮换行。**Jump** 在编辑器中定位光标，在阅读视图中滚动到相应的 callout。
 - 编辑器右键菜单：光标在 callout 内时提供编辑和两种转换；有选区时提供 **Wrap in callout**。
@@ -26,13 +28,20 @@ callout 是每一行都要带 `>` 的引用块，手工调整结构很繁琐：�
   - callout 包括所有带有这一层标记的行，以及按 CommonMark 规则懒续行（lazy continuation）的行。
   - 懒续行只能接在段落文字之后。跟在空的 `>` 行、标题、分隔线、`$$` 或代码块之后的行，不算懒续行；本身是列表项、标题、代码围栏或 `>` 开头的行，也不算。
   - frontmatter 和代码块中的内容不识别为 callout。
-- **只改表头时，只重写表头那一行，正文按原字节保留。** 改了正文时，按规范标记 `> ` 重写整个 callout。没有任何改动时不写回。
+- **类型拼写。** 插入 callout、包裹选区、接受行内补全或在弹窗中选定类型时，生成的标记使用大写。内置类型、别名和自定义类型遵循同一规则。对已有的 `[!tip]` 主动重选 `TIP` 后，保存为 `[!TIP]`。仅修改标题、折叠、metadata 或正文时保留原标记的拼写。手写小写标记也可正常使用。如果某个 Unicode 名称转成大写后会指向另一个 Obsidian 类型，则保留该名称的原拼写，例如 `straße`。
+- **只改表头时，仅替换 `[from, headerTo]` 第一行，正文按原字节完全保留。** 改了正文（例如点击 **Make GitHub-compatible** 将标题移入正文）时，按规范标记 `> ` 重写整个 callout。没有任何改动时不写回。
 - **包裹。** 选中的行放在它们共同的缩进处（例如列表项内），每行加一层 `> `，空行写成 `>`。前后不是空行时各补一个空行，否则相邻的文字会因懒续行并入 callout，或与相邻的引用块合并。
 - **转成正文。**
   - 去掉表头，每行只去掉这一层标记。内层的 callout 随之上升一层；嵌套在外层 callout 中时，外层的标记保留。
   - 标题变成粗体首行，后面跟一个空行。
 - **转成引用块。** 只去掉 callout 标记，标题变成粗体首行。
-- **编辑器中的正文。** 显示时去掉这一层标记，保存时由编辑器重新加上，用户不需要手写 `>`。
+- **多行粘贴。** 仅接管未被前置监听器 `preventDefault()`、不含附件文件的多行纯文本粘贴；若在行首粘贴且所有行已带有该 callout 的 `>` 前缀则保持原样避免重复前缀。
+
+## 类型外观
+
+**Callouts → Type appearance** 按小写类型名保存可选的 Lucide 图标和颜色。类型查找、过滤和外观设置均使用小写匹配，因此给 `research` 设定的图标和颜色同样适用于 `[!RESEARCH]`。颜色沿用文件图标的八个主题预设，或使用固定的十六进制颜色。图标与颜色可单独恢复主题默认值。自定义类型也参与补全和类型选择。Code background 使用同一颜色变量，因此可自动响应修改。
+
+保存或转换等待写入结果，源文本发生冲突时保留模态框草稿。粘贴同时包含 HTML、文件或其他富文本格式时交由 Obsidian 处理。每次预览更新均使过期的异步渲染失效，即使用户已返回原来的标题。
 
 ## 代码配色
 
@@ -68,44 +77,38 @@ callout 是每一行都要带 `>` 的引用块，手工调整结构很繁琐：�
 
 ```text
 src/features/
-├── callout.ts        命令、编辑器菜单、两种视图的按钮、写回、状态栏
+├── callout.ts              命令、编辑器菜单、EditorSuggest、智能粘贴、两种视图按钮、写回、状态栏
 └── callout/
-    ├── model.ts      表头解析、范围识别、包裹与拆出、GitHub 规则（纯函数）
-    └── editor.ts     编辑弹窗、类型探测、GitHub 报告弹窗
+    ├── model.ts            表头解析、范围识别、包裹与拆出、粘贴格式化、GitHub 规则（纯函数）
+    ├── types.ts            popout 安全的类型探测、外观分组与过滤（纯函数）
+    ├── type-suggest.ts     > [! 行内类型补全
+    ├── folder-suggest.ts   GitHub folders 路径补全
+    └── editor.ts           可调大小的双栏实时预览编辑弹窗、GitHub 报告弹窗
 ```
 
 ## 决策
 
-- **类型来自已加载的样式表。** 扫描 `.callout[data-callout="…"]` 选择器，用一个隐藏的探针元素读取 `--callout-icon` 和 `--callout-color`。这样主题和 CSS 片段定义的类型也会出现，颜色与 Obsidian 渲染一致。
-  - Obsidian 1.14 给出的颜色是十六进制值，旧版本是 `r, g, b` 三元组，代码统一转成 CSS 颜色。
-  - 色块的浅色背景用 `color-mix`，不用 `rgba()`。
-- **写回前核对源码。** callout 源码与打开时不一致时只提示重新打开，不覆盖并发修改。各入口的写回方式：
-  - 阅读视图：按 section 行号经 `vault.process` 写回。
-  - Live Preview：用 CodeMirror 事务。
-  - 命令：用 `Editor.replaceRange`。
-- **预览用 `MarkdownRenderer.render`。** 输入停止 150 ms 后重新渲染。弹窗持有自己的 `Component`，关闭时卸载。
-- **转换放进编辑器。** 命令和右键菜单项只在光标位于 callout 源码中时出现。Live Preview 渲染出的 callout 不算光标所在，阅读视图也没有编辑器，所以 2026-11-11 用户在编辑器里找不到转换。编辑器底部的两个按钮从所有入口都能用到。
-- **布局。** 第一版把所有控件放在左栏，预览和 GitHub 状态放在右栏。左栏太长，正文框落在首屏以下，右栏却大半空着，用户反馈拥挤。现在的布局：
-  - 类型、标题、折叠、metadata 横跨整个弹窗。标题、折叠、metadata 排成一行，标签在上方；原来的说明文字改为占位文字和悬停提示。不再使用 `Setting` 行，因此也没有分隔线。
-  - 只有正文和预览并排。两栏等高，分得弹窗多出的高度；内容过长时在各自的框内滚动。
-  - GitHub 状态放在两栏下方，问题列表再长也不会挤压预览。
-  - 按钮固定在底部，转换在左，取消和保存在右。
-  - 弹窗内容宽度小于 640px 时上下排列。这里用 container query，按弹窗而不是窗口的宽度判断。
-  - 在 1609×780 的窗口中，默认尺寸是 960×555，不需要滚动。
-- **可调整大小。** 表格编辑器和本编辑器共用 `src/ui/resizable-modal.ts`。
-  - 拖动右下角的把手时，尺寸按指针位移的两倍变化：弹窗居中，这样把手始终跟着指针。
-  - 尺寸用 `app.saveLocalStorage` 按库记住，下次以这个尺寸打开；双击把手恢复默认。
-  - 调整过的弹窗最大可到窗口边缘内 16px。移动端不加把手。
+- **正文编辑与实时预览保留在可调双栏弹窗，并补齐原生编辑入口优化。** 2026-11-22 将此前移除的双栏 `<textarea>` + 预览恢复为默认流程以保留编辑时的所见即所得，同时保留原生编辑器内 `> [!` 补全与多行智能粘贴；预览使用页内不可见双缓冲（`obsidian-patch-callout-preview-buffer`）+ 递增序号与每次独立的子 `Component`，解决清空闪白、异步竞态与子组件泄漏问题，并保留滚动位置。
+- **类型来自已加载的样式表并按外观自动归组。** 扫描 `.callout[data-callout="…"]` 选择器（使用跨窗口鸭子类型而非 `instanceof CSSStyleRule` 以兼容 popout 窗口），并用隐藏探针元素读取 `--callout-icon` 和 `--callout-color`。默认将 27 个内置类型按 `(icon, color)` 视觉签名聚合为 13 组（主题自定义样式的别名自动独立成组），选中后在下方展示该组全部别名以便单点切换。GitHub 标记笔记顶部额外展示 5 个 GitHub Alert。过滤框支持直搜全部别名、创建自定义类型并拦截 `]`/`|` 等非法字符。
+  - Obsidian 1.14+ 给出的颜色是十六进制值，旧版本和部分主题是 `r, g, b` 三元组，代码统一转成 CSS 颜色。
+  - 色块的浅色背景用 `color-mix`。
+- **写回前核对源码，仅改表头时只写第一行。** callout 源码与打开时不一致时只提示重新打开，不覆盖并发修改。各入口的写回方式：
+  - 阅读视图按 section 行号在 `vault.process` 中逐行核对内容，识别 CRLF、LF 和 CR。仅改表头时替换该行文字，保留其行尾及其余全文的原始字节。替换整个 callout 时，新增行使用表头处的换行符，替换范围外的换行符保持原样。
+  - Live Preview：用 CodeMirror 事务仅替换 `[from, headerTo]` 或 `[from, to]`。
+  - 命令：用 `Editor.replaceRange` 仅替换 `[from, headerTo]` 或 `[from, to]`。
+- **布局与可调整大小。** 沿用原有双栏布局与 `src/ui/resizable-modal.ts`（storage key `obsidian-patch-callout-editor-size`）：默认 `min(960px, 94vw)`，类型、标题、折叠、metadata 横跨顶部，正文与预览左右等高并排并在 `< 640px` 时堆叠；按钮固定底部，右下角把手按两倍位移调尺寸并记住库尺寸，双击恢复默认。
 - **空标题的占位文字**是 Obsidian 会显示的名称：类型转小写，连字符换成空格，首字母大写。例如 `NOTE` 显示为 Note，`my-type` 显示为 My type，在 1.15.0 的阅读视图中实测。
 
 ## 宿主依赖
 
 - 阅读视图：使用公开的 markdown post processor 和 `getSectionInfo`，只处理以 callout 开头的 section。
 - Live Preview：依赖 `.cm-callout > .embed-actions` DOM。容器不存在时不加按钮，命令仍然可用。按钮由挂在 `contentDOM` 上的 mouseover 监听按需添加，与 HTML 表格的做法相同。
-- 编辑器 API：`editorInfoField` 用于取得 Live Preview 中笔记的路径。
-- 弹窗：依赖 `.modal` 为纵向 flex 并在 `.modal-container` 中居中；记住尺寸用 `app.loadLocalStorage` 和 `saveLocalStorage`（1.8.7 起）。
+- 编辑器 API：`editorInfoField` 用于取得 Live Preview 中笔记的路径；`EditorSuggest` 与 `workspace.on("editor-paste")` 均为公开 API。
+- **弹窗**：依赖 `.modal` 为纵向 flex 并在 `.modal-container` 中居中；双栏编辑器使用 `min(960px, 94vw)`（及 `src/ui/resizable-modal.ts` 记忆尺寸）与 `.modal-button-container` 固定底栏。
 
 ## 验证
+
+2026-11-22，Linux / Obsidian 1.15.1 默认主题，还原可调大小的双栏实时预览 Callout 编辑器并整合类型优化与无闪白双缓冲（`min(960px, 94vw)` + `obsidian-patch-callout-editor-size` 拖拽缩放/双击复原、13 组外观聚合 + 过滤/别名条/自定义类型、`github: true` 置顶 GitHub alerts、页内双缓冲 + 每代独立 `Component` 防闪白与泄漏、`> [!` `EditorSuggest` 补全、多行 `editor-paste` 自动补前缀、仅改表头首行 `[from, headerTo]` 写回）：`npm test` 145 项单元测试通过，`npm run build`、`npm run check:release`、`npm run docs:build` 与 `npm run docs:check`（21 个 HTML 页面、853 条链接与资源）通过；`node scripts/test-callout.mjs /home/yaroxy/obsidian-vaults/dev-vault`（71 项检查）与 `node scripts/test-table.mjs /home/yaroxy/obsidian-vaults/dev-vault`（30 项检查）全部通过（0 跳过），并人工检查了 `callout-modal.png` 与 `callout-modal-github.png` 截图布局；测试结束后插件设置、编辑器尺寸、活跃标签与后台节流均已恢复。未验证移动端、popout 窗口、第三方主题及多系统桌面平台，本轮亦未重跑 Banner / Icons / Mermaid / Navigation 集成套件。
 
 2026-11-17，macOS / Obsidian 1.15.1 默认主题，代码背景扩展：生产构建通过；在 dev-vault 使用临时定向检查先复现旧版代码块保持灰色，再验证修改后的 43 项断言通过，覆盖浅色／深色、阅读视图／Live Preview、warning 内嵌 tip、带语法高亮和无语言标记的代码块、标题行内代码、开关恢复以及 callout 外代码不变。检查了阅读浅色和 Live Preview 深色截图；主题、设置、活跃标签和后台节流恢复，临时笔记已删除，错误日志为空。未重跑完整编辑器集成套件和单元测试，未验证移动端、其他主题和平台。
 

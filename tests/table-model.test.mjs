@@ -5,7 +5,7 @@ import { build } from "esbuild";
 const bundle = await build({ entryPoints: ["src/features/table/model.ts"], bundle: true, write: false, format: "esm", platform: "node" });
 const {
   createTable, deleteColumns, deleteRows, headRows, insertColumn, insertRow, layout, merge,
-  setAlign, setCaption, setHeader, split, tableRanges, toHtml,
+  setAlign, setCaption, setHeader, split, TableSizeError, tableRanges, toHtml,
 } = await import(`data:text/javascript;base64,${Buffer.from(bundle.outputFiles[0].contents).toString("base64")}`);
 
 const cell = (html, more = {}) => ({ header: false, rowspan: 1, colspan: 1, attrs: [["align", "center"]], html, ...more });
@@ -62,6 +62,16 @@ test("only leading all-header rows that do not span into the body form thead", (
   assert.equal(headRows(kana().rows), 1);
   assert.equal(headRows([[th("a", { rowspan: 2 }), th("b")], [cell("c")]]), 0);
   assert.equal(headRows([[th("a")], [th("b")], [cell("c")]]), 2);
+});
+
+test("a table at the grid limit can be read and rejected growth preserves its draft", () => {
+  const rows = Array.from({ length: 50 }, () => [cell("wide row", { colspan: 1000 })]);
+  const table = { attrs: [], rows };
+  assert.equal(layout(rows).width, 1000);
+  assert.throws(() => insertRow(table, 0), TableSizeError);
+  assert.throws(() => insertColumn(table, 1), TableSizeError);
+  assert.equal(table.rows.length, 50);
+  assert.ok(table.rows.every(row => row.length === 1 && row[0].colspan === 1000));
 });
 
 test("rows inserted inside a row span extend it, and new cells take after their neighbors", () => {
@@ -133,4 +143,28 @@ test("tables are found in Markdown source, including nested ones", () => {
   assert.ok(text.slice(ranges[0].from, ranges[0].to).startsWith("<table>\n<tr>"));
   assert.ok(text.slice(ranges[0].from, ranges[0].to).endsWith("</td></tr>\n</table>"));
   assert.equal(text.slice(ranges[1].from, ranges[1].to), '<TABLE style="a"></TABLE>');
+});
+
+test("tableRanges excludes frontmatter, code, comments, math, quotes, callouts, and lists while preserving indented inner rows", () => {
+  const real = "<table>\n    <tbody>\n      <tr><td><table><tr><td>inner</td></tr></table></td></tr>\n    </tbody>\n</table>";
+  const cases = [
+    `---\nnote: <table><tr><td>yaml</td></tr></table>\n---`,
+    "```html\n<table><tr><td>fence</td></tr></table>\n```",
+    "~~~\n<table><tr><td>tilde</td></tr></table>\n~~~",
+    "    <table><tr><td>indented code</td></tr></table>",
+    "Inline `<table><tr><td>code</td></tr></table>` example",
+    "<!--\n<table><tr><td>html comment</td></tr></table>\n-->",
+    "Inline <!-- <table><tr><td>comment</td></tr></table> -->",
+    "%%\n<table><tr><td>obsidian comment</td></tr></table>\n%%",
+    "Inline %% <table><tr><td>obsidian</td></tr></table> %%",
+    "$$\n<table><tr><td>math</td></tr></table>\n$$",
+    "<pre>\n<table><tr><td>pre</td></tr></table>\n</pre>",
+    "> [!note]\n> <table><tr><td>callout</td></tr></table>",
+    "- item\n  <table><tr><td>list</td></tr></table>",
+  ];
+  for (const excluded of cases) assert.equal(tableRanges(excluded).length, 0, excluded);
+  const combined = cases.join("\n\n") + "\n\n" + real;
+  const found = tableRanges(combined);
+  assert.equal(found.length, 1);
+  assert.equal(combined.slice(found[0].from, found[0].to), real);
 });

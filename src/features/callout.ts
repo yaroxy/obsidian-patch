@@ -1,10 +1,11 @@
 import { ViewPlugin, type EditorView } from "@codemirror/view";
-import { debounce, editorInfoField, MarkdownView, Notice, setIcon, type App, type Editor, type MarkdownPostProcessorContext, type Plugin, type TFile } from "obsidian";
-import { CalloutEditor, GitHubReport, type CalloutDraft } from "./callout/editor";
+import { debounce, editorInfoField, MarkdownView, Notice, setIcon, type App, type Editor, type IconName, type MarkdownPostProcessorContext, type Plugin, type TFile } from "obsidian";
+import { CalloutEditor, GitHubReport, type CalloutDraft, type CalloutEditorOptions } from "./callout/editor";
+import { CalloutTypeSuggest } from "./callout/type-suggest";
 import { editorLines, isActiveCheckNote, readCheckSource, sameCheckText } from "./note-check-source";
 import {
-  calloutAt, calloutLines, commonIndent, findCallouts, formatHeader, githubIssues, unwrapToBlockquote, unwrapToText, withMarkers,
-  type Callout, type CalloutHeader,
+  calloutAt, calloutLines, commonIndent, findCallouts, formatCalloutPaste, formatHeader, githubIssues,
+  matchCalloutSource, replaceCalloutLines, unwrapToBlockquote, unwrapToText, withMarkers, type Callout, type CalloutHeader,
 } from "./callout/model";
 
 export interface CalloutSettings {
@@ -26,37 +27,66 @@ export function parseCalloutSettings(data: unknown): CalloutSettings {
   };
 }
 
-const STALE = "The callout changed while it was being edited. Open the editor again.";
-const NEW_HEADER: CalloutHeader = { type: "note", metadata: "", fold: "", title: "" };
+const STALE = "The callout changed while it was being edited. Copy your draft before reopening the editor.";
+const NEW_HEADER: CalloutHeader = { type: "NOTE", metadata: "", fold: "", title: "" };
+type WriteMode = "header" | "full";
+type EditorContext = Pick<CalloutEditorOptions, "sourcePath" | "showGitHub" | "prioritizeGitHub" | "appearances">;
+
+function isGitHubMarked(app: App, file: TFile | null | undefined, githubFolders: string[]): boolean {
+  if (!file) return false;
+  if (app.metadataCache.getFileCache(file)?.frontmatter?.[GITHUB_PROPERTY] === true) return true;
+  return githubFolders.some((folder) => file.path.startsWith(`${folder.replace(/\/+$/, "")}/`));
+}
 
 /**
- * Visual editing for callouts: insert or wrap, edit, convert back to text or
- * a blockquote, and check them against GitHub's alert rules. Every entry point
- * writes back only if the callout's source is still what was opened.
+ * Visual property editing, inline type suggestions, smart multi-line paste,
+ * conversion, and GitHub compatibility checking for callouts. Every entry
+ * point writes back only if the callout's source is still what was opened.
  */
-export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings): () => void {
+export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings, appearances: () => EditorContext["appearances"]): () => void {
   const { app } = plugin;
-  const pathOf = (info: { file?: TFile | null } | null | undefined): string => info?.file?.path ?? "";
+  const fileOf = (info: { file?: TFile | null } | null | undefined): TFile | null => info?.file ?? null;
+  const prioritize = (file: TFile | null | undefined): boolean => settings().github && isGitHubMarked(app, file, settings().githubFolders);
+
+  const contextFor = (file: TFile | null): EditorContext => ({
+    sourcePath: file?.path ?? "", showGitHub: settings().github, prioritizeGitHub: prioritize(file), appearances: appearances(),
+  });
+  plugin.registerEditorSuggest(new CalloutTypeSuggest(app, appearances, prioritize));
+
+  plugin.registerEvent(app.workspace.on("editor-paste", (evt, editor) => {
+    const clipboard = evt.clipboardData;
+    if (evt.defaultPrevented || !clipboard || clipboard.files.length || clipboard.types.some(type => type !== "text/plain")) return;
+    const plain = clipboard.getData("text/plain");
+    if (!plain || !/[\r\n]/.test(plain)) return;
+    const text = editor.getValue();
+    const from = editor.posToOffset(editor.getCursor("from"));
+    const to = editor.posToOffset(editor.getCursor("to"));
+    const replacement = formatCalloutPaste(text, from, to, plain);
+    if (replacement === undefined) return;
+    evt.preventDefault();
+    editor.replaceSelection(replacement);
+  }));
 
   plugin.addCommand({
     id: "insert-callout",
     name: "Insert callout",
     icon: "quote",
-    editorCallback: (editor, info) => insert(app, editor, pathOf(info), settings().github),
+    editorCallback: (editor, info) => insert(app, editor, contextFor(fileOf(info))),
   });
-  const onCallout = (id: string, name: string, run: (editor: Editor, callout: Callout, path: string) => void): void => {
+  const onCallout = (id: string, name: string, run: (editor: Editor, callout: Callout, file: TFile | null) => void): void => {
     plugin.addCommand({
       id,
       name,
       editorCheckCallback: (checking, editor, info) => {
         const callout = calloutAtCursor(editor);
         if (!callout) return false;
-        if (!checking) run(editor, callout, pathOf(info));
+        if (!checking) run(editor, callout, fileOf(info));
         return true;
       },
     });
   };
-  onCallout("edit-callout", "Edit callout", (editor, callout, path) => editInEditor(app, editor, callout, path, settings().github));
+  onCallout("edit-callout", "Edit callout", (editor, callout, file) =>
+    editInEditor(app, editor, callout, contextFor(file)));
   onCallout("callout-to-text", "Convert callout to text", (editor, callout) => replaceCallout(editor, callout, unwrapToText(callout)));
   onCallout("callout-to-blockquote", "Convert callout to blockquote", (editor, callout) => replaceCallout(editor, callout, unwrapToBlockquote(callout)));
   plugin.addCommand({
@@ -75,14 +105,14 @@ export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings
     const callout = calloutAtCursor(editor);
     if (callout) {
       menu.addItem((item) => item.setTitle("Edit callout").setIcon("square-pen")
-        .onClick(() => editInEditor(app, editor, callout, pathOf(info), settings().github)));
+        .onClick(() => editInEditor(app, editor, callout, contextFor(fileOf(info)))));
       menu.addItem((item) => item.setTitle("Convert callout to text").setIcon("pilcrow")
         .onClick(() => replaceCallout(editor, callout, unwrapToText(callout))));
       menu.addItem((item) => item.setTitle("Convert callout to blockquote").setIcon("text-quote")
         .onClick(() => replaceCallout(editor, callout, unwrapToBlockquote(callout))));
     } else if (editor.somethingSelected()) {
       menu.addItem((item) => item.setTitle("Wrap in callout").setIcon("quote")
-        .onClick(() => insert(app, editor, pathOf(info), settings().github)));
+        .onClick(() => insert(app, editor, contextFor(fileOf(info)))));
     }
   }));
 
@@ -95,34 +125,44 @@ export function registerCallouts(plugin: Plugin, settings: () => CalloutSettings
       if (!embed || !actions || actions.querySelector(".obsidian-patch-callout-edit")) return;
       const button = actions.createDiv({ cls: "embed-action obsidian-patch-callout-edit" });
       actions.prepend(button);
-      addButton(button, () => editWidget(app, view, embed, settings().github));
+      addButton(button, "Edit callout", "square-pen", () => editWidget(app, view, embed, contextFor));
     };
     view.contentDOM.addEventListener("mouseover", hover);
     return { destroy: () => view.contentDOM.removeEventListener("mouseover", hover) };
   }));
 
-  // Reading View has no editor, so the change goes through the vault by line.
+  // Reading View has no editor, so edits go through the vault by line.
   plugin.registerMarkdownPostProcessor((el, ctx) => {
     if (!el.querySelector(":scope > .callout") || !locate(el, ctx)) return;
     el.addClass("obsidian-patch-callout-host");
-    addButton(el.createEl("button", { cls: "obsidian-patch-callout-edit clickable-icon", attr: { type: "button" } }), () => {
-      const found = locate(el, ctx);
-      const file = app.vault.getFileByPath(ctx.sourcePath);
-      if (!found || !file) {
-        new Notice(STALE);
-        return;
-      }
-      const { callout, section, lineStart, lineEnd } = found;
-      const source = section.slice(callout.from, callout.to);
-      openEditor(app, callout, ctx.sourcePath, settings().github, (text) => {
-        app.vault.process(file, (data) => {
-          const lines = data.split("\n");
-          if (lines.slice(lineStart, lineEnd + 1).join("\n") !== section) throw new Error(STALE);
-          const next = section.slice(0, callout.from) + text(source) + section.slice(callout.to);
-          return [...lines.slice(0, lineStart), next, ...lines.slice(lineEnd + 1)].join("\n");
-        }).catch((error: unknown) => new Notice(error instanceof Error ? error.message : String(error)));
-      });
-    });
+    const button = el.createEl("button", { cls: "obsidian-patch-callout-edit clickable-icon", attr: { type: "button" } });
+    addButton(
+      button,
+      "Edit callout",
+      "square-pen",
+      () => {
+        const found = locate(el, ctx);
+        const file = app.vault.getFileByPath(ctx.sourcePath);
+        if (!found || !file) {
+          new Notice("Could not locate this callout. Reopen the note and try again.");
+          return;
+        }
+        const { callout, source, lineStart } = found;
+        openEditor(
+          app,
+          callout,
+          contextFor(file),
+          async (mode, text) => {
+            await app.vault.process(file, (data) => {
+              const count = mode === "header" ? 1 : 1 + callout.body.length;
+              const updated = replaceCalloutLines(data, lineStart, source, count, text);
+              if (updated === undefined) throw new Error(STALE);
+              return updated;
+            });
+          },
+        );
+      },
+    );
   });
 
   return registerGitHubStatus(plugin, settings);
@@ -133,63 +173,67 @@ function calloutAtCursor(editor: Editor): Callout | undefined {
 }
 
 /**
- * Opens the editor on a callout. `write` receives a function from the callout's
- * old source to its new one: only the header line changes when the content
- * did not, so untouched content keeps its exact markers. A conversion from
- * the editor applies to the callout as edited there.
+ * Opens the editor on a callout. Header-only edits replace only the
+ * header line so untouched body lines keep their exact bytes and markers.
  */
-function openEditor(app: App, callout: Callout, sourcePath: string, github: boolean, write: (text: (source: string) => string) => void): void {
+function openEditor(
+  app: App,
+  callout: Callout,
+  context: EditorContext,
+  write: (mode: WriteMode, text: string) => void | Promise<void>,
+): void {
   new CalloutEditor(app, {
     title: "Edit callout",
     draft: { header: callout.header, body: callout.body },
     placement: callout,
-    sourcePath,
-    showGitHub: github,
+    ...context,
     save: (draft, changed) => {
-      write((source) => (changed.body
-        ? calloutLines(callout.indent, callout.depth, draft.header, draft.body).join("\n")
-        : withMarkers(formatHeader(draft.header), callout.indent, callout.depth) + source.slice((source.split("\n")[0] ?? "").length)));
+      if (changed.body) return write("full", calloutLines(callout.indent, callout.depth, draft.header, draft.body).join("\n"));
+      return write("header", withMarkers(formatHeader(draft.header), callout.indent, callout.depth));
     },
     convert: (draft, to) => {
       const edited = { ...callout, header: draft.header, body: draft.body };
       const lines = to === "text" ? unwrapToText(edited) : unwrapToBlockquote(edited);
-      write(() => lines.join("\n"));
+      return write("full", lines.join("\n"));
     },
   }).open();
 }
 
-function editInEditor(app: App, editor: Editor, callout: Callout, sourcePath: string, github: boolean): void {
+function editInEditor(app: App, editor: Editor, callout: Callout, context: EditorContext): void {
   const source = editor.getValue().slice(callout.from, callout.to);
-  openEditor(app, callout, sourcePath, github, (text) => {
-    const from = editor.offsetToPos(callout.from);
-    const to = editor.offsetToPos(callout.to);
-    if (editor.getRange(from, to) !== source) new Notice(STALE);
-    else editor.replaceRange(text(source), from, to);
+  openEditor(app, callout, context, (mode, text) => {
+    const current = matchCalloutSource(editor.getValue(), callout.line, source);
+    if (!current) throw new Error(STALE);
+    const end = mode === "header" ? current.headerTo : current.to;
+    editor.replaceRange(text, editor.offsetToPos(current.from), editor.offsetToPos(end));
   });
 }
 
-function editWidget(app: App, view: EditorView, embed: HTMLElement, github: boolean): void {
+function editWidget(app: App, view: EditorView, embed: HTMLElement, contextFor: (file: TFile | null) => EditorContext): void {
   const line = view.state.doc.lineAt(view.posAtDOM(embed));
   const callout = findCallouts(view.state.doc.toString()).find(({ from, depth }) => from === line.from && depth === 1);
   if (!callout) return;
+  const file = view.state.field(editorInfoField, false)?.file ?? null;
   const source = view.state.sliceDoc(callout.from, callout.to);
-  openEditor(app, callout, view.state.field(editorInfoField, false)?.file?.path ?? "", github, (text) => {
-    if (view.state.sliceDoc(callout.from, callout.to) !== source) new Notice(STALE);
-    else view.dispatch({ changes: { from: callout.from, to: callout.to, insert: text(source) } });
+  openEditor(app, callout, contextFor(file), (mode, text) => {
+    const current = matchCalloutSource(view.state.doc.toString(), callout.line, source);
+    if (!current) throw new Error(STALE);
+    const to = mode === "header" ? current.headerTo : current.to;
+    view.dispatch({ changes: { from: current.from, to, insert: text } });
   });
 }
 
 function locate(el: HTMLElement, ctx: MarkdownPostProcessorContext) {
   const info = ctx.getSectionInfo(el);
   if (!info) return undefined;
-  const section = info.text.split("\n").slice(info.lineStart, info.lineEnd + 1).join("\n");
+  const section = editorLines(info.text).split("\n").slice(info.lineStart, info.lineEnd + 1).join("\n");
   const callout = findCallouts(section).find(({ from, depth }) => from === 0 && depth === 1);
-  return callout && { callout, section, lineStart: info.lineStart, lineEnd: info.lineEnd };
+  return callout && { callout, source: section.slice(callout.from, callout.to), lineStart: info.lineStart };
 }
 
-function addButton(button: HTMLElement, open: () => void): void {
-  button.setAttribute("aria-label", "Edit callout");
-  setIcon(button, "square-pen");
+function addButton(button: HTMLElement, label: string, icon: IconName, open: () => void): void {
+  button.setAttribute("aria-label", label);
+  setIcon(button, icon);
   // In Live Preview, a press would otherwise move the cursor into the callout's source.
   button.addEventListener("mousedown", (evt) => {
     evt.preventDefault();
@@ -211,7 +255,7 @@ function replaceCallout(editor: Editor, callout: Callout, lines: string[]): void
  * line separates the callout from text around it, which would otherwise join
  * the callout as a lazy continuation or merge with a neighboring quote.
  */
-function insert(app: App, editor: Editor, sourcePath: string, github: boolean): void {
+function insert(app: App, editor: Editor, context: EditorContext): void {
   const from = editor.getCursor("from");
   const to = editor.getCursor("to");
   const selected = editor.somethingSelected();
@@ -224,10 +268,7 @@ function insert(app: App, editor: Editor, sourcePath: string, github: boolean): 
   const draft: CalloutDraft = { header: NEW_HEADER, body: lines.map((line) => (line.trim() === "" ? "" : line.slice(indent.length))) };
 
   const save = (result: CalloutDraft): void => {
-    if (Array.from({ length: last - first + 1 }, (_, i) => editor.getLine(first + i)).join("\n") !== original.join("\n")) {
-      new Notice(STALE);
-      return;
-    }
+    if (Array.from({ length: last - first + 1 }, (_, i) => editor.getLine(first + i)).join("\n") !== original.join("\n")) throw new Error(STALE);
     const block = calloutLines(indent, 1, result.header, result.body);
     // An empty new callout gets a line to type in.
     if (result.body.length === 0) block.push(`${withMarkers("", indent, 1)} `);
@@ -243,13 +284,13 @@ function insert(app: App, editor: Editor, sourcePath: string, github: boolean): 
     else editor.replaceRange(`\n${text}`, { line: first, ch: editor.getLine(first).length });
     const cursor = start + lead.length + block.length - 1;
     editor.setCursor({ line: cursor, ch: editor.getLine(cursor).length });
+    editor.focus();
   };
   new CalloutEditor(app, {
     title: selected ? "Wrap in callout" : "Insert callout",
     draft,
     placement: { indent, depth: 1 },
-    sourcePath,
-    showGitHub: github,
+    ...context,
     save,
   }).open();
 }
@@ -289,15 +330,11 @@ function registerGitHubStatus(plugin: Plugin, settings: () => CalloutSettings): 
   const status = plugin.addStatusBarItem();
   status.addClass("obsidian-patch-callout-status", "mod-clickable");
   status.hide();
-  const marked = (file: TFile): boolean => {
-    if (app.metadataCache.getFileCache(file)?.frontmatter?.[GITHUB_PROPERTY] === true) return true;
-    return settings().githubFolders.some((folder) => file.path.startsWith(`${folder.replace(/\/+$/, "")}/`));
-  };
   let revision = 0;
   const refresh = debounce(async (requested: number) => {
     const view = app.workspace.getActiveViewOfType(MarkdownView);
     const file = view?.file;
-    if (!settings().github || !view || !file || !marked(file)) {
+    if (!settings().github || !view || !file || !isGitHubMarked(app, file, settings().githubFolders)) {
       status.hide();
       return;
     }

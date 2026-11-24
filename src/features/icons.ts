@@ -120,7 +120,7 @@ export function registerIcons(
   };
 
   const loadSet = (force = false): Promise<SimpleIconSet> => {
-    if (simpleIcons !== undefined && !force) return simpleIcons;
+    if (simpleIcons !== undefined && (!force || status.status === "loading")) return simpleIcons;
     status = { status: "loading" };
     const loading = loadSimpleIcons(settings.cachedLatest, (cachedLatest) => {
       if (active && settings.cachedLatest !== cachedLatest) void update({ ...settings, cachedLatest });

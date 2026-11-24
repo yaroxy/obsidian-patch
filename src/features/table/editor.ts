@@ -1,9 +1,9 @@
-import { Menu, Modal, Scope, sanitizeHTMLToDom, setIcon, type App, type IconName } from "obsidian";
+import { Menu, Modal, Notice, Scope, sanitizeHTMLToDom, setIcon, type App, type IconName } from "obsidian";
 import { makeResizable } from "../../ui/resizable-modal";
 import { insertPlainText } from "./text-input";
 import {
   CAPTION_STYLE, deleteColumns, deleteRows, expand, headRows, inside, insertColumn, insertRow, layout, merge,
-  setAlign, setCaption, setHeader, split, toHtml, type Align, type Attrs, type Cell, type Layout, type Rect, type Table,
+  setAlign, setCaption, setHeader, split, TableSizeError, toHtml, type Align, type Attrs, type Cell, type Layout, type Rect, type Table,
 } from "./model";
 
 interface Action {
@@ -21,7 +21,9 @@ interface TableEditorOptions {
   editing?: boolean;
   converting?: boolean;
   /** Returning false leaves the drafts open, for example after a stale-source check. */
-  save(html: string[]): boolean | void;
+  save(html: string[]): boolean | void | Promise<boolean | void>;
+  /** Converts the current edited table draft to Markdown, calling `done` to close this editor on confirmation. */
+  convertToMarkdown?(draft: Table, done: () => void): void;
 }
 
 const cellsIn = (rect: Rect, { placed }: Layout) => placed.filter((at) => inside(at, rect));
@@ -100,9 +102,15 @@ export class TableEditor extends Modal {
     this.host = this.contentEl.createDiv({ cls: "obsidian-patch-table-grid markdown-rendered" });
     // Outside the content, so the buttons stay in view while the table scrolls.
     const footer = this.modalEl.createDiv({ cls: "modal-button-container" });
+    if (options.convertToMarkdown && !options.converting) {
+      const left = footer.createDiv({ cls: "obsidian-patch-table-convert" });
+      left.createEl("button", { text: "Convert to Markdown" }).addEventListener("click", () => {
+        options.convertToMarkdown?.(this.table, () => this.close());
+      });
+    }
     footer.createEl("button", { text: "Cancel" }).addEventListener("click", () => this.close());
     const label = options.converting ? this.drafts.length > 1 ? `Convert all ${this.drafts.length} tables` : "Convert to HTML" : "Save";
-    footer.createEl("button", { text: label, cls: "mod-cta" }).addEventListener("click", () => this.commit());
+    footer.createEl("button", { text: label, cls: "mod-cta" }).addEventListener("click", () => { void this.commit(); });
     makeResizable(this, "obsidian-patch-table-editor-size");
     this.listen();
 
@@ -111,12 +119,13 @@ export class TableEditor extends Modal {
     this.scope = new Scope(this.scope);
     this.scope.register([], "Escape", (evt) => {
       if (evt.isComposing) return; // Let the IME cancel its candidates.
+      if (this.modalEl.inert) return false;
       const active = this.host.doc.activeElement;
       if (active?.instanceOf(HTMLElement) && this.host.contains(active)) active.blur();
       else this.close();
       return false;
     });
-    this.scope.register(["Mod"], "Enter", () => { this.commit(); return false; });
+    this.scope.register(["Mod"], "Enter", () => { void this.commit(); return false; });
     this.scope.register(["Mod"], "z", () => { this.step(this.undoStack, this.redoStack); return false; });
     this.scope.register(["Mod", "Shift"], "z", () => { this.step(this.redoStack, this.undoStack); return false; });
   }
@@ -137,10 +146,18 @@ export class TableEditor extends Modal {
     this.host.doc.removeEventListener("mouseup", this.endDrag);
   }
 
-  private commit(): void {
-    const html = this.drafts.map(draft => toHtml(draft.table));
-    if (html.some((value, i) => value !== this.unchanged?.[i]) && this.options.save(html) === false) return;
-    this.close();
+  private async commit(): Promise<void> {
+    if (this.modalEl.inert) return;
+    this.modalEl.inert = true;
+    try {
+      const html = this.drafts.map(draft => toHtml(draft.table));
+      if (html.some((value, i) => value !== this.unchanged?.[i]) && await this.options.save(html) === false) return;
+      if (this.modalEl.isConnected) this.close();
+    } catch (error) {
+      new Notice(error instanceof Error ? error.message : String(error));
+    } finally {
+      this.modalEl.inert = false;
+    }
   }
 
   private navigation(): void {
@@ -211,7 +228,13 @@ export class TableEditor extends Modal {
   private apply(action: Action): void {
     const rect = this.selected();
     if (action.allowed?.(rect, this.grid) === false) return;
-    const next = action.run(this.table, rect);
+    let next: Table;
+    try { next = action.run(this.table, rect); }
+    catch (error) {
+      if (!(error instanceof TableSizeError)) throw error;
+      new Notice(error.message);
+      return;
+    }
     if (next === this.table) return;
     this.remember();
     this.table = next;
@@ -225,6 +248,7 @@ export class TableEditor extends Modal {
   }
 
   private step(from: Table[], to: Table[]): void {
+    if (this.modalEl.inert) return;
     const table = from.pop();
     if (!table) return;
     to.push(this.table);

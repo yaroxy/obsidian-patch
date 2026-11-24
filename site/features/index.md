@@ -6,8 +6,8 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 
 | Feature | What it adds |
 | --- | --- |
-| [HTML tables](tables.md) | Visual editing, merged cells, grouped headers, captions, and Markdown-to-HTML conversion. |
-| [Callouts](callouts.md) | Insert, edit, preview, unwrap, and check GitHub compatibility; tint code backgrounds. |
+| [HTML tables](tables.md) | Visual editing, merged cells, grouped headers, captions, and two-way Markdown/HTML conversion. |
+| [Callouts](callouts.md) | Insert, edit, live-preview, complete `> [!` types, keep multi-line pastes quoted, unwrap, and check GitHub compatibility; tint code backgrounds. |
 | [Math formatting](math-format.md) | Indentation and alignment for display math, preserving formulas. |
 
 ## Shape your notes

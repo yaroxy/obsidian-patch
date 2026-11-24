@@ -39,6 +39,8 @@ async function loadTab(remote) {
           export const parseMathFormatSettings = x => x, parseCalloutSettings = x => x, parseIconSettings = x => x, parseLineWidthSettings = x => x;
           export const registerPatchMermaid = () => {}, registerCalloutCode = () => {}, registerActiveLine = () => {}, registerHeadingLevels = () => {};
           export const registerPdfExport = () => {}, registerBanner = () => {}, registerTables = () => {}, registerMathFormat = () => {};
+          export const registerAppearance = () => {}, parseAppearanceSettings = x => x ?? {tableCodeFont:"", calloutTypes:{}};
+          export class CalloutAppearanceModal {}
           export class GitHubFolderSuggest {}
           export const registerCallouts = () => {}, registerIcons = () => {}, registerLineWidth = () => {};` };
       });
@@ -128,8 +130,8 @@ test("settings registration exposes every community row for search without DOM o
   p.icons = new Proxy({}, { get() { assert.fail("Search indexing accessed the icon controller"); } });
   const tab = new CommunityTab(p);
   const groups = tab.getSettingDefinitions();
-  assert.deepEqual(groups.map(x => x.heading), ["Callouts", "Editor", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]);
-  assert.equal(groups.flatMap(x => x.items).length, 23);
+  assert.deepEqual(groups.map(x => x.heading), ["Callouts", "Editor", "HTML Tables", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]);
+  assert.equal(groups.flatMap(x => x.items).length, 25);
   assert.equal(groups.flatMap(x => x.items).every(x => typeof x.name === "string" && x.name.length > 0 && typeof x.desc === "string"), true);
   assert.deepEqual(p.calls, []);
   assert.equal(groups.find(x => x.heading === "Patch Mermaid").items.some(x => x.name === "Custom Mermaid version"), false);

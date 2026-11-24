@@ -17,6 +17,8 @@ export interface CalloutHeader {
 export interface Callout {
   /** Offset of the header line. */
   from: number;
+  /** Offset at the end of the header line, before its line break. */
+  headerTo: number;
   /** Offset just past the last line, before its line break. */
   to: number;
   /** Line number of the header. */
@@ -139,6 +141,7 @@ export function findCallouts(markdown: string): Callout[] {
     }
     callouts.push({
       from: offsets[i] ?? 0,
+      headerTo: (offsets[i] ?? 0) + (lines[i] ?? "").length,
       to: (offsets[j - 1] ?? 0) + (lines[j - 1] ?? "").length,
       line: i,
       indent: head.indent,
@@ -148,6 +151,23 @@ export function findCallouts(markdown: string): Callout[] {
     });
   }
   return callouts;
+}
+
+/** Reparse the live source so new continuation lines and changes at the old end are included in the comparison. */
+export function matchCalloutSource(markdown: string, lineStart: number, expected: string): Callout | undefined {
+  const current = findCallouts(markdown).find(callout => callout.line === lineStart);
+  return current && markdown.slice(current.from, current.to) === expected ? current : undefined;
+}
+
+/** Replace whole callout lines in the saved file after checking the entire current callout. */
+export function replaceCalloutLines(source: string, lineStart: number, expected: string, lineCount: number, replacement: string): string | undefined {
+  if (!matchCalloutSource(source.replace(/\r\n?/g, "\n"), lineStart, expected)) return undefined;
+  // Even entries are the original lines, odd entries their exact delimiters (LF, CRLF or CR).
+  const parts = source.split(/(\r\n|[\r\n])/);
+  const first = lineStart * 2;
+  const newline = parts[first + 1] ?? parts[first - 1] ?? "\n";
+  parts.splice(first, lineCount * 2 - 1, replacement.replace(/\n/g, newline));
+  return parts.join("");
 }
 
 /** The innermost callout around an offset. */
@@ -245,4 +265,101 @@ export function githubIssues(callout: Pick<Callout, "indent" | "depth" | "header
 export function toGitHub(header: CalloutHeader, body: string[]): { header: CalloutHeader; body: string[] } {
   const lines = header.title ? [`**${header.title}**`, ...body] : body;
   return { header: { type: githubType(header.type), metadata: "", fold: "", title: "" }, body: lines };
+}
+
+export function isValidCalloutType(type: string): boolean {
+  return type.trim() !== "" && !/[\]|\r\n]/.test(type);
+}
+
+export function isValidCalloutMetadata(metadata: string): boolean {
+  return !/[\]\r\n]/.test(metadata);
+}
+
+/** Use the same spelling in pickers and Markdown. Uppercase must still resolve to the same Obsidian type. */
+export function displayCalloutType(name: string): string {
+  const upper = name.toUpperCase();
+  return upper.toLowerCase() === name.toLowerCase() ? upper : name;
+}
+
+/** Places the cursor inside the callout body after its blockquote markers, or at the header end if empty. */
+export function bodyCursorPosition(markdown: string, callout: Callout): { line: number; ch: number } {
+  const lines = markdown.split("\n");
+  if (callout.body.length === 0) return { line: callout.line, ch: (lines[callout.line] ?? "").length };
+  const line = callout.line + 1;
+  const first = lines[line] ?? "";
+  const content = contentOf(first, callout.indent, callout.depth);
+  return { line, ch: content !== undefined ? first.length - content.length : 0 };
+}
+
+/**
+ * Formats multi-line plain text pasted inside a callout body so pasted lines
+ * keep the callout's blockquote markers and empty lines stay within the callout.
+ */
+export function formatCalloutPaste(markdown: string, fromOffset: number, toOffset: number, pastedText: string): string | undefined {
+  const normalized = pastedText.replace(/\r\n?/g, "\n");
+  if (!normalized.includes("\n")) return undefined;
+  const callout = calloutAt(findCallouts(markdown), fromOffset);
+  if (!callout || toOffset > callout.to || fromOffset <= callout.headerTo) return undefined;
+  const lineStart = markdown.lastIndexOf("\n", fromOffset - 1) + 1;
+  const rawLineEnd = markdown.indexOf("\n", toOffset);
+  const lineEnd = rawLineEnd < 0 ? markdown.length : rawLineEnd;
+  const beforeCursor = markdown.slice(lineStart, fromOffset);
+  const afterCursor = markdown.slice(toOffset, lineEnd);
+  // A selection ending at column zero leaves the next line's entire quote prefix untouched.
+  const keepsMarkedLine = markdown[toOffset - 1] === "\n" && contentOf(afterCursor, callout.indent, callout.depth) !== undefined;
+  const separateFollowingLine = keepsMarkedLine && !normalized.endsWith("\n");
+  const pastedLines = (separateFollowingLine ? normalized + "\n" : normalized).split("\n");
+
+  const prefixLine = (content: string, isLast: boolean): string => {
+    if (isLast && content === "" && keepsMarkedLine) return "";
+    if (isLast && content === "" && afterCursor !== "" && !/^[ \t]/.test(afterCursor)) return `${withMarkers("", callout.indent, callout.depth)} `;
+    return withMarkers(content, callout.indent, callout.depth);
+  };
+
+  if (contentOf(beforeCursor, callout.indent, callout.depth) !== undefined) {
+    const first = pastedLines[0] ?? "";
+    const head = />$/.test(beforeCursor) && first !== "" && !/^[ \t]/.test(first) ? ` ${first}` : first;
+    return [head, ...pastedLines.slice(1).map((line, i) => prefixLine(line, i + 1 === pastedLines.length - 1))].join("\n");
+  }
+  if (beforeCursor === "") {
+    const checkLines = pastedLines[pastedLines.length - 1] === "" ? pastedLines.slice(0, -1) : pastedLines;
+    if (checkLines.length > 0 && checkLines.every((line) => contentOf(line, callout.indent, callout.depth) !== undefined)) {
+      return separateFollowingLine ? normalized + "\n" : undefined;
+    }
+    return pastedLines.map((line, i) => prefixLine(line, i === pastedLines.length - 1)).join("\n");
+  }
+  return [
+    pastedLines[0] ?? "",
+    ...pastedLines.slice(1).map((line, i) => prefixLine(line, i + 1 === pastedLines.length - 1)),
+  ].join("\n");
+}
+
+/** Detects `> [!query` on a Markdown line outside frontmatter and fenced code blocks. */
+export function calloutSuggestTrigger(markdown: string, lineIndex: number, ch: number): { startCh: number; query: string } | undefined {
+  const lines = markdown.split("\n");
+  const line = lines[lineIndex];
+  if (line === undefined) return undefined;
+  const match = /^[ \t]*(?:>[ \t]?)+[ \t]*\[!([^\]|]*)$/.exec(line.slice(0, ch));
+  if (!match) return undefined;
+  let i = 0;
+  if (lines[0] === "---") {
+    const close = lines.findIndex((row, index) => index > 0 && (row === "---" || row === "..."));
+    if (close < 0 || lineIndex <= close) return undefined;
+    i = close + 1;
+  }
+  let fence: string | undefined;
+  for (; i <= lineIndex; i++) {
+    const inner = (lines[i] ?? "").replace(MARKERS, "");
+    if (fence !== undefined) {
+      if (i === lineIndex) return undefined;
+      if (closesFence(inner, fence)) fence = undefined;
+      continue;
+    }
+    const opening = FENCE.exec(inner);
+    if (opening) {
+      if (i === lineIndex) return undefined;
+      fence = opening[1];
+    }
+  }
+  return { startCh: ch - match[1]!.length, query: match[1]! };
 }

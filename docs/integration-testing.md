@@ -54,6 +54,51 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## Editor updates branch candidate — 2026-11-24
+
+The Community build passed 169 unit tests across 22 files, TypeScript, production packaging, and the documentation build and link check (21 pages and 854 links and assets). Its production `main.js` is 10,307,133 bytes with SHA-256 `4e1d3f230ff9ebc8964901e4e1228f3bb75fc4f5d55c875d5d7e70b22c1754d6`.
+
+Obsidian 1.15.1 on Debian passed 99 Callout, 52 Table, 29 Table conversion, 32 Mermaid and 20 Icons checks on this build. Each suite restored settings and session state. Callout tests covered uppercase suggestions through the native editor, per-type icon and color overrides across Settings windows, and conflicts after extending a callout. Table tests covered custom inline-code fonts and new links to table IDs added while a conversion preview was open. Native round trips retained the default link and highlight behavior. Icons downloaded live graphics and matching brand colors and checked cached rendering after reload. Mobile, other desktop platforms, other themes, the native OS context menu, Full, and unrelated suites were outside this pass.
+
+## Uppercase callout types — 2026-11-24
+
+The unreleased Community build passed 164 unit tests, package validation, the documentation build and the site check. On Debian with Obsidian 1.15.1, the Callout suite passed 93 checks with no skipped groups and restored the development session. The native editor inserted `NOTE`, wrapped a selection with `TIP`, saved the alias `TLDR` and the custom type `DECISION`, and completed a lowercase `war` query to `WARNING`. Explicitly selecting an existing lowercase type changed its marker to uppercase. Editing just the title or body kept its existing spelling. The native appearance dialog showed uppercase names and retained the saved icon and color. The model tests cover Unicode type identities. Mobile and the Full build were outside this run.
+
+## Table fonts, callout appearance, and editor fixes — 2026-11-24
+
+The unreleased Community build based on `a98b4ff` passed 163 unit tests, the production build and release validation. Debian and Obsidian 1.15.1 passed 52 Table checks, 28 Table conversion checks, 89 Callout checks and 32 Mermaid checks. All four suites completed with zero skipped groups and restored the development session. The documentation build and check covered 21 pages and 854 site links and assets. Mobile, Full and other themes were outside this pass.
+
+The native settings tests selected an installed font and inspected inline code in a Live Preview HTML widget, Reading View and the visual table editor. Markdown pipe table cells and ordinary inline code retained their original fonts. A custom callout type used a Lucide icon, a theme palette color, a custom color and its original theme defaults in sequence. Both the existing and freshly rendered title displayed the configured icon. Inline and fenced code changed tint with the selected color and the nested callout retained its own tint.
+
+The five findings below were retested. Both table conversion entry points preserved literal code whitespace. An ordinary Reading View save retained the mixed line endings byte for byte. CRLF tables converted at the correct positions and one undo restored the prior editor text. Saving the resulting native editor transaction on this host wrote LF throughout. Concurrent ordinary table saves in Reading View, Live Preview and the source command kept the draft open. Callout save and conversion conflicts also kept the draft, and a clipboard carrying HTML and plain text remained available to the native paste handler. A deterministic unit test verified the delayed A → B → A preview sequence. Mermaid’s two TreeView example icons with unresolved upstream SVG references remain as recorded below.
+
+## Single-plugin candidate and editor findings — 2026-11-24
+
+A temporary copy of the Community working tree based on `a98b4ff`, including the six new source and test files, installed its locked dependencies from the npm cache and passed all 157 unit tests. Its production `main.js`, `manifest.json` and `styles.css` matched the workspace build byte for byte and passed package validation. With Obsidian 1.15.1 on Debian, the Mermaid suite passed 32 checks with no skipped groups, including ELK, Cynefin, TreeView, both bundled icon packs and theme changes. The upstream renderer still dropped all three local SVG references used by the CSS folder and Chrome Web Store example icons. The suite restored its tab, settings, editor sizes and background throttling. Mobile and Full were outside this run.
+
+Additional probes on the same installed build used temporary development-vault notes and the normal editing commands. The test removed its notes and restored the session. The observations below describe the build before the fixes recorded above.
+
+| Case | Observed result |
+| --- | --- |
+| Convert a table cell containing `<code>a  b</code>` to Markdown | The output code span and rendered cell contained a single space. The preview reported a lossless round-trip. |
+| Edit a cell in a CRLF-only note from Reading View | Saving produced a mix of CRLF and LF. Choosing **Convert to Markdown** in a fresh copy of the unchanged note produced a stale-source notice and kept the conversion dialog open. |
+| Change a callout title in Reading View while another edit updates its body | The concurrent edit survived. The save conflict closed the modal and discarded the new title. |
+| Paste a multiline clipboard selection containing both plain text and an HTML link into a callout | The paste handler consumed the event and inserted the link label as plain text, dropping the destination. |
+
+A separate controlled test of the callout editor held a preview render for title B open while the field changed from A to B and back to A. Releasing the pending render displayed B while the field still showed A.
+
+## Table and callout review fixes — 2026-11-24
+
+The Community working tree based on `a98b4ff` passed 157 unit tests, the production build, release-file validation and the documentation build and check (21 pages and 853 links and assets). On Debian with Obsidian 1.15.1, the development-vault suites passed 27 table conversion checks, 30 table editing checks and 74 callout checks. All three suites restored their session state and reported zero skipped groups. Mobile, Full, other desktop platforms and unrelated native suites were outside this follow-up.
+
+Direct and visual-editor conversion placed the same text in the same columns for zero and positive row spans across two body groups and a footer. Both commands refused a sparse table over the 50,000-position limit. Detaching the original Reading View table kept its drafts open and the file intact. Restoring it allowed conversion followed by a single undo. A Reading View callout title edit preserved the surrounding mixed CRLF and LF bytes, with lone CR and an unterminated last line also covered in unit tests.
+
+## Community bundle and working-tree review — 2026-11-24
+
+The unreleased Community working tree based on `a98b4ff` passed 154 unit tests, the production build, package validation and documentation checks. On Debian with Obsidian 1.15.1, Mermaid passed 32 checks including ELK rendering and icons from both offline packs. Icons passed 20 checks including a live Simple Icons and brand-color download and cached rendering after reload. Callouts passed 71, Table editing 30 and Table conversion 24. Each suite restored its settings and session state. Mobile, other desktop platforms, other themes, the native icon context menu and unrelated suites were outside this run. [Release disclosures and bundle measurements](community-review-history.md#051-release-disclosures--2026-11-24)
+
+A separate in-memory check in the same development window found a conversion discrepancy outside those suites. In a two-column table, the first body cell `A` spans to the end of its row group with `rowspan="0"`, `B` is beside it, and `C` is in the next row. Direct conversion places `C` in column two. Passing the original table through the HTML editor’s draft model first places `C` in column one and reports no loss.
+
 ## Inline math in converted tables — 2026-11-19
 
 The Community candidate based on `5f95d60` passed 138 unit tests, the production build, release-file validation, and documentation checks for 21 pages and 850 links and assets. On macOS with Obsidian 1.15.1, the Table and Markdown conversion suites passed 30 and 18 checks. Conversion preserved the formula source and cell positions in the reported table and the public vector example. The suites covered one-step undo, editable TeX in the modal, native Reading View and Live Preview rendering, and restoration of the test session state. The screenshot is a crop of the converted vector example in Reading View. Mobile, other desktop platforms, and Full were outside this run. [Screenshot](images/inline-math-table.png)

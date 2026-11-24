@@ -46,7 +46,7 @@ async function obsidianSession(app, config, suite) {
     if (globalThis.__obsidianPatchTest?.runId === config.runId) {
       await cleanup("dialogs", () => {
         app.setting.close();
-        for (const button of document.querySelectorAll(".obsidian-patch-table-modal button,.obsidian-patch-callout-modal button")) {
+        for (const button of document.querySelectorAll(".obsidian-patch-table-modal button,.obsidian-patch-table-md-modal button,.obsidian-patch-callout-modal button")) {
           if (button.textContent === "Cancel") button.click();
         }
         document.querySelector(".modal-container .modal-close-button")?.click();

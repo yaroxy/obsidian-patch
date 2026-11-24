@@ -5,6 +5,11 @@ interface Size {
   height: number;
 }
 
+export interface ResizableOptions {
+  min?: Partial<Size>;
+  margin?: { x?: number; y?: number };
+}
+
 const MIN: Size = { width: 420, height: 300 };
 /** Space kept between a resized modal and the window's edges, as in the CSS cap. */
 const MARGIN = 16;
@@ -25,9 +30,13 @@ function parseSize(value: unknown): Size | null {
  * The CSS for `.obsidian-patch-resizable` pins the header and the buttons, so
  * the modal's own layout decides which part takes the room.
  */
-export function makeResizable(modal: Modal, key: string): void {
+export function makeResizable(modal: Modal, key: string, options: ResizableOptions = {}): void {
   if (Platform.isMobile) return;
   const { app, modalEl } = modal;
+  const minWidth = options.min?.width ?? MIN.width;
+  const minHeight = options.min?.height ?? MIN.height;
+  const marginX = options.margin?.x ?? MARGIN;
+  const marginY = options.margin?.y ?? MARGIN;
   modalEl.addClass("obsidian-patch-resizable");
   const grip = modalEl.createDiv({ cls: "obsidian-patch-resize-grip" });
   setTooltip(grip, "Drag to resize. Double-click to restore the default size.");
@@ -40,8 +49,10 @@ export function makeResizable(modal: Modal, key: string): void {
       return;
     }
     const win = modalEl.win;
-    modalEl.style.width = `${Math.round(Math.min(Math.max(size.width, MIN.width), win.innerWidth - 2 * MARGIN))}px`;
-    modalEl.style.height = `${Math.round(Math.min(Math.max(size.height, MIN.height), win.innerHeight - 2 * MARGIN))}px`;
+    const maxWidth = Math.max(0, win.innerWidth - 2 * marginX);
+    const maxHeight = Math.max(0, win.innerHeight - 2 * marginY);
+    modalEl.style.width = `${Math.round(Math.min(Math.max(size.width, minWidth), maxWidth))}px`;
+    modalEl.style.height = `${Math.round(Math.min(Math.max(size.height, minHeight), maxHeight))}px`;
   };
   apply(parseSize(app.loadLocalStorage(key)));
 

@@ -44,7 +44,7 @@ npm run build
 npm run check:release
 ```
 
-**Compatibility:** Release testing covers the pinned dependency. A different version may change diagram syntax, SVG output, or compatibility with the bundled ELK layout engine. Check npm’s peer dependency messages when choosing another major version. Compilation and the package check alone do not exercise rendering in Obsidian.
+**Compatibility:** The standard Mermaid package includes ELK and its named layouts from 12.0.0 onward. This build uses that implementation. Personal builds with an older major version need a matching ELK adapter to render those layouts. A different Mermaid version can also change diagram syntax and SVG output. [Mermaid layout documentation](https://mermaid.js.org/config/layouts.html)
 
 Before using a personal build in your main vault, run `node scripts/test-mermaid.mjs /absolute/path/to/dev-vault` from the same checkout. This suite installs that build into the named development vault and exercises the actual renderer. See [Integration testing](integration-testing.md) for prerequisites, fixtures, and settings restoration. Try representative diagrams from your own notes as well. A later directory update replaces the personal build with the official bundle.
 

@@ -462,6 +462,129 @@ body {
   font-weight: var(--font-normal);
 }
 
+.obsidian-patch-table-convert {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-inline-end: auto;
+}
+
+.modal.obsidian-patch-table-md-modal {
+  width: 820px;
+  max-width: 100%;
+  max-height: min(760px, 100%);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.obsidian-patch-table-md-modal > .modal-header,
+.obsidian-patch-table-md-modal > .modal-button-container { flex: none; }
+
+.obsidian-patch-table-md-modal > .modal-content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--size-4-3);
+  min-height: 0;
+  overflow-y: auto;
+  container-type: inline-size;
+}
+
+.obsidian-patch-table-md-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--size-4-3);
+  align-items: center;
+}
+
+.obsidian-patch-table-md-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-2-2);
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+
+.obsidian-patch-table-md-status {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-table-md-status svg { width: var(--icon-s); height: var(--icon-s); flex: none; }
+.obsidian-patch-table-md-status.is-ok { color: var(--color-green); }
+.obsidian-patch-table-md-status.is-warning { color: var(--text-warning); }
+.obsidian-patch-table-md-status.is-error { color: var(--text-error); }
+
+.obsidian-patch-table-md-issues {
+  margin: 0;
+  padding-inline-start: 1.5em;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.obsidian-patch-table-md-panes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--size-4-3);
+  flex: 1 1 auto;
+  min-height: 14em;
+}
+
+.obsidian-patch-table-md-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+  min-width: 0;
+  min-height: 0;
+}
+
+.obsidian-patch-table-md-label {
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.obsidian-patch-table-md-source,
+.obsidian-patch-table-md-preview {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+  padding: var(--size-4-2) var(--size-4-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--input-radius);
+}
+
+.obsidian-patch-table-md-source {
+  font-family: var(--font-monospace);
+  font-size: var(--font-ui-small);
+  white-space: pre;
+  user-select: text;
+}
+
+.obsidian-patch-table-md-preview-wrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.obsidian-patch-table-md-buffer {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+@container (max-width: 640px) {
+  .obsidian-patch-table-md-panes { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Patch Icons */
 
 /*
@@ -601,15 +724,21 @@ body {
   max-width: 94vw;
 }
 
+.obsidian-patch-callout-modal > .modal-header { flex: none; }
+
 .obsidian-patch-callout-modal > .modal-content {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--size-4-4);
+  padding: 2px 4px;
+  margin: -2px -4px;
   container-type: inline-size;
 }
 
 .obsidian-patch-callout-section,
 .obsidian-patch-callout-field,
+.obsidian-patch-callout-type-picker,
 .obsidian-patch-callout-pane {
   display: flex;
   flex-direction: column;
@@ -620,6 +749,28 @@ body {
 .obsidian-patch-callout-label {
   font-size: var(--font-ui-small);
   font-weight: var(--font-semibold);
+  color: var(--text-muted);
+}
+
+.obsidian-patch-callout-type-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+}
+
+input.obsidian-patch-callout-filter {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 22rem;
+  height: calc(var(--input-height) - var(--size-2-2));
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-callout-group-label {
+  font-size: var(--font-ui-smaller);
+  font-weight: var(--font-medium);
   color: var(--text-muted);
 }
 
@@ -693,19 +844,36 @@ body {
   height: var(--icon-xs);
 }
 
-.obsidian-patch-callout-types > input.obsidian-patch-callout-other {
-  width: 9em;
-  height: calc(var(--input-height) - var(--size-2-2));
-  font-size: var(--font-ui-small);
+.obsidian-patch-callout-types > .obsidian-patch-callout-custom-chip {
+  border-style: dashed;
+  border-color: var(--background-modifier-border-hover);
 }
 
-.obsidian-patch-callout-types > input.obsidian-patch-callout-other.is-active {
+.obsidian-patch-callout-aliases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--size-2-2);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+}
+
+button.obsidian-patch-callout-alias {
+  height: auto;
+  padding: var(--size-2-1) var(--size-2-3);
+  border: 1px solid transparent;
+  font-size: var(--font-ui-smaller);
+  box-shadow: none;
+}
+
+button.obsidian-patch-callout-alias.is-active {
   border-color: var(--interactive-accent);
+  color: var(--text-normal);
 }
 
 .obsidian-patch-callout-fields {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(11.5rem, 1.15fr) minmax(0, 1fr);
   gap: var(--size-4-4);
 }
 
@@ -729,6 +897,14 @@ body {
   font-size: var(--font-ui-small);
 }
 
+.obsidian-patch-callout-preview-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .obsidian-patch-callout-preview {
   flex: 1 1 auto;
   min-height: 0;
@@ -736,6 +912,15 @@ body {
   padding: var(--size-4-2) var(--size-4-3);
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--input-radius);
+}
+
+.obsidian-patch-callout-preview-buffer {
+  position: absolute;
+  inset: 0;
+  padding: var(--size-4-2) var(--size-4-3);
+  visibility: hidden;
+  pointer-events: none;
+  overflow: hidden;
 }
 
 .obsidian-patch-callout-github {
@@ -752,7 +937,33 @@ body {
 
 .obsidian-patch-callout-github-head > button { margin-inline-start: auto; }
 
+.obsidian-patch-callout-error {
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+}
+
+.obsidian-patch-callout-suggest-item {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.obsidian-patch-callout-suggest-item .obsidian-patch-callout-chip-icon {
+  color: var(--obsidian-patch-chip-color, var(--text-normal));
+}
+
+.obsidian-patch-callout-suggest-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.obsidian-patch-callout-suggest-badge {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+}
+
 @container (max-width: 640px) {
+  input.obsidian-patch-callout-filter { max-width: 100%; }
   .obsidian-patch-callout-fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .obsidian-patch-callout-fields > :first-child { grid-column: 1 / -1; }
 
@@ -760,6 +971,10 @@ body {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: none;
   }
+}
+
+@container (max-width: 380px) {
+  .obsidian-patch-callout-fields { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Convert buttons on the left, Cancel and Save on the right. */
@@ -815,4 +1030,34 @@ body {
 .obsidian-patch-callout-status-icon svg {
   width: var(--icon-xs);
   height: var(--icon-xs);
+}
+
+.obsidian-patch-callout-appearance-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-2);
+  font-weight: var(--font-semibold);
+  padding-block: var(--size-4-2);
+}
+
+.obsidian-patch-callout-appearance-preview > span:first-child,
+.obsidian-patch-callout-icon-option {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.obsidian-patch-callout-icon-option {
+  margin-inline-end: var(--size-4-2);
+}
+
+.obsidian-patch-table-code-font :is(.obsidian-patch-table-host, .cm-html-embed, .obsidian-patch-table-grid) > table :is(th, td) code:not(pre > code) {
+  font-family: var(--obsidian-patch-table-code-font), var(--font-monospace);
+}
+
+body .callout[data-callout].obsidian-patch-callout-type-icon {
+  --callout-icon: var(--obsidian-patch-callout-type-icon);
+}
+
+body .callout[data-callout].obsidian-patch-callout-type-color {
+  --callout-color: var(--obsidian-patch-callout-type-color);
 }

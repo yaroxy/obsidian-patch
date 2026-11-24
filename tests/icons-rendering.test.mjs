@@ -14,7 +14,7 @@ const bundled = await build({
       export const normalizePath = path => path;
       export class Notice {}
     ` : path.endsWith("picker") ? "export class IconPicker {}"
-      : 'export function loadSimpleIcons() { throw new Error("Unexpected network request"); }' }));
+      : 'export function loadSimpleIcons() { return globalThis.__patchesTestLoadIcons(); }' }));
   } }],
 });
 const { registerIcons } = await import(`data:text/javascript;base64,${Buffer.from(bundled.outputFiles[0].contents).toString("base64")}`);
@@ -118,6 +118,23 @@ function painted(element, expected) {
   if (expected) assert.match(element.style.getPropertyValue(PROPERTY), /^url\("data:image\/svg\+xml,%3Csvg/);
   else assert.equal(element.style.getPropertyValue(PROPERTY), "");
 }
+
+test("updates share an in-flight icon load and can refresh again after it finishes", async t => {
+  let loads = 0;
+  const pending = Promise.withResolvers();
+  globalThis.__patchesTestLoadIcons = () => { loads++; return pending.promise; };
+  t.after(() => { delete globalThis.__patchesTestLoadIcons; });
+  const f = fixture();
+  t.after(() => f.unload());
+  const controller = f.start({ "Brand.md": "simple-icons:fixture" }, {});
+  const first = controller.updateSimpleIcons();
+  const second = controller.updateSimpleIcons();
+  assert.equal(loads, 1);
+  pending.resolve({ version: "1", svg: () => CACHED_SVG, color: () => undefined });
+  for (const status of await Promise.all([first, second])) assert.deepEqual(status, { status: "ready", version: "1" });
+  await controller.updateSimpleIcons();
+  assert.equal(loads, 2);
+});
 
 test("explorer rows receive image masks without creating stylesheets or inline SVG", async () => {
   const f = fixture(), [doc] = f.documents, root = f.leaves[0].view.containerEl;

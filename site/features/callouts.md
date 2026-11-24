@@ -1,14 +1,17 @@
 # Callouts
 
-Edit a callout's type, title, fold state, metadata, and content with a live preview.
+Edit a callout's type, title, fold state, metadata, and content side by side with a live preview.
 
 ![Editing a travel reminder and checking its live preview before saving](../../docs/images/callout-editor.gif)
 
-- **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**.
-- **Insert:** run **Patches: Insert callout** to add one at the cursor or wrap selected lines.
+- **Edit:** hover a callout in Reading View or Live Preview and click **Edit callout**, or run **Patches: Edit callout** inside its source. Visually identical aliases are grouped together with inline alias pills and a live filter box for searching or entering a custom type.
+- **Type completion and smart paste:** type `> [!` in the editor for grouped inline type suggestions, and paste multi-line plain text inside a callout body to keep every line prefixed with the callout's `>` markers.
+- **Insert:** run **Patches: Insert callout** to choose a header and insert a callout at the cursor or wrap selected lines.
 - **Unwrap:** choose **Convert to text** or **Convert to blockquote** in the editor.
 
-The command palette and editor context menu also offer editing and conversion when the cursor is in the callout's source. Header-only edits preserve the body, and saving checks for conflicting changes.
+You can search in lowercase. For example, type `> [!tip` and accept the suggestion to insert `> [!TIP]`. Patches also writes uppercase markers when you insert a callout, wrap a selection, or choose a built-in type, alias, or custom type in the callout editor. Reselecting the type of an existing `[!tip]` changes it to `[!TIP]`. A custom name whose uppercase form would resolve to a different Obsidian type keeps its spelling.
+
+When you edit the title, content, fold state, or metadata without selecting a type, the marker keeps its original spelling. Header-only edits preserve the body byte for byte. Saving checks for conflicting edits and keeps the draft open if the source has changed. The command palette and editor context menu also offer editing and conversion when the cursor is in the callout's source.
 
 ## GitHub compatibility
 
@@ -33,13 +36,19 @@ In 0.5.0, the command reads the saved note in Reading view and includes unsaved 
 
 ![GitHub treats the callouts on lines 8 and 10 as plain blockquotes. Each row has a Jump button and its own collapsed reasons.](../../docs/images/callout-github-report.png)
 
+## Type appearance
+
+In the upcoming release, open **Settings → Patches → Callouts → Type appearance → Customize**. Choose a built-in type or enter a new name such as `research`. Use **Choose icon** to search Obsidian’s built-in Lucide icons, for example `microscope`. Choose a theme color such as **Cyan**, or **Custom color** for a fixed shade. Click **Apply**. Both `> [!RESEARCH]` and a hand-typed `> [!research]` use this appearance. Each type has its own settings, including built-in aliases. To return to the theme defaults, select **Use theme icon** and **Use theme color** and apply. These vault preferences leave the note’s Markdown portable.
+
+GitHub supports the five alert markers `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` and `[!CAUTION]` and supplies their visual appearance.
+
 ## Code backgrounds
 
 ::: info Version availability
 Code-block background tinting and the renamed **Code background** toggle are available in **0.4.0 and later**. Earlier versions tint inline code.
 :::
 
-Inline code and code block backgrounds take their callout's color in Reading View and Live Preview, including nested callouts. Syntax highlighting keeps the theme's colors, and inline code in a title follows the title's text color. Toggle **Callouts → Code background**; it is on by default.
+Inline code and code block backgrounds use a translucent layer of the nearest callout’s color (12% by default), including a palette or custom color. This applies in Reading View and Live Preview. Syntax highlighting keeps the theme's colors, and inline code in a title follows the title's text color. Toggle **Callouts → Code background**; it is on by default.
 
 ![Code backgrounds toggled off and on in light and dark themes: orange in a warning, teal in its nested tip, and unchanged outside the callout](../../docs/images/callout-code-blocks.gif)
 
@@ -48,7 +57,7 @@ The recording switches **Code background** off and on in both themes. The outer 
 Try the nested example in a note:
 
 ````markdown
-> [!warning] Before deploying `preview`
+> [!WARNING] Before deploying `preview`
 > Keep `dryRun` enabled while checking the output.
 >
 > ```javascript
@@ -56,7 +65,7 @@ Try the nested example in a note:
 > await deploy(options);
 > ```
 >
-> > [!tip] Check the preview first
+> > [!TIP] Check the preview first
 > > ```python
 > > print("Preview ready")
 > > ```

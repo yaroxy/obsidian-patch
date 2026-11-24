@@ -28,13 +28,24 @@
   // A closing modal can linger in the DOM, so the newest one is the one in use.
   const modal = () => Array.from(doc.querySelectorAll(".obsidian-patch-callout-modal")).pop();
   const button = text => Array.from(modal().querySelectorAll("button")).find(b => b.textContent === text);
-  const chip = name => modal().querySelector(`.obsidian-patch-callout-chip[aria-label="${name}"]`);
+  const chip = name => modal()?.querySelector(`.obsidian-patch-callout-chip[data-callout-type="${name}"]`);
+  const filter = () => modal().querySelector(".obsidian-patch-callout-filter");
+  const alias = name => Array.from(modal().querySelectorAll(".obsidian-patch-callout-alias")).find(b => b.textContent === name);
   const field = name => Array.from(modal().querySelectorAll(".obsidian-patch-callout-field"))
     .find(f => f.querySelector(".obsidian-patch-callout-label")?.textContent === name)?.querySelector("input, select");
-  const other = () => modal().querySelector(".obsidian-patch-callout-other");
   const sizeKey = "obsidian-patch-callout-editor-size";
   const input = (el, value) => { el.value = value; el.dispatchEvent(new win.Event("input", { bubbles: true })); };
   const editor = () => leaf.view.editor;
+  async function checkGrowingCallout(mode, action) {
+    const title = field("Title").value;
+    const grown = original.replace("> > nested", "> > nested\n> Added elsewhere");
+    editor().setValue(grown);
+    button(action).click();
+    await until(() => modal() && !modal().inert && [...doc.querySelectorAll(".notice")].some(el => el.textContent.includes("changed while"))
+      && field("Title").value === title && editor().getValue() === grown,
+    `${mode} retains the complete callout and the draft when another edit appends a body line`);
+    editor().setValue(original);
+  }
   async function source() {
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: true } });
     await wait(150);
@@ -146,6 +157,114 @@
       "a file change while the report is open rejects the stale Jump");
     await source();
   }
+  async function checkAppearance() {
+    const type = "patches-test-" + context.runId;
+    const entries = () => app.plugins.plugins.patches.settings.appearance.calloutTypes;
+    assert(!Object.hasOwn(entries(), type), "The temporary callout type already exists");
+    await app.vault.modify(file(), lines(`> [!${type}] Sample`, "> A paragraph with `code`.", ">", "> ```js", "> let n = 1;", "> ```", ">", "> > [!tip]", "> > `nested`"));
+    const rendered = () => leaf.view.previewMode.containerEl.querySelector(`.callout[data-callout="${type}"]`);
+    const shape = () => rendered()?.querySelector(".callout-icon svg")?.innerHTML;
+    const color = () => rendered() && win.getComputedStyle(rendered().querySelector(".callout-title")).color;
+    await until(shape, "Reading View displays the temporary callout with the theme icon");
+    const themeIcon = shape(), themeColor = color();
+    await app.plugins.plugins.patches.setCalloutCode(true);
+    const backgrounds = () => [...rendered().querySelectorAll(".callout-content p > code, pre")]
+      .map(el => win.getComputedStyle(el).backgroundColor);
+    const oldBackgrounds = backgrounds();
+    assert(oldBackgrounds.length === 3, "Expected inline code, a fenced block and nested inline code");
+    const probe = doc.body.createSpan();
+    let settingsDoc;
+    try {
+      const row = () => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
+        .find(el => el.isConnected && el.getClientRects().length && el.querySelector(".setting-item-name")?.textContent === "Type appearance");
+      const openSettings = async label => {
+        app.setting.open();
+        app.setting.openTabById("patches");
+        // A reopened native Settings window can have a different document.
+        await wait(400);
+        await until(row, label);
+        settingsDoc = row().ownerDocument;
+        row().scrollIntoView({ block: "center" });
+        settingsDoc.defaultView.focus();
+      };
+      await openSettings("the Callouts settings expose type appearance");
+      const find = selector => settingsDoc.querySelector(selector) ?? doc.querySelector(selector);
+      const panel = () => find(".obsidian-patch-callout-appearance [aria-label='Callout type']")?.closest(".modal");
+      const localInput = (element, value, event = "input") => {
+        element.value = value;
+        element.dispatchEvent(new element.ownerDocument.defaultView.Event(event, { bubbles: true }));
+      };
+      const click = (container, label) => [...container.querySelectorAll("button")].find(el => el.textContent === label).click();
+      const open = async () => {
+        click(row(), "Customize");
+        await until(panel, "the Callout appearance dialog opens");
+        localInput(panel().querySelector("[aria-label='Callout type']"), type);
+      };
+      const select = () => panel().querySelector("[aria-label='Callout color']");
+      await open();
+      assert(panel().querySelector('datalist option[value="NOTE"]') && panel().querySelector(".obsidian-patch-callout-appearance-preview").textContent === type.toUpperCase(),
+        "Appearance type suggestions and the preview should use uppercase labels");
+      click(panel(), "Choose icon");
+      const search = () => find('input[placeholder="Search Lucide icons…"]');
+      await until(search, "the Lucide icon picker opens");
+      localInput(search(), "flask-conical");
+      const choice = () => [...search().closest(".prompt").querySelectorAll(".suggestion-item")]
+        .find(el => el.textContent.trim() === "flask-conical");
+      await until(choice, "typing an icon name finds its exact Lucide match");
+      choice().click();
+      const chosenIcon = panel().querySelector(".obsidian-patch-callout-appearance-preview svg").innerHTML;
+      assert(chosenIcon !== themeIcon, "The picker kept the original theme icon");
+      localInput(select(), "purple", "change");
+      click(panel(), "Apply");
+      probe.style.color = "var(--color-purple)";
+      await until(() => !panel() && entries()[type]?.icon === "lucide-flask-conical" && entries()[type]?.color === "purple"
+        && shape() === chosenIcon && color() === win.getComputedStyle(probe).color,
+      "applying a Lucide icon and a palette color updates the rendered callout");
+      leaf.view.previewMode.rerender(true);
+      await until(() => shape() === chosenIcon && color() === win.getComputedStyle(probe).color,
+        "a fresh Reading View render also uses the saved icon and theme color");
+
+      await open();
+      assert([...panel().querySelectorAll("datalist option")].some(option => option.value === type.toUpperCase()),
+        "The saved custom type is missing its uppercase appearance suggestion");
+      assert(select().value === "purple", "Reopening the dialog lost the palette selection");
+      localInput(select(), "custom", "change");
+      const custom = panel().querySelector("[aria-label='Custom callout color']");
+      assert(!custom.hidden, "Custom color input stayed hidden");
+      localInput(custom, "#256b88");
+      click(panel(), "Apply");
+      await until(() => !panel() && entries()[type]?.color === "#256B88" && shape() === chosenIcon && color() === "rgb(37, 107, 136)",
+        "a custom hex color reaches the rendered title and preserves its chosen icon");
+      const [inline, block, nested] = backgrounds();
+      assert(inline !== oldBackgrounds[0] && block !== oldBackgrounds[1] && nested === oldBackgrounds[2], "Code did not follow its nearest callout color");
+      checks.push("changing a custom color updates inline and fenced code backgrounds while nested code keeps its own tint");
+
+      app.setting.close();
+      rendered().parentElement.querySelector(".obsidian-patch-callout-edit").click();
+      await until(() => modal() && filter(), "the editor opens on the saved custom callout type");
+      input(filter(), type);
+      const customChip = chip(type);
+      assert(customChip?.textContent === type.toUpperCase() && customChip.querySelector("svg")?.innerHTML === chosenIcon
+        && win.getComputedStyle(customChip).getPropertyValue("--obsidian-patch-chip-color").trim().toUpperCase() === "#256B88",
+      "The editor type catalog lost the configured name, icon or color");
+      button("Cancel").click();
+      await openSettings("the custom type remains available in Callouts settings");
+      await open();
+      assert(select().value === "custom" && panel().querySelector("[aria-label='Custom callout color']").value === "#256b88",
+        "Reopening the dialog lost the custom color");
+      click(panel(), "Use theme icon");
+      localInput(select(), "", "change");
+      click(panel(), "Apply");
+      await until(() => !panel() && !Object.hasOwn(entries(), type) && shape() === themeIcon && color() === themeColor,
+        "restoring both theme defaults removes the type override and restores the rendered appearance");
+    } finally {
+      probe.remove();
+      for (const owner of new Set([settingsDoc, doc])) {
+        owner?.querySelector(".obsidian-patch-callout-appearance .modal-close-button")?.click();
+      }
+      app.setting.close();
+    }
+  }
   async function checkFolderSuggestions(status) {
     const root = "Patch Callout Tests", guides = root + "/Guides";
     const vault = app.vault, plugin = app.plugins.plugins.patches;
@@ -236,12 +355,12 @@
     }
   }
   try {
-    await app.plugins.plugins["patches"].setCallouts({ github: true, githubFolders: [] });
     app.saveLocalStorage(sizeKey, null);
+    await app.plugins.plugins["patches"].setCallouts({ github: true, githubFolders: [] });
     if (file()) await app.vault.modify(file(), original);
     else await app.vault.create(notePath, original);
     await source();
-    await until(() => editor()?.getValue() === original, "the test note opens in Source mode");
+    await until(() => editor()?.getValue() === original && app.workspace.activeEditor === leaf.view, "the test note opens in Source mode");
 
     const command = app.commands.commands["patches:edit-callout"];
     editor().setCursor({ line: 0, ch: 0 });
@@ -251,40 +370,80 @@
     checks.push("Edit callout is offered only with the cursor in a callout");
 
     app.commands.executeCommandById("patches:edit-callout");
-    await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout[data-callout='info']"), "the editor opens with a rendered preview");
-    assert(modal().querySelectorAll(".obsidian-patch-callout-chip").length >= 27, "Type picker lacks Obsidian's types");
-    assert(chip("info").classList.contains("is-active"), "Current type not selected");
-    assert(modal().querySelector(".obsidian-patch-callout-body").value === lines("body line", "> [!tip]", "> nested"), "Content not shown without markers");
-    checks.push("the picker lists Obsidian's types and the content shows without markers");
-    assert(modal().querySelector(":scope > .modal-button-container") && !modal().querySelector(".modal-content .modal-button-container"), "Buttons sit inside the scrolling content");
+    await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout"), "the two-pane editor opens with grouped type chips and live preview");
+    const chipCount = modal().querySelectorAll(".obsidian-patch-callout-chip").length;
+    assert(chipCount >= 13 && chipCount < 27, `Expected deduplicated type chips, got ${chipCount}`);
+    assert(chip("info")?.classList.contains("is-active") && chip("info").textContent === "INFO", "Existing lowercase info should select the visible INFO chip");
+    assert(modal().querySelector(".obsidian-patch-callout-body") && modal().querySelector(".obsidian-patch-callout-preview .callout"),
+      "Two-pane editor lacks content textarea or live preview");
+    assert(modal().querySelector(":scope > .obsidian-patch-resize-grip") && modal().querySelector(":scope > .modal-button-container")
+      && !modal().querySelector(".modal-content .modal-button-container"), "Callout editor lacks the grip or keeps its buttons in the content");
     assert(button("Convert to text") && button("Convert to blockquote"), "The editor lacks the convert buttons");
-    checks.push("the buttons sit below the content, with both conversions");
-    chip("warning").click();
-    assert(field("Title").placeholder === "Warning", `Empty title shows "${field("Title").placeholder}"`);
-    checks.push("the empty title shows the name Obsidian would show");
-    input(field("Title"), "New title");
-    await until(() => modal().querySelector(".obsidian-patch-callout-preview .callout[data-callout='warning'] .callout-title")?.textContent.includes("New title"),
-      "the preview follows the type and title");
-    button("Save").click();
-    await until(() => editor().getValue() === original.replace("> [!info] Title", "> [!warning] New title"), "a header change rewrites only the header line");
+    checks.push("the picker groups visually identical types alongside the live preview");
+    await capture("callout-modal", win, modal().getBoundingClientRect());
 
+    chip("abstract").click();
+    assert(alias("SUMMARY") && alias("TLDR"), "Aliases strip should expose uppercase abstract aliases");
+    alias("TLDR").click();
+    assert(field("Title").placeholder === "Tldr", `Empty title shows "${field("Title").placeholder}"`);
+    await until(() => modal().querySelector('.obsidian-patch-callout-preview .callout[data-callout="tldr"]'),
+      "selecting an alias updates the live preview callout type");
+    button("Save").click();
+    await until(() => !modal() && editor().getValue() === original.replace("[!info]", "[!TLDR]"), "selecting an alias writes TLDR and preserves the body");
     editor().setCursor({ line: 3, ch: 0 });
     app.commands.executeCommandById("patches:edit-callout");
-    await until(() => modal(), "the editor opens again");
-    const body = modal().querySelector(".obsidian-patch-callout-body");
-    input(body, `${body.value}\nmore`);
+    await until(() => chip("abstract")?.classList.contains("is-active"), "the alias reopens in its primary group");
+    input(filter(), "caution");
+    assert(chip("caution")?.textContent === "CAUTION", "Lowercase filtering should surface uppercase aliases directly");
+    chip("caution").click();
+    assert(filter().value === "" && alias("CAUTION").classList.contains("is-active"), "Selecting filtered alias activates it");
+    input(filter(), "bad|type");
+    assert(modal().querySelector(".obsidian-patch-callout-error"), "Invalid type characters should display an error");
+    input(filter(), "decision");
+    const useCustom = modal().querySelector(".obsidian-patch-callout-custom-chip");
+    assert(useCustom?.textContent.includes("DECISION"), "The custom type button should show its uppercase spelling");
+    useCustom.click();
+    assert(chip("decision")?.classList.contains("is-active") && chip("decision").textContent === "DECISION", "Custom type chip should be selectable and active");
     button("Save").click();
-    await until(() => editor().getValue().includes(lines("> [!warning] New title", "> body line", "> > [!tip]", "> > nested", "> more")),
-      "a content change writes canonical markers");
+    await until(() => !modal() && editor().getValue() === original.replace("[!info]", "[!DECISION]"), "a lowercase custom type query writes DECISION");
+    editor().setCursor({ line: 3, ch: 0 });
+    app.commands.executeCommandById("patches:edit-callout");
+    await until(() => chip("decision")?.classList.contains("is-active"), "the saved custom type reopens with its uppercase chip selected");
+    chip("warning").click();
+    input(field("Title"), "New title");
+    button("Save").click();
+    await until(() => editor().getValue() === original.replace("> [!info] Title", "> [!WARNING] New title"),
+      "a header change rewrites only the header line and preserves >body line");
+
+    editor().setValue(original);
+    editor().setCursor({ line: 3, ch: 0 });
+    app.commands.executeCommandById("patches:edit-callout");
+    await until(() => chip("info")?.classList.contains("is-active"), "the editor recognizes the existing lowercase type");
+    chip("info").click();
+    await checkGrowingCallout("Source mode", "Save");
+    button("Save").click();
+    await until(() => editor().getValue() === original.replace("[!info]", "[!INFO]"), "explicitly re-selecting the same type changes only its spelling to INFO");
+
+    editor().setValue(original);
+    editor().setCursor({ line: 3, ch: 0 });
+    app.commands.executeCommandById("patches:edit-callout");
+    await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout"), "the editor opens for live body editing");
+    input(modal().querySelector(".obsidian-patch-callout-body"), "updated body line");
+    await until(() => modal().querySelector(".obsidian-patch-callout-preview .callout-content")?.textContent.includes("updated body line")
+      && !modal().querySelector(".obsidian-patch-callout-preview-buffer"),
+    "editing body updates live preview without leftover staging buffers");
+    button("Save").click();
+    await until(() => editor().getValue().includes("> [!info] Title\n> updated body line"), "body edits preserve the existing lowercase type");
 
     editor().setValue(original);
     editor().setCursor({ line: 3, ch: 0 });
     app.commands.executeCommandById("patches:edit-callout");
     await until(() => modal()?.querySelector(".obsidian-patch-callout-github-status.is-error"), "GitHub status flags a titled info callout");
     button("Make GitHub-compatible").click();
-    await until(() => modal().querySelector(".obsidian-patch-callout-github-status.is-ok") && chip("NOTE") === null && other().value === "NOTE"
-      || modal().querySelector(".obsidian-patch-callout-github-status.is-ok") && chip("note")?.classList.contains("is-active"),
-    "Make GitHub-compatible fixes the type and title");
+    await until(() => modal().querySelector(".obsidian-patch-callout-github-status.is-ok")
+      && modal().querySelector(".obsidian-patch-callout-body").value.startsWith("**Title**")
+      && modal().querySelector('.obsidian-patch-callout-preview .callout[data-callout="note"]'),
+    "Make GitHub-compatible fixes the type, moves title into body textarea, and updates the preview");
     button("Save").click();
     await until(() => editor().getValue().includes(lines("> [!NOTE]", "> **Title**", "> body line")), "the title moves into the content as bold text");
 
@@ -302,7 +461,7 @@
     editor().setValue(original);
     editor().setCursor({ line: 4, ch: 0 });
     app.commands.executeCommandById("patches:edit-callout");
-    await until(() => modal()?.querySelector(".obsidian-patch-callout-preview .callout[data-callout='info']"), "the editor opens to convert");
+    await until(() => modal()?.querySelector(".obsidian-patch-callout-chip"), "the editor opens to convert");
     input(field("Title"), "Edited");
     button("Convert to text").click();
     await until(() => editor().getValue() === lines("Paragraph one.", "Paragraph two.", "", "**Edited**", "", "body line", "> [!tip]", "> nested", "", "End"),
@@ -312,17 +471,17 @@
     editor().setSelection({ line: 0, ch: 0 }, { line: 1, ch: "Paragraph two.".length });
     app.commands.executeCommandById("patches:insert-callout");
     await until(() => modal()?.querySelector(".modal-title")?.textContent === "Wrap in callout", "Insert callout wraps a selection");
-    assert(!button("Convert to text"), "A new callout offers to convert");
+    assert(!button("Convert to text"), "A new callout does not offer to convert");
     chip("tip").click();
     button("Save").click();
-    await until(() => editor().getValue().startsWith(lines("> [!tip]", "> Paragraph one.", "> Paragraph two.", "", "> [!info] Title")), "the selected lines are wrapped");
+    await until(() => editor().getValue().startsWith(lines("> [!TIP]", "> Paragraph one.", "> Paragraph two.", "", "> [!info] Title")), "the selected lines are wrapped in TIP");
 
     editor().setValue(original);
     editor().setCursor({ line: 8, ch: 3 });
     app.commands.executeCommandById("patches:insert-callout");
     await until(() => modal()?.querySelector(".modal-title")?.textContent === "Insert callout", "Insert callout opens for a new callout");
     button("Save").click();
-    await until(() => editor().getValue().endsWith(lines("End", "", "> [!note]", "> ")), "a new callout is added after a blank line, with a line to type in");
+    await until(() => editor().getValue().endsWith(lines("End", "", "> [!NOTE]", "> ")), "a new callout defaults to NOTE and has a blank line to type in");
     assert(editor().getCursor().line === 11 && editor().getCursor().ch === 2, "Cursor not on the new callout's content line");
     checks.push("the cursor waits on the new callout's content line");
 
@@ -362,6 +521,52 @@
     checks.push("a double-click on the grip restores the default size");
     button("Cancel").click();
 
+    editor().setValue(lines("> [!note]", "> "));
+    editor().setCursor({ line: 1, ch: 2 });
+    const dt = new win.DataTransfer();
+    dt.setData("text/plain", "line one\n\nline two");
+    const pasteEvent = new win.ClipboardEvent("paste", { clipboardData: dt, cancelable: true });
+    app.workspace.trigger("editor-paste", pasteEvent, editor(), leaf.view);
+    assert(pasteEvent.defaultPrevented, "Multi-line paste inside a callout should be handled");
+    assert(editor().getValue() === lines("> [!note]", "> line one", ">", "> line two"),
+      `Multi-line paste produced: ${JSON.stringify(editor().getValue())}`);
+    editor().undo();
+    await until(() => editor().getValue() === lines("> [!note]", "> "), "one undo reverts the formatted callout paste");
+    const richData = new win.DataTransfer();
+    richData.setData("text/plain", "Paper\nNext");
+    richData.setData("text/html", '<p><a href="https://example.org/paper">Paper</a></p><p>Next</p>');
+    const richPaste = new win.ClipboardEvent("paste", { clipboardData: richData, cancelable: true });
+    app.workspace.trigger("editor-paste", richPaste, editor(), leaf.view);
+    assert(!richPaste.defaultPrevented && editor().getValue() === lines("> [!note]", "> "),
+      "Patches intercepted a multiline paste containing an HTML link");
+    checks.push("multiline HTML paste passes through to Obsidian's clipboard handling");
+
+    // Exercise Obsidian's normal EditorSuggest input transaction with the cursor
+    // inside an auto-paired bracket, independent of Electron character-event timing.
+    editor().setValue("> []");
+    editor().setCursor({ line: 0, ch: 3 });
+    win.focus();
+    editor().focus();
+    await until(() => editor().hasFocus() && editor().getCursor().ch === 3, "the source cursor sits inside the paired callout brackets");
+    const suggestItems = () => [...doc.querySelectorAll(".suggestion-container .obsidian-patch-callout-suggest-item")];
+    const suggestState = error => {
+      const manager = app.workspace.editorSuggest;
+      throw new Error(error.message + " " + JSON.stringify({
+        text: editor().getValue(), cursor: editor().getCursor(), focus: doc.activeElement?.className,
+        contexts: manager?.suggests?.filter(provider => provider.context).map(provider => ({ query: provider.context.query, open: provider.isOpen })),
+        choices: [...doc.querySelectorAll(".suggestion-container .suggestion-item")].map(el => el.textContent).slice(0, 15),
+      }));
+    };
+    editor().replaceSelection("!", "input.type");
+    await until(() => suggestItems().length > 1, "typing ! inside the brackets opens the callout type suggestions").catch(suggestState);
+    editor().replaceSelection("war", "input.type");
+    const suggestItem = () => suggestItems()
+      .find(el => el.querySelector(".obsidian-patch-callout-suggest-name")?.textContent === "WARNING");
+    await until(() => suggestItems().length === 1 && suggestItem(), "typing > [!war shows the uppercase WARNING suggestion").catch(suggestState);
+    suggestItem().click();
+    await until(() => editor().getValue() === "> [!WARNING] " && editor().getCursor().ch === "> [!WARNING] ".length,
+      "selecting WARNING from a lowercase query writes the uppercase marker and places the cursor after ] ");
+
     editor().setValue(original);
     await wait(100);
     await leaf.setViewState({ type: "markdown", state: { file: notePath, mode: "source", source: false } });
@@ -370,10 +575,11 @@
     embed.dispatchEvent(new win.MouseEvent("mouseover", { bubbles: true }));
     await until(() => embed.querySelector(":scope > .embed-actions > .obsidian-patch-callout-edit"), "Live Preview shows Edit callout among the widget's actions");
     embed.querySelector(".obsidian-patch-callout-edit").click();
-    await until(() => modal()?.querySelector(".obsidian-patch-callout-chip.is-active[aria-label='info']"), "the Live Preview button opens the callout");
+    await until(() => chip("info")?.classList.contains("is-active"), "the Live Preview button opens the callout");
     input(field("Title"), "From Live Preview");
+    await checkGrowingCallout("Live Preview", "Convert to text");
     button("Save").click();
-    await until(() => editor().getValue().includes("> [!info] From Live Preview\n>body line"), "Live Preview writes back the header");
+    await until(() => editor().getValue().includes("> [!info] From Live Preview\n>body line"), "editing the title alone in Live Preview preserves the existing lowercase marker");
 
     editor().setValue(original);
     await until(() => (embed = leaf.view.contentEl.querySelector(".cm-callout")) && embed.querySelector(".callout-title")?.textContent.includes("Title"),
@@ -381,7 +587,7 @@
     embed.dispatchEvent(new win.MouseEvent("mouseover", { bubbles: true }));
     await until(() => embed.querySelector(":scope > .embed-actions > .obsidian-patch-callout-edit"), "the restored widget offers Edit callout");
     embed.querySelector(".obsidian-patch-callout-edit").click();
-    await until(() => modal()?.querySelector(".obsidian-patch-callout-chip.is-active[aria-label='info']"), "the Live Preview button opens the callout to convert");
+    await until(() => chip("info")?.classList.contains("is-active"), "the Live Preview button opens the callout to convert");
     button("Convert to blockquote").click();
     await until(() => editor().getValue() === original.replace(lines("> [!info] Title", ">body line"), lines("> **Title**", "> body line")),
       "Convert to blockquote from Live Preview keeps the quote and drops the callout marker");
@@ -397,15 +603,50 @@
     button("Save").click();
     await wait(800);
     const written = await app.vault.read(file());
-    assert(written === original.replace("> [!info] Title", "> [!example] Title"),
+    assert(written === original.replace("> [!info] Title", "> [!EXAMPLE] Title"),
       `Reading View did not write back: ${JSON.stringify({ line: written.split("\n")[3], notices: Array.from(doc.querySelectorAll(".notice")).map(n => n.textContent) })}`);
     checks.push("Reading View writes back through the vault");
 
+    const mixedEndings = "Before\r\n\n> [!info] Mixed endings\r\n>body one\n>body two\r\n\nAfter\r\n";
+    await app.vault.modify(file(), mixedEndings);
+    const mixedHost = () => [...leaf.view.previewMode.containerEl.querySelectorAll(".obsidian-patch-callout-host")]
+      .find(host => host.querySelector(".callout-title")?.textContent.includes("Mixed endings"));
+    await until(() => mixedHost()?.querySelector(".obsidian-patch-callout-edit"), "Reading View locates the callout in a mixed-ending note");
+    mixedHost().querySelector(".obsidian-patch-callout-edit").click();
+    await until(() => modal() && field("Title").value === "Mixed endings", "the mixed-ending callout opens with the correct title");
+    input(field("Title"), "Updated header");
+    for (const [action, concurrent] of [
+      ["Save", mixedEndings.replace(">body two", ">Edited elsewhere")],
+      ["Convert to blockquote", mixedEndings.replace(">body two", ">body two\r\n>Added elsewhere")],
+    ]) {
+      await app.vault.modify(file(), concurrent);
+      button(action).click();
+      await until(() => modal() && !modal().inert && [...doc.querySelectorAll(".notice")].some(el => el.textContent.includes("changed while")),
+        `${action} reports a concurrent change and leaves the editor open`);
+      assert(field("Title").value === "Updated header" && await app.vault.read(file()) === concurrent,
+        `${action} lost the draft or overwrote the concurrent change`);
+    }
+    await app.vault.modify(file(), mixedEndings);
+    button("Save").click();
+    await until(async () => await app.vault.read(file()) === mixedEndings.replace("Mixed endings", "Updated header"),
+      "Reading View edits only the header bytes and preserves every LF and CRLF inside and outside the callout");
+
+    await checkAppearance();
     await app.vault.modify(file(), `---\ngithub: true\n---\n${original}`);
     await source();
     const status = doc.querySelector(".obsidian-patch-callout-status");
     await until(() => status && status.style.display !== "none" && status.textContent === "GitHub: 2/2 callouts not alerts",
       "the status bar counts callouts GitHub would not show as alerts in a note marked github: true");
+    editor().setCursor({ line: 6, ch: 0 });
+    app.commands.executeCommandById("patches:edit-callout");
+    await until(() => Array.from(modal()?.querySelectorAll(".obsidian-patch-callout-group-label") ?? []).some(el => el.textContent === "GitHub alerts"),
+      "GitHub-tracked notes show a dedicated GitHub alerts group");
+    const githubGrid = modal().querySelector(".obsidian-patch-callout-types");
+    assert(["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"].every(name => githubGrid.querySelector(`.obsidian-patch-callout-chip[aria-label="${name}"]`)),
+      "GitHub alerts group lacks one of the 5 alert chips");
+    await capture("callout-modal-github", win, modal().getBoundingClientRect());
+    button("Cancel").click();
+    await until(() => !modal(), "GitHub property modal closes cleanly");
     await checkReportLayout(status);
     await checkFolderSuggestions(status);
   } catch (failure) {
