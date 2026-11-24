@@ -10,11 +10,11 @@ The site uses VitePress 1.6.4, with a scoped override to Vite 6.4.5 because the 
 
 ## Content
 
-The homepage and README share a real travel-note capture combining the existing autumn cover, a merged itinerary table, and a tinted code block inside a callout. The homepage also has a button-controlled demo gallery for icon colors, exact global width, and callout code backgrounds, followed by three workflow groups. Guides explain the feature, show its result, give usable examples, and state settings and limitations. Navigation groups writing/editing, note appearance, and rendering/export. The reference section documents note properties, commands, view/platform scope, and CSS variables. Troubleshooting collects recurring questions without duplicating full guides.
+The homepage and README share a real travel-note capture combining the existing autumn cover, a merged itinerary table, and a tinted code block inside a callout. The homepage also has a button-controlled demo gallery for Git change markers, callout brand icons, and installed table code fonts, followed by three workflow groups. Guides explain the feature, show its result, give usable examples, and state settings and limitations. Navigation groups writing/editing, note appearance, and rendering/export. The reference section documents note properties, commands, view/platform scope, and CSS variables. Troubleshooting collects recurring questions without duplicating full guides.
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
-The README and homepage highlight the 0.6.0 editor features. The [table guide](../site/features/tables.md#convert-an-html-table-to-markdown) includes a copyable watchlist for reverse conversion alongside the [0.5.1 inline-formula example](../site/features/tables.md#convert-tables-with-inline-formulas). The homepage keeps the icon, line-width, and code-background gallery labeled with its original 0.4.0 release.
+The README and homepage highlight the 0.7.0 Git, icon and font features. The [table guide](../site/features/tables.md#convert-an-html-table-to-markdown) includes a copyable watchlist for reverse conversion alongside the [0.5.1 inline-formula example](../site/features/tables.md#convert-tables-with-inline-formulas).
 
 The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
 
@@ -22,21 +22,21 @@ The [callout appearance recording](images/callout-type-appearance.gif) follows t
 
 ## Community Directory screenshots
 
-The 0.6.0 gallery is prepared for the five desktop slots under **Edit listing → Screenshots**. Replace the third and fourth images with the new watchlist examples. Each PNG fits the full Obsidian capture on a 1200 × 800 canvas, preserves its aspect ratio, and is below 5 MB. [Directory screenshot requirements](https://docs.obsidian.md/community-directory/manage-entry)
+Upload the five PNGs in [the 0.7.0 desktop set](images/community/0.7.0/) in filename order under **Edit listing → Screenshots**. Each image is 1200 × 800 and below 5 MB. The captions sit outside the real captures. [Directory screenshot requirements](https://docs.obsidian.md/community-directory/manage-entry)
 
-| Order | Screenshot | What to look for |
+| Slot | Upload | Visible features |
 | --- | --- | --- |
-| 1 | [Kyoto travel note](images/community/01-kyoto-note.png) | A cover, merged itinerary, and code inside a callout in one finished note. |
-| 2 | [Icon colors](images/community/02-icon-colors.png) | The Python icon preview, its brand color, and the color controls in one picker. |
-| 3 | [HTML table to Markdown](images/community/03-watchlist-html-to-markdown.png) | The movie list in Markdown and the rendered preview, with Friday repeated for both films and the caption above the table. |
-| 4 | [Custom callout appearance](images/community/04-watchlist-callout.png) | The WATCHLIST type and live preview share a teal clapperboard, with matching inline code tint. |
-| 5 | [From draft to publication](images/community/05-mermaid-diagram.png) | Two numbered handoffs in Patches 0.4.0 above the same source in Obsidian 1.15.1’s native Mermaid block. |
+| 1 | [Reading and layout](images/community/0.7.0/01-reading-and-layout.png) | Kyoto cover, merged itinerary cells, tinted callout code, heading levels and the reading-width setting. |
+| 2 | [Git changes](images/community/0.7.0/02-git-changes.png) | Added, edited and deleted lines in the gutter beside the same watchlist compared with its last commit. |
+| 3 | [Tables and fonts](images/community/0.7.0/03-tables-and-fonts.png) | HTML-to-Markdown preview with merged cells and a caption, plus installed-font suggestions for inline code. |
+| 4 | [Callouts and icons](images/community/0.7.0/04-callouts-and-icons.png) | The Python callout appearance and the explorer picker share an installed Simple Icons catalog and brand-color controls. |
+| 5 | [Diagrams and PDF](images/community/0.7.0/05-diagrams-and-pdf.png) | Numbered Mermaid arrows, exported PDF heading bookmarks and links within the document. |
 
-The original 0.4.0 gallery used the [kana table editor](images/community/03-table-editor.png) and [nested callout code](images/community/04-callout-code.png) in slots 3 and 4.
+The Git screenshots and font suggestions were captured with the reviewed 0.7.0 build on Debian in Obsidian 1.15.1. The Git example shows the same unsaved watchlist before and after clicking its Friday margin marker. The font field was captured before choosing JetBrains Mono. The icon examples come from the 0.7.0 desktop Icons suite. The layout, table conversion, Mermaid and PDF examples reuse earlier real captures. Earlier directory sets remain in the parent folder.
 
 ## Feature demo captures
 
-The fifth screenshot and the [three-second flowchart loop](images/mermaid-flow-steps.gif) come from the published Community 0.4.0 files in Obsidian 1.15.1. Use the English publishing workflow in the [Mermaid guide](../site/features/mermaid.md#number-the-steps-in-a-flowchart) with Bundled and Strict. Set `layout: dagre` within the diagram. In this example, the bundled default ELK layout plays the steps but omits both badges. Obsidian’s native block draws the same nodes and arrows without step numbering or playback.
+The original 0.6.0 gallery’s Mermaid screenshot and the [three-second flowchart loop](images/mermaid-flow-steps.gif) come from the published Community 0.4.0 files in Obsidian 1.15.1. Use the English publishing workflow in the [Mermaid guide](../site/features/mermaid.md#number-the-steps-in-a-flowchart) with Bundled and Strict. Set `layout: dagre` within the diagram. In this example, the bundled default ELK layout plays the steps but omits both badges. Obsidian’s native block draws the same nodes and arrows without step numbering or playback.
 
 For the Directory comparison, show the same source in `patch-mermaid` and `mermaid` fences in one Reading view. The site loop samples that rendered SVG at 20 frames per second for one complete cycle. A still from the loop is displayed when the browser requests reduced motion.
 

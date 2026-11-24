@@ -29,6 +29,8 @@ Heading labels are visual aids and are omitted from PDF output. Banners are omit
 
 ## Current verification
 
+On Debian with Obsidian 1.15.1, Patches 0.7.0 passed 31 Git, 104 Callout, 57 Table and 22 Icons checks. Git comparison requires the desktop app. Font suggestions depend on the device exposing its installed fonts. Mobile devices and other desktop systems were outside this run. [0.7.0 desktop results](https://github.com/yaroxy/obsidian-patch/blob/b1471f3b662890b6a03d9b0312d33fb6ed9697f1/docs/integration-testing.md#070-community-candidate--2026-11-24)
+
 The 0.6.0 table, callout, Mermaid, and icon features were tested on Debian with Obsidian 1.15.1. Table conversion on iOS and Android has yet to be verified. [Desktop test results](https://github.com/yaroxy/obsidian-patch/blob/1a64287718438134b8f70c92c7fb777454618378/docs/integration-testing.md#resizable-conversion-preview--2026-11-24)
 
 The 0.5.0 tests used macOS and Obsidian 1.15.1. The line-width investigation also covered Aether Core with four CSS snippets, and the cover investigation isolated a conflict with Image Converter 1.4.6. [Troubleshooting](../troubleshooting.md)

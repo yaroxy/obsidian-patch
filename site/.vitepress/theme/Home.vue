@@ -2,15 +2,15 @@
 import { withBase } from 'vitepress';
 import { computed, ref } from 'vue';
 import overview from '../../../docs/images/home-overview.png';
-import iconsDemo from '../../../docs/images/icons-colors.gif';
-import widthDemo from '../../../docs/images/line-width-settings.gif';
-import calloutDemo from '../../../docs/images/callout-code-blocks.gif';
+import gitDemo from '../../../docs/images/note-git-gutter.png';
+import brandDemo from '../../../docs/images/callout-brand-appearance.png';
+import fontDemo from '../../../docs/images/table-font-suggestions.png';
 const demos = [
-  { id: 'icons', label: 'Icon colors', title: 'Pick the icon. Make it yours.', description: 'Choose a brand color, one of eight presets, or a custom color in the same Change icon panel.', image: iconsDemo, alt: 'Python in its blue brand color, a green preset, and a custom purple', guide: 'icons' },
-  { id: 'width', label: 'Exact line width', title: 'Give every note the right amount of room.', description: 'Type an exact global width, from 500 to 2000 px. The number field and slider stay in sync.', image: widthDemo, alt: 'Entering 1137 px in settings and applying it to the global line-width slider', guide: 'line-width' },
-  { id: 'callouts', label: 'Callout code', title: 'A background that belongs in the callout.', description: 'Code blocks follow each callout’s color, including nested callouts. Syntax highlighting keeps the theme’s colors.', image: calloutDemo, alt: 'Code backgrounds off and on in light and dark themes, including a nested callout', guide: 'callouts' },
+  { id: 'git', label: 'Git changes', title: 'Compare a note with its last commit', description: 'In a desktop Git vault, green marks additions, blue marks edits and a red triangle marks a deletion. Click a mark to open the comparison, including unsaved edits.', image: gitDemo, alt: 'Colored margin marks beside changes to the weekend watchlist', guide: '/reference/commands.html#compare-a-note-with-git' },
+  { id: 'icons', label: 'Callout icons', title: 'Give a callout its brand color', description: 'Install Simple Icons once, then choose a brand logo for a callout, file or folder. Use its official color or pick your own swatch.', image: brandDemo, alt: 'A blue Python logo and color swatches for the PYTHON-NOTES callout type', guide: '/features/callouts.html#type-appearance' },
+  { id: 'font', label: 'Table code fonts', title: 'Preview an installed code font', description: 'Type part of a font name and select a suggestion on supported devices. The setting applies to inline code in HTML table cells.', image: fontDemo, alt: 'Typing JetBrains Mo brings up JetBrains Mono and JetBrains Mono NL', guide: '/features/tables.html#inline-code-font' },
 ];
-const selectedDemo = ref('icons');
+const selectedDemo = ref('git');
 const demo = computed(() => demos.find(item => item.id === selectedDemo.value));
 const groups = [
   { number: '01', title: 'Give ideas a little structure.', description: 'Merge table cells, edit callouts with a live preview, and line up equations without changing the formulas.', links: [['HTML tables', 'tables'], ['Callouts', 'callouts'], ['Math formatting', 'math-format']] },
@@ -38,14 +38,13 @@ const groups = [
         <figcaption>A cover, a clearer itinerary, and code that fits its callout. <a :href="withBase('/features/banner.html')">Start with a banner →</a></figcaption>
       </figure>
     </section>
-    <div class="patches-preview"><span>New in 0.7.0</span> See which lines changed as you edit a note in a desktop Git vault. <a :href="withBase('/reference/commands.html#compare-a-note-with-git')">Compare a note with its last commit →</a></div>
     <section class="patches-updates" aria-labelledby="updates-title">
-      <div class="patches-section-heading"><p class="patches-eyebrow">FROM 0.4.0</p><h2 id="updates-title">A few more personal touches.</h2></div>
+      <div class="patches-section-heading"><h2 id="updates-title">New in 0.7.0</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">
         <button v-for="item in demos" :key="item.id" type="button" :aria-pressed="selectedDemo === item.id" aria-controls="feature-demo" @click="selectedDemo = item.id">{{ item.label }}</button>
       </div>
       <div id="feature-demo" class="patches-update-panel">
-        <div class="patches-update-copy" aria-live="polite"><h3>{{ demo.title }}</h3><p>{{ demo.description }}</p><a :href="withBase(`/features/${demo.guide}.html`)">See the guide →</a></div>
+        <div class="patches-update-copy" aria-live="polite"><h3>{{ demo.title }}</h3><p>{{ demo.description }}</p><a :href="withBase(demo.guide)">See the guide →</a></div>
         <div class="patches-update-media"><img :key="demo.id" :src="demo.image" :alt="demo.alt" loading="lazy"></div>
       </div>
     </section>

@@ -1,13 +1,13 @@
-Patches 0.7.0 adds a way to see what changed in a note since your last Git commit. On desktop, open a note in a Git-backed vault. A blue mark beside a line means you edited it, green means you added it, and a red triangle shows where you removed text.
+Patches 0.7.0 adds Git change markers to the desktop editor. In the weekend watchlist below, I added *Paprika*, changed Friday’s film list, and removed a reminder. The green bar marks the added line, blue marks an edit, and the red triangle shows where a line was deleted.
 
-![The editor gutter marks changes to a weekend watchlist](https://raw.githubusercontent.com/yaroxy/obsidian-patch/417027fb6394a6e838bbd015c753225c0c87a7e5/docs/images/note-git-gutter.png)
+![The watchlist in the editor and the comparison opened by clicking its Friday change marker](https://raw.githubusercontent.com/yaroxy/obsidian-patch/1ccab6895bfc5e6c3dbce940cf0acea1c1ee023b/docs/images/community/0.7.0/02-git-changes.png)
 
-Click a marker to compare that part of the note. The upper pane shows the last commit and the lower pane follows your edits, including text you haven’t saved. If you prefer a clear margin, run **Patches: Toggle Git change markers for this vault**. You can still open the comparison from the command palette.
+Click a marker to see the last commit above your current text, including unsaved edits. This works in desktop vaults inside a Git working tree with Git installed locally. If you prefer a clear margin, run **Patches: Toggle Git change markers for this vault**. **View Git diff for this note** still opens the comparison on demand.
 
-Callouts can now use brand logos. Open **Settings → Patches → Patch Icons → Simple Icons → Install** once, then go to **Callouts → Type appearance** and choose a logo and its brand color. The catalog works offline after installation and is shared with file and folder icons.
+Callouts can now share brand logos with your files and folders. Open **Settings → Patches → Patch Icons → Simple Icons → Install** once. Then open **Callouts → Type appearance**, pick a logo and choose its brand color or your own swatch. After installation you can search the catalog offline.
 
-![Callout appearance with a brand icon and color swatches](https://raw.githubusercontent.com/yaroxy/obsidian-patch/417027fb6394a6e838bbd015c753225c0c87a7e5/docs/images/callout-brand-appearance.png)
+![The PYTHON-NOTES callout with the Python logo and brand-color swatches](https://raw.githubusercontent.com/yaroxy/obsidian-patch/b1471f3b662890b6a03d9b0312d33fb6ed9697f1/docs/images/callout-brand-appearance.png)
 
-If you use inline code in HTML tables, the font setting now previews the family you choose and suggests installed fonts on supported devices.
+For HTML tables, the inline code font setting now previews your choice and suggests installed families on supported devices. I tested the table changes on Debian with Obsidian 1.15.1. The phone movie-list workflow is still unverified on iOS and Android.
 
-[Release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.7.0) · [Git comparison guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git) · [Callout appearance guide](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
+Update via **Settings → Community plugins → Check for updates**. [0.7.0 release notes](https://github.com/yaroxy/obsidian-patch/releases/tag/0.7.0) · [Git comparison guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git) · [Table font example](https://yaroxy.github.io/obsidian-patch/features/tables.html#inline-code-font)

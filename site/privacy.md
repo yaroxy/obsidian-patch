@@ -4,11 +4,11 @@ Patches performs note editing and presentation locally. No account is required t
 
 ## Simple Icons
 
-In 0.6.0, opening the icon picker for the first time in a session, or selecting **Patch Icons → Update**, can contact jsDelivr to resolve and download the latest Simple Icons set. Used icons missing their cached SVG can also trigger a download. Brand colors are read from JSON for the matching Simple Icons version.
-
 In 0.7.0, choosing **Install** or **Update** for Simple Icons downloads the optional catalog to the plugin folder. The initial installation tip makes no network request. Subsequent searches, including after restarting Obsidian, read local data. Opening a picker or rendering a note works offline.
 
 A full load makes up to four JSON requests. It looks up the package version at `data.jsdelivr.com`, then retrieves the icon set, its release information and the matching brand colors from `cdn.jsdelivr.net`. Only package names and versions appear in the request URLs. Note contents, file paths and picker searches stay local. Already-used icons and their available colors are cached in plugin settings for offline display.
+
+In 0.6.0, opening the icon picker for the first time in a session, or selecting **Patch Icons → Update**, can contact jsDelivr to resolve and download the latest Simple Icons set. Used icons missing their cached SVG can also trigger a download. Brand colors are read from JSON for the matching Simple Icons version.
 
 As with any network request, the service receives normal connection information, including the requesting IP address. See [jsDelivr’s privacy policy](https://www.jsdelivr.com/terms/privacy-policy-jsdelivr-net).
 

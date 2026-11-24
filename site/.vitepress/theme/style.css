@@ -44,10 +44,8 @@
 .patches-demo-label { font-size: 9px; letter-spacing: .8px; }
 .patches-demo img { display: block; width: 100%; height: auto; }
 .patches-demo figcaption { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 14px 16px; font-size: 11px; line-height: 1.6; border-top: 1px solid var(--vp-c-divider); color: var(--vp-c-text-2); }
-.patches-demo a, .patches-workflows a, .patches-start a, .patches-preview a, .patches-updates a { color: var(--vp-c-brand-1); }
-.patches-preview { display: flex; flex-wrap: wrap; gap: 3px 12px; margin: 42px 0 75px; font-size: 12px; line-height: 1.7; color: var(--vp-c-text-2); }
-.patches-preview > span { color: var(--vp-c-brand-1); font-weight: 650; }
-.patches-updates { margin-bottom: 72px; }
+.patches-demo a, .patches-workflows a, .patches-start a, .patches-updates a { color: var(--vp-c-brand-1); }
+.patches-updates { margin-block: 72px; }
 .patches-demo-switcher { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .patches-demo-switcher button { border: 1px solid var(--vp-c-divider); border-radius: 7px; padding: 9px 15px; font-size: 13px; color: var(--vp-c-text-2); }
 .patches-demo-switcher button[aria-pressed="true"] { color: var(--vp-c-brand-1); border-color: var(--vp-c-brand-1); background: var(--vp-c-brand-soft); }
@@ -88,7 +86,7 @@
   .patches-home { padding: 35px 24px 50px; }
   .patches-hero h1 { font-size: 42px; letter-spacing: -2px; }
   .patches-intro { font-size: 16px; }
-  .patches-preview { margin-block: 30px 45px; }
+  .patches-updates { margin-block: 45px; }
   .patches-section-heading { grid-template-columns: 1fr; gap: 12px; }
   .patches-section-heading h2, .patches-start h2 { font-size: 28px; }
   .patches-workflow { grid-template-columns: 25px 1fr; padding-block: 24px; }

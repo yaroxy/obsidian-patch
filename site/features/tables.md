@@ -85,3 +85,5 @@ Patches 0.7.0 suggests installed font families as you type on devices that expos
 ## Related reference
 
 [Table commands](../reference/commands.md) · [Troubleshooting table conversion](../troubleshooting.md#table-conversion-is-unavailable)
+
+![Typing JetBrains Mo in the inline code font field suggests JetBrains Mono and JetBrains Mono NL](../../docs/images/table-font-suggestions.png)

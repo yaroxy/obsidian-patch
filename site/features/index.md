@@ -11,7 +11,9 @@ Choose a feature for its steps, examples, settings, and limitations. All Patches
 | [Callouts](callouts.md) | Insert, edit, preview, and unwrap callouts. Tint code backgrounds and check GitHub compatibility. |
 | [Math formatting](math-format.md) | Indentation and alignment for display math, preserving formulas. |
 
-Version 0.6.0 adds [HTML-to-Markdown conversion](tables.md#convert-an-html-table-to-markdown), [table code fonts](tables.md#inline-code-font), [callout type completion and paste](callouts.md#type-completion-and-paste), and [per-type callout icons and colors](callouts.md#type-appearance).
+Patches 0.7.0 adds [desktop Git change markers and comparison](../reference/commands.md#compare-a-note-with-git), [brand logos for callouts](callouts.md#type-appearance) and [installed-font suggestions for HTML tables](tables.md#inline-code-font).
+
+Version 0.6.0 introduced [HTML-to-Markdown conversion](tables.md#convert-an-html-table-to-markdown), [table code fonts](tables.md#inline-code-font), [callout type completion and paste](callouts.md#type-completion-and-paste), and [per-type callout icons and colors](callouts.md#type-appearance).
 
 ## Shape your notes
 
