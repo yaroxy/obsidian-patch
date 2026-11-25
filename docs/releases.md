@@ -78,6 +78,22 @@ Note content does not need migration: `patch-mermaid`, `patch-banner`, and `patc
 
 After checking that Patches has your settings and hotkeys and works with your notes, you can uninstall **Obsidian Patch** under **Settings → Community plugins**. Keeping it disabled temporarily is also fine. The migration intentionally retains its directory for recovery; the new plugin uses its own `patches/data.json`. Keep the migration backup until you are satisfied with the new installation, and leave **Patches** installed when removing the old plugin.
 
+## Community release workflow
+
+### Review the pushed branch
+
+After pushing a Community release candidate, open the Patches entry in the Community Directory and run **Review branch** for the exact commit SHA. Record the branch, SHA, date, and Directory result in [Community review history](community-review-history.md). Fix blocking findings, push the revised commit, and run the preview again. Document why any remaining warnings or recommendations can be accepted. [Community Directory review instructions](https://docs.obsidian.md/community-directory/manage-entry#fix-a-failed-review)
+
+### Prepare the release materials
+
+Once the branch review passes, prepare all three items for the release.
+
+- **README update.** Summarize the main user-visible changes, refresh affected instructions and examples, and check the release and download links once they are live.
+- **Documentation site update.** Update the affected guides and reference pages. Refresh the homepage demo when it shows changed behavior. Run `npm run docs:build` and `npm run docs:check`, then verify changed screenshots and copyable examples in the site preview. [Documentation website guide](site-design.md)
+- **English forum draft.** Prepare a reply for the existing Patches topic explaining what changed and how users can try it. Include the release and relevant guide links. Add a screenshot or a copyable example when it helps demonstrate the change. [Patches forum topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923)
+
+Keep feature names, setup steps, and compatibility details consistent across the three items. Follow the versioning, validation, and publication steps below. If release preparation changes anything covered by the branch review, push the updated candidate and run **Review branch** again before tagging. After publication, verify the GitHub release and the deployed site. Confirm that the Directory offers the new version before telling users to update through **Community plugins**.
+
 ## Preparing a release
 
 Keep these values consistent before building:
@@ -136,6 +152,6 @@ See [GitHub release management](https://docs.github.com/en/repositories/releasin
 
 ## Community Directory submission
 
-Before submitting, verify the published name and ID remain available, review the [developer policies](https://docs.obsidian.md/community-directory/developer-policies) and [submission requirements](https://docs.obsidian.md/community-directory/submission-requirements-for-plugins), and confirm that the default branch's manifest matches the published release. Provide the default Community build command and explain the separate Full branch so reviewers can reproduce the submitted package. Read [Community review history](community-review-history.md) before preparing the candidate; preview its exact commit with **Review branch** before tagging a new release.
+Before submitting, verify the published name and ID remain available, review the [developer policies](https://docs.obsidian.md/community-directory/developer-policies) and [submission requirements](https://docs.obsidian.md/community-directory/submission-requirements-for-plugins), and confirm that the default branch's manifest matches the published release. Provide the default Community build command and explain the separate Full branch so reviewers can reproduce the submitted package. For subsequent releases, follow the [Community release workflow](#community-release-workflow).
 
 Sign in at [community.obsidian.md](https://community.obsidian.md), connect the repository owner's GitHub account, and choose **Plugins → New plugin**. Submit the repository URL and address review feedback through new commits and releases. Only describe the plugin as available through Community plugins after confirming that users can install it there.

@@ -18,6 +18,8 @@ Use current source and configuration for implementation status and versions. Tre
 
 Before changing release packaging, build variants, or plugin ID migration, read `docs/releases.md`.
 
+For each Community release, follow the [Community release workflow](docs/releases.md#community-release-workflow) for branch review, the README and site updates, and the English forum draft.
+
 Before addressing Community Directory feedback or preparing a directory release, read `docs/community-review-history.md` and append new review results there, distinguishing local verification from service approval.
 
 ## Repository conventions
