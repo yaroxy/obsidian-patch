@@ -11,12 +11,12 @@ Requires **Obsidian 1.15.0 or later**.
 3. Select **Install**, then **Enable**.
 4. Open **Settings → Patches** to configure its features.
 
-In 0.7.0, Lucide icons are ready to use. For brand logos, select **Settings → Patches → Patch Icons → Simple Icons → Install**. One download serves callouts, files and folders.
+Lucide icons are ready to use. For brand logos, select **Settings → Patches → Patch Icons → Simple Icons → Install**. One download serves callouts, files and folders.
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
 ::: tip Per-note numbering in 0.9.0
-To continue a report at chapter 10, open the note, choose **Editor → Heading numbering → This note…**, select **Decimal hierarchy**, and set **First number** to **10**. The preview shows how subsections will be numbered. [Try the example](features/heading-levels.md#per-note-numbering-options)
+To continue a report at chapter 10, open the note, choose **Editor → Heading numbering → This note…**, select **Decimal hierarchy**, and set **First number** to **10**. The preview shows how subsections will be numbered. [Try the example](features/heading-levels.md#per-note-numbering-options) · [0.9.0 release notes and downloads](https://github.com/yaroxy/obsidian-patch/releases/tag/0.9.0)
 :::
 
 ## Try one improvement

@@ -22,23 +22,7 @@ Use **Settings → Patches → Editor → Heading numbering → This note…** t
 
 ![Per-note numbering options showing a first number of 10 and a live preview](docs/images/heading-numbering-note-settings.png)
 
-On desktop, dragging the window with Line Width enabled now avoids repeated checks of the same minimum size. The central workspace keeps its 500 px minimum as the sidebars narrow. [Window sizing guide](https://yaroxy.github.io/obsidian-patch/features/line-width.html#desktop-window-width)
-
-## New in 0.8.0
-
-Patches 0.8.0 adds display-only section numbers. Add `patch-heading-numbering: decimal` to a note’s properties and headings such as **Methods** and its subsection **Materials** appear as **1 Methods** and **1.1 Materials** in Live Preview and Reading View. Move a section and its numbers update automatically. Heading links, copied text and the Markdown file keep the original titles. Vault-wide numbering starts off. [Try a sample note and compare the four styles](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
-
-![A narrow reading pane showing sections 9 and 10, their subsections and a wrapped title aligned under its first word](docs/images/heading-number-alignment.png)
-
-Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons need the corresponding pack installed once from Patch Mermaid settings. [0.8.0 release notes and downloads](https://github.com/yaroxy/obsidian-patch/releases/tag/0.8.0)
-
-## New in 0.7.0
-
-- Desktop vaults inside a Git working tree automatically show change markers in visible Markdown editors. Click a marker or run **View Git diff for this note** to compare the last commit with your current edits. **Toggle Git change markers for this vault** controls the gutter across the vault. [Git diff guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git)
-- Install the shared **Simple Icons** catalog through **Patch Icons → Simple Icons → Install** to choose brand logos offline for callouts, files and folders. The wider Callout appearance panel includes color swatches and uses the Obsidian interface font for type suggestions. [Callout appearance](https://yaroxy.github.io/obsidian-patch/features/callouts.html#type-appearance)
-- The HTML table code font field suggests installed families on supported devices. [Inline code font](https://yaroxy.github.io/obsidian-patch/features/tables.html#inline-code-font)
-
-![The editor marks changes to a watchlist and the Git comparison shows the committed and current lines](docs/images/community/0.7.0/02-git-changes.png)
+On desktop, dragging the window with Line Width enabled now avoids repeated checks of the same minimum size. The central workspace keeps its 500 px minimum as the sidebars narrow. [Window sizing guide](https://yaroxy.github.io/obsidian-patch/features/line-width.html#desktop-window-width) · [0.9.0 release notes and downloads](https://github.com/yaroxy/obsidian-patch/releases/tag/0.9.0)
 
 ## Features
 
@@ -47,6 +31,7 @@ Find appearance and editing options under **Settings → Patches**, and Git comm
 - **Callouts**
   - [Edit, preview, and unwrap callouts](https://yaroxy.github.io/obsidian-patch/features/callouts.html). Set icons and colors by type, tint code backgrounds, and [check folders for GitHub compatibility](https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders).
 - **Editor**
+  - Display section numbers in Live Preview and Reading View. Moving a section updates its number and preserves links to the heading. [Heading numbering guide](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
   - [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) marks the current line in the margin and highlights its line number. In a Git vault, consecutive additions or edits form a continuous colored bar beside it.
   - [Show H1–H6 labels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) beside the first line of each heading. Live Preview shares the extra heading space evenly above and below the text.
 - **Git on desktop**
@@ -54,7 +39,7 @@ Find appearance and editing options under **Settings → Patches**, and Git comm
 - **HTML Tables**
   - [Convert between Markdown and HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html). Edit merged cells and captions, and choose a font for inline code in HTML cells.
 - **Line Width**
-  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note. In 0.8.0, Line Width also keeps at least 500 px between the sidebars when resizing the desktop window.
+  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note. On desktop, Line Width keeps at least 500 px between the sidebars when resizing the window.
 - **Math Format**
   - [Indent and align display formulas](https://yaroxy.github.io/obsidian-patch/features/math-format.html).
 - **Patch Banner**
@@ -76,7 +61,7 @@ Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Di
 
 With Obsidian Sync Standard, install Patches on each device. Its bundled diagram renderer makes `main.js` larger than the plan’s 5 MB per-file limit.
 
-In 0.8.0, diagrams using `logos:` or `material-icon-theme:` icons need a download under **Settings → Patches → Patch Mermaid → Install** once per pack version. Version 0.7.0 includes both packs.
+For diagrams that use `logos:` or `material-icon-theme:` icons, choose **Install** under **Settings → Patches → Patch Mermaid** once per pack version. [Diagram icon packs](https://yaroxy.github.io/obsidian-patch/features/mermaid.html#install-diagram-icons)
 
 For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 
@@ -96,7 +81,7 @@ Other notes keep their global width. See [note properties](https://yaroxy.github
 
 ## Network and privacy
 
-The Community build runs its bundled Mermaid code locally. Patches 0.8.0 downloads version-pinned diagram icon JSON from **jsDelivr** when you install a pack or repair a damaged copy. Installed packs load locally. In 0.7.0, selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from the same service. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
+The Community build runs its bundled Mermaid code locally. Patches downloads version-pinned diagram icon JSON from **jsDelivr** when you install a pack or repair a damaged copy. Installed packs load locally. Selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from the same service. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
 
 The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 

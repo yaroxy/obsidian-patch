@@ -248,6 +248,18 @@ The maintainer confirmed that the branch preview passed for `d3b867f27b2c7fbdba6
 
 The maintainer confirmed that the Community Directory branch review passed for `codex/review-note-numbering` at `e1290cb7f389dc4a6db15f34deb7e2193ee070dc`. This preview covered per-note heading settings, bold numbering and desktop resizing. The version metadata still identified 0.8.0 at that commit. The 0.9.0 packaging commit requires its own branch preview before tagging. [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/e1290cb7f389dc4a6db15f34deb7e2193ee070dc)
 
+### 0.9.0 candidate preview — pending in the November 25 screenshot
+
+The maintainer’s screenshot shows the preview of `codex/review-note-numbering` at `ab50264` as pending. The source review reported a dependency installation failure and skipped checks that needed the resolved dependencies. The dependency review separately reported an API rate limit. The screenshot gives no install log or final outcome. [Candidate commit](https://github.com/yaroxy/obsidian-patch/commit/ab5026476aab822a6358090737a70600fcb3a1d1)
+
+Compared with the earlier preview at `e1290cb`, the package manifest and lockfile changed only the root package version. On Debian with Node 24.22.2 and npm 11.19.1, a fresh copy of the candidate and an empty npm cache installed 283 packages with `npm ci --no-audit --no-fund`. The production build and version-specific package check passed. The resulting `main.js` matched the previously tested SHA-256. These observations describe the local build.
+
+### 0.9.0 approved and published — 2026-11-26 (Singapore)
+
+The maintainer confirmed the Community Directory preview passed for `codex/review-note-numbering` at `ab5026476aab822a6358090737a70600fcb3a1d1`. Tag `0.9.0` points to that commit. GitHub published the release on November 25 at 16:07 UTC (November 26 in Singapore). [GitHub release](https://github.com/yaroxy/obsidian-patch/releases/tag/0.9.0)
+
+The release workflow completed its build, tests, package checks and artifact attestations. GitHub returned HTTP 502 on the final `styles.css` upload and the workflow skipped its draft verification step. All three attachments were present in the draft. Before publication, each downloaded file matched the clean local build byte for byte and passed GitHub attestation verification against the release workflow, tag and commit. The clean local test run passed all 187 tests. [Workflow run and upload log](https://github.com/yaroxy/obsidian-patch/actions/runs/45650776206)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

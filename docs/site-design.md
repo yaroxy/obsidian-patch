@@ -14,7 +14,7 @@ The homepage and README share a real travel-note capture combining the existing 
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
-The README and homepage highlight the 0.7.0 Git, icon and font features. The [table guide](../site/features/tables.md#convert-an-html-table-to-markdown) includes a copyable watchlist for reverse conversion alongside the [0.5.1 inline-formula example](../site/features/tables.md#convert-tables-with-inline-formulas).
+The README links to earlier releases in the changelog. The homepage gallery demonstrates heading numbering, Git changes, callout icons and table fonts. The [table guide](../site/features/tables.md#convert-an-html-table-to-markdown) includes a copyable watchlist for reverse conversion alongside the [0.5.1 inline-formula example](../site/features/tables.md#convert-tables-with-inline-formulas).
 
 The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
 
@@ -36,7 +36,7 @@ Build the Community plugin and open the Debian development vault with the **Obsi
 
 Inspect each PNG at its original size before copying it. Check that the wrapped title lines up, the Git bars span consecutive lines and the controls named in the caption are visible. The README, feature guides and homepage import the images from this directory. Build and check the site after replacing them.
 
-The [heading numbering forum reply](forum-heading-numbering.md) is ready to post after 0.8.0 is published in the [existing Patches topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Its screenshot URL points to the commit containing the published capture. When replacing the image, pin the new URL to its pushed commit. Check the image and guide link in the forum composer preview before posting.
+The [0.9.0 per-note numbering reply](forum-per-note-numbering.md) and the [0.8.0 heading numbering reply](forum-heading-numbering.md) are drafts for the [existing Patches topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Their screenshot URLs point to the commits containing the respective captures. When replacing the image, pin the new URL to its pushed commit. Check the image and guide link in the forum composer preview before posting.
 
 ## Community Directory screenshots
 
