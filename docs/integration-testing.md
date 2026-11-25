@@ -57,6 +57,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.9.0 Community release candidate — 2026-11-25
+
+The 0.9.0 package uses the plugin source at `e1290cb7f389dc4a6db15f34deb7e2193ee070dc` and the new release metadata. All 187 unit tests, the production build and package validation with `--tag=0.9.0` passed. The built `main.js` is 5,660,755 bytes with SHA-256 `1f1516c048f8ac07a16805d2504d3c6662170408b4030226ab5cf63c26e4ec50`.
+
+In the Debian KDE development vault, Obsidian 1.15.1 passed all 45 navigation checks and all six PDF comparisons. Twelve successive window sizes caused zero reads of an unchanged native minimum. The runner restored the original settings and active tab. The site build passed checks for 21 pages, 904 links and assets, and the README links. A browser preview verified the homepage demo, the rendered note-settings image, the guide anchor and the YAML example with its copy control. Physical mobile devices and other desktop platforms were outside this run.
+
 ## Local review of per-note heading numbering and window resizing — 2026-11-25
 
 The isolated Community checkout based on `106d151` passed 187 unit tests, the production build and the release-package check with its locked dependencies. The documentation build passed checks for 21 HTML pages, 903 site links and assets, and the README links. The native navigation and PDF results below are from earlier desktop runs.

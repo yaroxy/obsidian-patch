@@ -244,6 +244,10 @@ The candidate on `main` includes the fixes for the preview of `c8f25a5`. The 0.8
 
 The maintainer confirmed that the branch preview passed for `d3b867f27b2c7fbdba608364e4fb82df51ab30e3`. Tag `0.8.0` points to that commit. The release workflow built and attested all three Community attachments. After publication, the downloaded `main.js`, `manifest.json` and `styles.css` each matched the tested local package byte for byte and passed attestation verification against the tag, commit and release workflow. The public Directory entry still showed 0.7.0 immediately after the GitHub release. [Release](https://github.com/yaroxy/obsidian-patch/releases/tag/0.8.0) · [Release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/45548414740)
 
+### 0.9.0 feature branch preview — 2026-11-25
+
+The maintainer confirmed that the Community Directory branch review passed for `codex/review-note-numbering` at `e1290cb7f389dc4a6db15f34deb7e2193ee070dc`. This preview covered per-note heading settings, bold numbering and desktop resizing. The version metadata still identified 0.8.0 at that commit. The 0.9.0 packaging commit requires its own branch preview before tagging. [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/e1290cb7f389dc4a6db15f34deb7e2193ee070dc)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

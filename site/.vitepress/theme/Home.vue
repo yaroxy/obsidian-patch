@@ -2,12 +2,12 @@
 import { withBase } from 'vitepress';
 import { computed, ref } from 'vue';
 import overview from '../../../docs/images/home-overview.png';
-import headingsDemo from '../../../docs/images/heading-number-alignment.png';
+import headingsDemo from '../../../docs/images/heading-numbering-note-settings.png';
 import gitDemo from '../../../docs/images/git-change-runs.png';
 import brandDemo from '../../../docs/images/callout-brand-appearance.png';
 import fontDemo from '../../../docs/images/table-font-suggestions.png';
 const demos = [
-  { id: 'headings', label: 'Heading numbers', title: 'Number sections in a single note', description: 'In 0.8.0, add patch-heading-numbering: decimal to a note’s properties. Section numbers follow the outline and wrapped titles line up beneath their first word.', image: headingsDemo, alt: 'Sections 9, 9.1, 10 and 10.1 in a shared number column beside Chinese headings', guide: '/features/heading-levels.html#heading-numbering' },
+  { id: 'headings', label: 'Heading numbers', title: 'Start a note at chapter 10', description: 'In 0.9.0, choose a first number for this note and preview its headings before applying. Other notes follow their own settings.', image: headingsDemo, alt: 'Per-note options for decimal numbering with the first number set to 10, starting at H2 and one level deep', guide: '/features/heading-levels.html#per-note-numbering-options' },
   { id: 'git', label: 'Git changes', title: 'See where an edit begins and ends', description: 'In 0.8.0, one blue bar spans consecutive edited lines and a green bar spans additions. Click either to compare your edits with the last commit.', image: gitDemo, alt: 'A blue bar beside lines 10 to 12 and a green bar beside lines 13 to 15', guide: '/reference/commands.html#compare-a-note-with-git' },
   { id: 'icons', label: 'Callout icons', title: 'Give a callout its brand color', description: 'Install Simple Icons once, then choose a brand logo for a callout, file or folder. Use its official color or pick your own swatch.', image: brandDemo, alt: 'A blue Python logo and color swatches for the PYTHON-NOTES callout type', guide: '/features/callouts.html#type-appearance' },
   { id: 'font', label: 'Table code fonts', title: 'Preview an installed code font', description: 'Type part of a font name and select a suggestion on supported devices. The setting applies to inline code in HTML table cells.', image: fontDemo, alt: 'Typing JetBrains Mo brings up JetBrains Mono and JetBrains Mono NL', guide: '/features/tables.html#inline-code-font' },

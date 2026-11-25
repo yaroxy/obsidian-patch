@@ -15,8 +15,8 @@ In 0.7.0, Lucide icons are ready to use. For brand logos, select **Settings → 
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.8.0
-Add `patch-heading-numbering: decimal` to one note to number its sections in Live Preview and Reading View. If your Mermaid diagrams use Logos or Material Icon Theme icons, install the matching pack before going offline. [Try heading numbers](features/heading-levels.md#heading-numbering) · [Install diagram icons](features/mermaid.md#install-diagram-icons)
+::: tip Per-note numbering in 0.9.0
+To continue a report at chapter 10, open the note, choose **Editor → Heading numbering → This note…**, select **Decimal hierarchy**, and set **First number** to **10**. The preview shows how subsections will be numbered. [Try the example](features/heading-levels.md#per-note-numbering-options)
 :::
 
 ## Try one improvement

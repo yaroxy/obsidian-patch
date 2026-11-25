@@ -16,9 +16,13 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## In development
+## New in 0.9.0
 
 Use **Settings → Patches → Editor → Heading numbering → This note…** to number a single note. For example, choosing Decimal hierarchy and starting at 10 saves just `patch-heading-numbering: decimal start=10` and displays **10 Methods** and **10.1 Materials**. Automatic numbers use bold text and a subtle theme-accent tint. [Note properties and examples](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#per-note-numbering-options)
+
+![Per-note numbering options showing a first number of 10 and a live preview](docs/images/heading-numbering-note-settings.png)
+
+On desktop, dragging the window with Line Width enabled now avoids repeated checks of the same minimum size. The central workspace keeps its 500 px minimum as the sidebars narrow. [Window sizing guide](https://yaroxy.github.io/obsidian-patch/features/line-width.html#desktop-window-width)
 
 ## New in 0.8.0
 

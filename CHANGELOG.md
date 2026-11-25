@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-25
+
 ### Added
 
 - Set the first heading number, starting heading level and maximum depth for one note under **Editor → Heading numbering → This note…**. The dialog previews and saves one text property, such as `patch-heading-numbering: decimal start=10`. Omitted options inherit the vault defaults.

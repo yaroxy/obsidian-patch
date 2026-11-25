@@ -5,7 +5,7 @@ Properties let a note opt into a feature or override a global setting. Add them 
 | Property | Accepted value | Effect |
 | --- | --- | --- |
 | `patch-heading-numbering` (0.8.0) | `decimal`, `zh-report`, `en-outline`, `continuous` or `false` | Selects [section numbering](../features/heading-levels.md#heading-numbering) for this note. Omit it to inherit the vault preference. |
-| `patch-heading-numbering` (development build) | One text value, e.g. `decimal start=10 level=2 depth=1` | Set the style and optionally the first number, starting heading level and maximum depth. Omitted options inherit the vault defaults. [Examples](../features/heading-levels.md#per-note-numbering-options) |
+| `patch-heading-numbering` (0.9.0) | One text value, e.g. `decimal start=10 level=2 depth=1` | Set the style and optionally the first number, starting heading level and maximum depth. Omitted options inherit the vault defaults. [Examples](../features/heading-levels.md#per-note-numbering-options) |
 | `patch-line-width` | Whole number from 500–2000, or a string such as `"1100px"` | Overrides the readable width for the pane showing this note. |
 | `patch-banner` | A quoted vault link, such as `"[[assets/kyoto-cover.jpg]]"` | Uses that vault image, animation, or video as the note cover. |
 | `patch-banner-width` (0.5.0) | Whole percentage from 10 to 100, such as `65` or `"65%"` | Centers this note’s cover at that percentage of the pane. Omitted or invalid values use the vault cover width. |

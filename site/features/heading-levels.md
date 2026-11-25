@@ -40,11 +40,11 @@ patch-heading-numbering: decimal
 | `continuous` | 1 Methods → 2 Materials → 3 Results |
 | `false` | Turns numbering off for this note |
 
-A single H1 at the beginning serves as the document title. The first section below it starts at 1. A skipped heading level attaches to the closest preceding higher heading. Code examples, callouts, block quotes and embedded notes do not consume numbers. In 0.8.0, **Numbering options** sets the vault-wide starting heading level, maximum depth and first number. The sample updates as you change these settings.
+A single H1 at the beginning serves as the document title. The first section below it starts at 1. A skipped heading level attaches to the closest preceding higher heading. Code examples, callouts, block quotes and embedded notes do not consume numbers. Choose **Vault options** in 0.9.0 to set the vault-wide starting heading level, maximum depth and first number. The sample updates as you change these settings.
 
 ### Per-note numbering options
 
-In the development build, open the note and choose **Settings → Patches → Editor → Heading numbering → This note…**. Pick a style and, if needed, a first number. **Heading level and depth** holds the two less common controls. The preview updates as you edit. Choose **Apply** to save the choices in a single text property. Expand **Note properties (YAML)** to see the exact line.
+In 0.9.0, open the note and choose **Settings → Patches → Editor → Heading numbering → This note…**. Pick a style and, if needed, a first number. **Heading level and depth** holds the two less common controls. The preview updates as you edit. Choose **Apply** to save the choices in a single text property. Expand **Note properties (YAML)** to see the exact line.
 
 ```yaml
 patch-heading-numbering: decimal start=10
@@ -63,7 +63,7 @@ Omit any option to inherit that value. For example, `start=10` alone changes onl
 
 ![Note options showing a first number of 10, H2 as the starting level and a depth of 1](../../docs/images/heading-numbering-note-settings.png)
 
-In the development build, automatic numbers use bold text on a lightly tinted background with a fine outline. The tint follows the theme accent in light and dark modes. Column widths use the bold face of the vault font.
+In 0.9.0, automatic numbers use bold text on a lightly tinted background with a fine outline. The tint follows the theme accent in light and dark modes. Column widths use the bold face of the vault font.
 
 The fold arrow stays on the leading side of the shaded number, with its own click target. Numbers follow the vault’s text font. Changing that font updates the shared column width. Automatic numbers such as **9**, **10** and **10.1** align at the start of a shared column. Each automatic number has a subtle background that follows your theme and distinguishes it from a number typed into the title. The title and its wrapped lines align in the next column.
 
