@@ -3,7 +3,7 @@ import { Decoration, ViewPlugin, WidgetType, type DecorationSet, type EditorView
 import { editorInfoField, editorLivePreviewField, getFrontMatterInfo, MarkdownRenderChild, MarkdownView, parseYaml, type Plugin } from "obsidian";
 import { editorLines } from "./note-check-source";
 import { columnProperty, numberedLineClass, numberColumn } from "./heading-numbering/column";
-import { bodyHeadings, notePreset, numberHeadings, NUMBERING_PROPERTY, type Numbering, type NumberingSettings } from "./heading-numbering/model";
+import { bodyHeadings, effectiveNumbering, noteOptions, numberHeadings, NUMBERING_PROPERTY, type Numbering, type NumberingSettings } from "./heading-numbering/model";
 
 const refresh = StateEffect.define<null>();
 const prefixClass = "obsidian-patch-heading-number";
@@ -14,18 +14,13 @@ export function numberingForSource(source: string, settings: NumberingSettings):
   if (!settings.enabled && !source.includes(NUMBERING_PROPERTY)) return undefined;
   const text = editorLines(source);
   const info = getFrontMatterInfo(text);
-  let property: unknown;
   if (info.exists && info.frontmatter.includes(NUMBERING_PROPERTY)) {
-    try {
-      const parsed: unknown = parseYaml(info.frontmatter);
-      if (parsed && typeof parsed === "object" && NUMBERING_PROPERTY in parsed) property = parsed[NUMBERING_PROPERTY];
-    }
+    try { settings = effectiveNumbering(settings, noteOptions(parseYaml(info.frontmatter))); }
     catch { return undefined; }
   }
-  const preset = notePreset(settings, property);
-  if (!preset) return undefined;
+  if (!settings.enabled) return undefined;
   const firstLine = text.slice(0, info.contentStart).split("\n").length - 1;
-  return numberHeadings(bodyHeadings(text.slice(info.contentStart), firstLine), settings, preset);
+  return numberHeadings(bodyHeadings(text.slice(info.contentStart), firstLine), settings, settings.preset);
 }
 
 function prefixElement(doc: Document, prefix: string): HTMLSpanElement {
@@ -183,8 +178,20 @@ export function registerHeadingNumbering(plugin: Plugin, initial: NumberingSetti
   plugin.registerEvent(workspace.on("window-close", (_win, window) => { stopObservingFonts(window.document); fontDocs.delete(window.document); }));
   plugin.register(() => { for (const doc of fontDocs) stopObservingFonts(doc); });
   plugin.registerEvent(workspace.on("css-change", refreshLayout));
-  plugin.registerEvent(plugin.app.metadataCache.on("changed", file => {
-    for (const doc of documents.values()) if (doc.path === file.path) queueSections(doc);
+  plugin.registerEvent(plugin.app.metadataCache.on("changed", (file, source) => {
+    let redraw = false;
+    for (const doc of documents.values()) {
+      if (doc.path !== file.path) continue;
+      // Obsidian can retain every heading section when only Properties changed.
+      if (doc.text !== undefined && doc.text !== source) {
+        const before = getFrontMatterInfo(doc.text).frontmatter, after = getFrontMatterInfo(source).frontmatter;
+        if (before !== after && (before.includes(NUMBERING_PROPERTY) || after.includes(NUMBERING_PROPERTY))) redraw = true;
+      }
+      queueSections(doc);
+    }
+    if (redraw) for (const { view } of workspace.getLeavesOfType("markdown")) {
+      if (view instanceof MarkdownView && view.file === file && view.getMode() === "preview") view.previewMode.rerender(true);
+    }
   }));
   plugin.app.workspace.onLayoutReady(() => {
     if (disposed) return;

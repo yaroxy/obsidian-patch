@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Set the first heading number, starting heading level and maximum depth for one note under **Editor → Heading numbering → This note…**. The dialog previews and saves one text property, such as `patch-heading-numbering: decimal start=10`. Omitted options inherit the vault defaults.
+- Display automatic heading numbers in bold on a lightly tinted, outlined badge in Live Preview, Reading View and the settings sample. The number column fits the bold vault font.
+
+### Fixed
+
+- Avoid stutter from repeated native window size queries while resizing the desktop window with Line Width enabled.
+
 ## [0.8.0] - 2026-11-25
 
 ### Added

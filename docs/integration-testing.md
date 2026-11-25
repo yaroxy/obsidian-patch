@@ -57,6 +57,22 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## Local review of per-note heading numbering and window resizing — 2026-11-25
+
+The isolated Community checkout based on `106d151` passed 187 unit tests, the production build and the release-package check with its locked dependencies. The documentation build passed checks for 21 HTML pages, 903 site links and assets, and the README links. The native navigation and PDF results below are from earlier desktop runs.
+
+## Continuous desktop window resizing — 2026-11-25
+
+In the Debian KDE development vault with Obsidian 1.15.1, the same 12 successive native window sizes triggered 24 synchronous reads of the unchanged native minimum before the fix and zero afterward. The central workspace stayed at least 500 px wide throughout the test. All 45 navigation checks, six PDF comparisons and the production build passed. The navigation runner restored the development session. The resize sequence used native window size changes and covered Debian KDE.
+
+## Compact heading numbering and bold prefixes — 2026-11-25
+
+The Community development build passed 187 unit tests, the release-package check, 44 native navigation checks and six PDF comparisons on Debian KDE with Obsidian 1.15.1. A note saved its decimal style, first number, starting level and depth in one text property. Clearing its optional values retained the simple decimal preset. The vault control previewed bold numbers and the two open panes switched between 700 and 400 weight. The native suite restored the session. Physical mobile devices and other desktop platforms were outside this run.
+
+## Per-note numbering options — 2026-11-25
+
+On Debian KDE with Obsidian 1.15.1, the working tree based on `106d151` passed 43 navigation checks and six PDF comparisons. The settings dialog wrote a first number of 10, an H2 starting level and a maximum depth of 1 into one note. Live Preview and an already-open Reading View both updated. Clearing the numeric overrides restored inherited numbering and preserved an unrelated note property and the vault defaults. The suite restored the session. All 186 unit tests passed. Mobile devices and other desktop platforms were outside this run.
+
 ## 0.8.0 Community release candidate — 2026-11-25
 
 The Community candidate uses the plugin source at `14b3ed9ac9e42338ad97bbaf5ed6073d66d048ab` with the 0.8.0 release metadata. All 185 unit tests, the production build and the package check with `--tag=0.8.0` passed. The built `main.js` measures 5,654,854 bytes and its SHA-256 is `b0aa2179e7a7719766d3c3ac62437451bf6d71300e1dca676c06c58fbac9c487`.

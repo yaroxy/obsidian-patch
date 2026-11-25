@@ -3,7 +3,7 @@ import test from "node:test";
 import { build } from "esbuild";
 
 const bundle = await build({ entryPoints: ["src/features/heading-numbering/model.ts"], bundle: true, write: false, format: "esm", platform: "node" });
-const { bodyHeadings, numberHeadings, notePreset, parseNumberingSettings } = await import("data:text/javascript;base64," + Buffer.from(bundle.outputFiles[0].contents).toString("base64"));
+const { bodyHeadings, numberHeadings, noteOptions, numberingProperty, writeNoteOptions, effectiveNumbering, notePreset, parseNumberingSettings } = await import("data:text/javascript;base64," + Buffer.from(bundle.outputFiles[0].contents).toString("base64"));
 const defaults = parseNumberingSettings();
 function count(source, preset = "decimal", patch = {}) {
   return numberHeadings(bodyHeadings(source, 0), { ...defaults, ...patch }, preset);
@@ -73,4 +73,32 @@ test("old settings default to off and individual notes can opt in or opt out", (
   const on = { ...defaults, enabled: true, preset: "en-outline" };
   assert.equal(notePreset(on, false), undefined);
   assert.equal(notePreset(on, "unknown"), "en-outline");
+});
+
+test("note properties override each vault default independently and preserve an explicit off", () => {
+  const vault = { enabled: true, preset: "en-outline", startAt: 4, startLevel: 3, maxDepth: 2 };
+  const resolve = data => effectiveNumbering(vault, noteOptions(data));
+  assert.deepEqual(resolve({}), vault);
+  assert.deepEqual(resolve({ "patch-heading-numbering-level": "0", "patch-heading-numbering-start": "10" }),
+    { ...vault, startLevel: 0, startAt: 10 });
+  assert.deepEqual(resolve({ "patch-heading-numbering-depth": 7, "patch-heading-numbering-start": 0, "patch-heading-numbering-level": 1.5 }), vault);
+  assert.equal(resolve({ "patch-heading-numbering": false, "patch-heading-numbering-start": 5 }).enabled, false);
+  assert.equal(effectiveNumbering(defaults, noteOptions({ "patch-heading-numbering-start": 8 })).enabled, false);
+  const options = effectiveNumbering(defaults, noteOptions({ "patch-heading-numbering": "decimal",
+    "patch-heading-numbering-start": 10, "patch-heading-numbering-level": 2, "patch-heading-numbering-depth": 1 }));
+  assert.deepEqual(prefixes(count(note, options.preset, options)), ["10", "11"]);
+});
+
+test("one Properties text value round-trips partial overrides, off, and cleared settings", () => {
+  for (const options of [{}, { preset: false }, { startAt: 3 }, { preset: false, maxDepth: 2 },
+    { preset: "decimal", startAt: 10, startLevel: 0, maxDepth: 1 }]) {
+    assert.deepEqual(noteOptions({ "patch-heading-numbering": numberingProperty(options) }), options);
+  }
+  const data = { keep: true, "patch-heading-numbering": "decimal depth=1 start=10",
+    "patch-heading-numbering-depth": 4, "patch-heading-numbering-level": 2 };
+  writeNoteOptions(data, noteOptions(data));
+  assert.deepEqual(data, { keep: true, "patch-heading-numbering": "decimal start=10 level=2 depth=1" });
+  writeNoteOptions(data, {});
+  assert.deepEqual(data, { keep: true });
+  assert.deepEqual(parseNumberingSettings({ bold: false }), defaults);
 });

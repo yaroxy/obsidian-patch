@@ -16,6 +16,10 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
+## In development
+
+Use **Settings → Patches → Editor → Heading numbering → This note…** to number a single note. For example, choosing Decimal hierarchy and starting at 10 saves just `patch-heading-numbering: decimal start=10` and displays **10 Methods** and **10.1 Materials**. Automatic numbers use bold text and a subtle theme-accent tint. [Note properties and examples](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#per-note-numbering-options)
+
 ## New in 0.8.0
 
 Patches 0.8.0 adds display-only section numbers. Add `patch-heading-numbering: decimal` to a note’s properties and headings such as **Methods** and its subsection **Materials** appear as **1 Methods** and **1.1 Materials** in Live Preview and Reading View. Move a section and its numbers update automatically. Heading links, copied text and the Markdown file keep the original titles. Vault-wide numbering starts off. [Try a sample note and compare the four styles](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
@@ -129,11 +133,11 @@ Official release testing covers the pinned version. Other versions can change di
 
 ## Acknowledgments
 
-**Line Width** follows the ideas of [Editor Width Slider](https://github.com/MugishoMp/obsidian-editor-width-slider) by MugishoMp (MIT), and **Patch Icons** follows [Iconize](https://github.com/FlorianWoelki/obsidian-iconize) by Florian Woelki (MIT). Their implementations are written for this plugin; the Iconize importer reads its settings format.
+**Line Width** was inspired by Mugisho Mugisho’s Editor Width Slider. Patches implements its own per-pane width and desktop workspace minimum. **Patch Icons** was inspired by Florian Woelki’s Iconize. Its importer reads Iconize settings and follows its icon-name conversion convention. [Editor Width Slider (MIT)](https://github.com/MugishoMp/obsidian-editor-width-slider/blob/master/LICENSE) · [Iconize (MIT)](https://github.com/FlorianWoelki/obsidian-iconize/blob/main/LICENSE) · [Included notices](THIRD-PARTY-NOTICES.md)
 
 The desktop note comparison uses [jsdiff](https://github.com/kpdecker/jsdiff) (BSD-3-Clause).
 
-Icons come from [Lucide](https://lucide.dev/) (ISC), [Simple Icons](https://simpleicons.org/) (CC0 1.0), and the [Iconify](https://iconify.design/) packs used by Mermaid. Brand icons are trademarks of their respective owners.
+Patch Icons uses Obsidian’s Lucide icons (ISC, with MIT terms for Feather-derived designs). Simple Icons releases its collection under CC0. Individual brand icons may have their own license and trademark guidelines. Mermaid uses Iconify packs. [Lucide licenses](https://lucide.dev/license) · [Simple Icons licensing and trademarks](https://github.com/simple-icons/simple-icons/blob/develop/DISCLAIMER.md) · [Iconify](https://iconify.design/)
 
 ## License
 

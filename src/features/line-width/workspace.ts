@@ -31,6 +31,7 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
   let disposed = false;
   let previousMinimum: number | undefined;
   let appliedMinimum: number | undefined;
+  let appliedContentMinimum: number | undefined;
   let frame = 0;
   const floorClass = "obsidian-patch-line-width-sidebar-floor";
   const clamped = new Set<Element>();
@@ -70,14 +71,19 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
     for (const dock of clamped) dock.classList.add(floorClass);
     minimum += padding + Math.max(0, visible - 1) * pixels(layoutStyle.columnGap);
     const chrome = Math.max(0, win.innerWidth - el.clientWidth);
+    const contentMinimum = Math.ceil((minimum + chrome) * electron.webFrame.getZoomFactor());
+    // Electron's remote window methods block the renderer. Ordinary dragging changes
+    // the available width, but usually leaves the minimum content width unchanged.
+    if (contentMinimum === appliedContentMinimum) return;
     const bounds = native.getBounds();
     const frameWidth = bounds.width - native.getContentBounds().width;
     const [current, height] = native.getMinimumSize();
     if (current !== appliedMinimum) previousMinimum = current;
-    const width = Math.max(previousMinimum ?? current, Math.ceil((minimum + chrome) * electron.webFrame.getZoomFactor()) + frameWidth);
+    const width = Math.max(previousMinimum ?? current, contentMinimum + frameWidth);
     if (current !== width) native.setMinimumSize(width, height);
     appliedMinimum = width;
     if (bounds.width < width && !native.isMaximized() && !native.isFullScreen()) native.setSize(width, bounds.height);
+    appliedContentMinimum = contentMinimum;
   }
 
   const schedule = () => {
@@ -106,12 +112,15 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
       frame = 0;
       const [width, height] = native.getMinimumSize();
       if (previousMinimum !== undefined && appliedMinimum === width && width !== previousMinimum) native.setMinimumSize(previousMinimum, height);
-      previousMinimum = appliedMinimum = undefined;
+      previousMinimum = appliedMinimum = appliedContentMinimum = undefined;
     }
   }
 
   plugin.registerDomEvent(win, "resize", schedule);
-  plugin.registerEvent(workspace.on("css-change", schedule));
+  plugin.registerEvent(workspace.on("css-change", () => {
+    appliedContentMinimum = undefined;
+    schedule();
+  }));
   plugin.registerEvent(workspace.on("layout-change", schedule));
   workspace.onLayoutReady(() => { if (!disposed) configure(enabled); });
   plugin.register(() => { disposed = true; configure(false); });

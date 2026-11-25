@@ -53,6 +53,32 @@ async function navigationIntegration(app, config) {
       }
       report.workspaceWidths = samples;
       pass("shrinking the native window respects a 500 px central split and 200 px open sidebars across collapse and reopen");
+      const floor = samples[0].floor;
+      const frameWidth = native.getBounds().width - native.getContentBounds().width;
+      const resizeSteps = 12, stepSize = 15;
+      const resizeTo = async width => {
+        native.setSize(width, original.height);
+        await until(() => Math.abs(innerWidth - (width - frameWidth)) <= 1, `window reached ${width} px`);
+      };
+      await resizeTo(floor + resizeSteps * stepSize);
+      await wait(100);
+      const getMinimumSize = native.getMinimumSize;
+      const minimumDescriptor = Object.getOwnPropertyDescriptor(native, "getMinimumSize");
+      let minimumReads = 0;
+      native.getMinimumSize = () => { minimumReads++; return getMinimumSize.call(native); };
+      try {
+        for (let step = resizeSteps - 1; step >= 0; step--) {
+          await resizeTo(floor + step * stepSize);
+          assert(rect(root).width >= 500, "Central split fell below 500 px during resizing");
+        }
+        await wait(100);
+      } finally {
+        if (minimumDescriptor) Object.defineProperty(native, "getMinimumSize", minimumDescriptor);
+        else delete native.getMinimumSize;
+      }
+      report.workspaceResize = { steps: resizeSteps, nativeMinimumReads: minimumReads };
+      assert(minimumReads === 0, `Read the unchanged native minimum ${minimumReads} times during resizing`);
+      pass("continuous window resizing does not query an unchanged native minimum");
       split = ws.getLeaf("split", "vertical");
       await wait(150);
       assert(rect(root).width >= 500 && rect(split.containerEl).width < 500, "Window minimum leaked into a child split");
@@ -264,6 +290,7 @@ async function navigationIntegration(app, config) {
         span.ownerDocument.body.appendChild(probe);
         try { assert(style.fontFamily === getComputedStyle(probe).fontFamily, context + ": number does not use the vault text font"); }
         finally { probe.remove(); }
+        assert(style.fontWeight === "700" && style.boxShadow !== "none", context + ": expected a bold, outlined number");
         assert(style.textAlign === "start", context + ": number does not align to the start of its column");
         assert(style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== style.color, context + ": number needs a visible background and text");
         return span.getBoundingClientRect().left;
@@ -332,19 +359,35 @@ async function navigationIntegration(app, config) {
     await until(() => !noteRoot().querySelector(".cm-line " + prefixClass), "conflict pauses all editor prefixes");
     app.setting.open(); app.setting.openTabById("patches");
     await until(() => app.setting.activeTab.containerEl.textContent.includes("Expected 1.2."), "current-note preview explains the handwritten conflict");
-    const row = [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")].find(el => el.querySelector(".setting-item-name")?.textContent === "Heading numbering");
-    const dropdown = row.querySelector('select[aria-label="Heading numbering style"]');
-    dropdown.value = "zh-report"; dropdown.dispatchEvent(new Event("change", { bubbles: true }));
-    await until(() => row.querySelector(".obsidian-patch-heading-number-preview")?.textContent.includes("一、 Methods"), "sample responds to the preset dropdown");
-    const options = row.querySelector("details"); options.open = true;
+    const openOptions = async label => {
+      const findRow = () => [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")].find(el => el.isConnected && el.getClientRects().length && el.querySelector(".setting-item-name")?.textContent === "Heading numbering");
+      await until(findRow, "heading numbering setting is visible");
+      const setting = findRow();
+      const panel = () => setting.ownerDocument.querySelector(".obsidian-patch-heading-number-modal") ?? document.querySelector(".obsidian-patch-heading-number-modal");
+      setting.scrollIntoView({ block: "center" });
+      setting.ownerDocument.defaultView.focus();
+      [...setting.querySelectorAll("button")].find(el => el.textContent === label).click();
+      await until(panel, "numbering options open");
+      return panel();
+    };
     const setOption = (control, value) => { control.value = value; control.dispatchEvent(new Event("change", { bubbles: true })); };
-    const [startLevel, depth] = options.querySelectorAll("select");
-    setOption(startLevel, "2"); setOption(depth, "1"); setOption(options.querySelector("input"), "10");
-    await until(() => row.querySelector(".obsidian-patch-heading-number-preview")?.textContent.includes("十一、 Results"), "advanced controls update the sample");
+    const setField = (modal, label, value) => setOption(modal.querySelector('[aria-label="' + label + '"]'), value);
+    const applyOptions = async modal => {
+      modal.querySelector('button[type="submit"]').click();
+      await until(() => !modal.isConnected, "numbering options saved");
+    };
+    const options = await openOptions("Vault options");
+    options.querySelector("details").open = true;
+    assert(getComputedStyle(options.querySelector(prefixClass)).fontWeight === "700", "sample did not show bold numbers");
+    setField(options, "Numbering style", "zh-report");
+    setField(options, "Starting heading level", "2");
+    setField(options, "Maximum depth", "1");
+    setField(options, "First number", "10");
+    await until(() => options.querySelector(".obsidian-patch-heading-number-preview")?.textContent.includes("十一、 Results"), "advanced controls update the sample");
+    checkNumberStarts(options.querySelectorAll(".obsidian-patch-heading-number-preview " + prefixClass), "settings");
+    await shot("numbering-settings", options);
+    await applyOptions(options);
     assert(plugin().settings.headingNumbering.startLevel === 2 && plugin().settings.headingNumbering.maxDepth === 1, "Advanced heading options did not persist");
-    row.scrollIntoView({ block: "center" }); await wait(50);
-    checkNumberStarts(row.querySelectorAll(".obsidian-patch-heading-number-preview " + prefixClass), "settings");
-    await shot("numbering-settings", row);
     await plugin().setHeadingNumbering({ ...defaults, preset: "zh-report" });
     pass("the settings controls preview the selected style, starting level, depth and initial ordinal");
     app.setting.close();
@@ -370,6 +413,34 @@ async function navigationIntegration(app, config) {
       await split.openFile(leaf.view.file, { active: false, state: { mode: "preview" } });
       const peerPrefix = () => split.view.contentEl.querySelector('h3[data-heading="Verification"] ' + prefixClass)?.dataset.prefix;
       await until(() => peerPrefix() === "1.2", "second pane reads the original numbering");
+      ed.setValue(unnumbered.replace("patch-heading-numbering: decimal", "patch-heading-numbering: decimal\nunrelated: keep"));
+      await leaf.view.save();
+      app.setting.open(); app.setting.openTabById("patches");
+      const noteOptions = await openOptions("This note…");
+      noteOptions.querySelector("details").open = true;
+      setField(noteOptions, "First number", "10"); setField(noteOptions, "Starting heading level", "2"); setField(noteOptions, "Maximum depth", "1");
+      const reference = noteOptions.querySelectorAll("details")[1];
+      reference.open = true;
+      assert(reference.querySelector("pre").textContent === "patch-heading-numbering: decimal start=10 level=2 depth=1", "YAML reference did not show a single property");
+      reference.open = false;
+      await shot("numbering-note-settings", noteOptions);
+      await applyOptions(noteOptions);
+      app.setting.close();
+      const currentPrefixes = () => [prefixAt("## Methods"), peerPrefix(), ...Array.from(split.view.contentEl.querySelectorAll('.markdown-reading-view [data-heading] '+prefixClass), item => [item.parentElement.dataset.heading, item.dataset.prefix])];
+      await until(() => prefixAt("## Methods") === "10" && !peerPrefix() && split.view.contentEl.querySelector('h2[data-heading="Methods"] ' + prefixClass)?.dataset.prefix === "10", "both views use the note's starting number and depth").catch(error => { throw new Error(error.message + JSON.stringify(currentPrefixes())); });
+      assert(ed.getValue().includes("unrelated: keep") && plugin().settings.headingNumbering.startAt === 1, "note settings changed other properties or the vault default");
+      app.setting.open(); app.setting.openTabById("patches");
+      const reset = await openOptions("This note…");
+      reset.querySelector("details").open = true;
+      for (const label of ["First number", "Starting heading level", "Maximum depth"]) setField(reset, label, "");
+      await applyOptions(reset);
+      app.setting.close();
+      await until(() => prefixAt("## Methods") === "1" && peerPrefix() === "1.2", "cleared properties inherit the vault values again");
+      assert(ed.getValue().includes("patch-heading-numbering: decimal\n") && !ed.getValue().includes("start=10"), "clearing advanced options did not restore the simple style");
+      const badges = [leaf.view.contentEl.querySelector(".cm-line " + prefixClass), split.view.contentEl.querySelector(".markdown-reading-view " + prefixClass)];
+      assert(badges.every(el => el && getComputedStyle(el).fontWeight === "700"), "open panes use different number weights");
+      pass("number badges stay bold in both open panes with a single note property");
+      pass("note controls persist individual overrides, show their YAML, preserve unrelated properties and restore inheritance in both panes");
       ed.setValue(unnumbered.replace("## Methods", "## Introduction\n## Methods"));
       await leaf.view.save();
       await until(() => prefixAt("Verification") === "2.2" && peerPrefix() === "2.2", "retained heading updates in both panes after a preceding insertion");

@@ -1,6 +1,11 @@
 import { headingText, markdownBlocks } from "../markdown-blocks";
 
 export const NUMBERING_PROPERTY = "patch-heading-numbering";
+const numericOptions = [
+  { key: "startAt", name: "start", min: 1, max: Number.MAX_SAFE_INTEGER },
+  { key: "startLevel", name: "level", min: 0, max: 6 },
+  { key: "maxDepth", name: "depth", min: 1, max: 6 },
+] as const;
 export const PRESETS = { decimal: "Decimal hierarchy", "zh-report": "Chinese report", "en-outline": "English outline", continuous: "Continuous" } as const;
 export type Preset = keyof typeof PRESETS;
 export interface NumberingSettings {
@@ -33,6 +38,56 @@ export function notePreset(settings: NumberingSettings, property: unknown): Pres
   if (property === false || property === "false") return undefined;
   if (isPreset(property)) return property;
   return settings.enabled ? settings.preset : undefined;
+}
+
+export interface NoteOptions {
+  preset?: Preset | false;
+  startAt?: number;
+  startLevel?: number;
+  maxDepth?: number;
+}
+
+export function noteOptions(frontmatter: unknown): NoteOptions {
+  if (!frontmatter || typeof frontmatter !== "object" || Array.isArray(frontmatter)) return {};
+  const values = frontmatter as Record<string, unknown>;
+  const result: NoteOptions = {};
+  const property = values[NUMBERING_PROPERTY];
+  const tokens = typeof property === "string" ? property.trim().split(/\s+/) : [];
+  const style = tokens[0];
+  if (isPreset(style)) result.preset = style;
+  else if (property === false || style === "false") result.preset = false;
+  for (const { key, name, min, max } of numericOptions) {
+    const token = tokens.find(part => part.startsWith(name + "="));
+    // Earlier development builds used one property for each numeric override.
+    const raw = token === undefined ? values[NUMBERING_PROPERTY + "-" + name] : token.slice(name.length + 1);
+    const value = typeof raw === "string" && /^\d+$/.test(raw) ? Number(raw) : raw;
+    const n = integer(value, min, max, -1);
+    if (n >= 0) result[key] = n;
+  }
+  return result;
+}
+
+export function numberingProperty(options: NoteOptions): string | false | undefined {
+  const parts: string[] = [];
+  if (options.preset !== undefined) parts.push(String(options.preset));
+  for (const { key, name } of numericOptions) {
+    if (options[key] !== undefined) parts.push(name + "=" + options[key]);
+  }
+  if (!parts.length) return undefined;
+  return parts.length === 1 && options.preset === false ? false : parts.join(" ");
+}
+
+export function writeNoteOptions(data: Record<string, unknown>, options: NoteOptions): void {
+  const property = numberingProperty(options);
+  if (property === undefined) delete data[NUMBERING_PROPERTY];
+  else data[NUMBERING_PROPERTY] = property;
+  for (const { name } of numericOptions) delete data[NUMBERING_PROPERTY + "-" + name];
+}
+
+export function effectiveNumbering(vault: NumberingSettings, note: NoteOptions): NumberingSettings {
+  const { preset, ...numbers } = note;
+  const style = notePreset(vault, preset);
+  return { ...vault, ...numbers, enabled: style !== undefined, preset: style ?? vault.preset };
 }
 
 export interface Heading { line: number; level: number; title: string; }

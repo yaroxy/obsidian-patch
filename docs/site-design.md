@@ -28,6 +28,7 @@ Build the Community plugin and open the Debian development vault with the **Obsi
 | --- | --- | --- |
 | Navigation | `aligned-headings-reading-light.png` | `heading-number-alignment.png` |
 | Navigation | `aligned-headings-reading-dark.png` | `heading-number-alignment-dark.png` |
+| Navigation | `numbering-note-settings.png` | `heading-numbering-note-settings.png` |
 | Navigation | `numbering-settings.png` | `heading-numbering-settings.png` |
 | Git diff | `layout-wrapped-heading.png` | `active-numbered-heading.png` |
 | Git diff | `change-runs-live-preview.png` | `git-change-runs.png` |

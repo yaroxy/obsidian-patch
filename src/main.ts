@@ -603,7 +603,7 @@ class PatchesSettingTab extends PluginSettingTab {
         () => this.plugin.settings.activeLine, (enabled) => this.plugin.setActiveLine(enabled)),
       this.toggle("Heading levels", "Shows right-aligned H1–H6 labels beside headings in Reading View, Live Preview, and Source mode. Labels are not saved in your notes or included in PDF exports.",
         () => this.plugin.settings.headingLevels, (enabled) => this.plugin.setHeadingLevels(enabled)),
-      { name: "Heading numbering", desc: "Display section numbers in Live Preview and Reading View. A note can choose its own style with the patch-heading-numbering property.",
+      { name: "Heading numbering", desc: "Show section numbers in Live Preview and Reading View. The switch sets the vault default.",
         render: setting => renderNumberingSetting(setting, this.plugin.app, () => this.plugin.settings.headingNumbering,
           value => this.plugin.setHeadingNumbering(value)) },
     ];

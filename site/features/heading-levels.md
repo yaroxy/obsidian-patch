@@ -40,7 +40,30 @@ patch-heading-numbering: decimal
 | `continuous` | 1 Methods → 2 Materials → 3 Results |
 | `false` | Turns numbering off for this note |
 
-A single H1 at the beginning serves as the document title. The first section below it starts at 1. A skipped heading level attaches to the closest preceding higher heading. Code examples, callouts, block quotes and embedded notes do not consume numbers. **Numbering options** sets the starting heading level, maximum depth and first number. The sample updates as you change these settings.
+A single H1 at the beginning serves as the document title. The first section below it starts at 1. A skipped heading level attaches to the closest preceding higher heading. Code examples, callouts, block quotes and embedded notes do not consume numbers. In 0.8.0, **Numbering options** sets the vault-wide starting heading level, maximum depth and first number. The sample updates as you change these settings.
+
+### Per-note numbering options
+
+In the development build, open the note and choose **Settings → Patches → Editor → Heading numbering → This note…**. Pick a style and, if needed, a first number. **Heading level and depth** holds the two less common controls. The preview updates as you edit. Choose **Apply** to save the choices in a single text property. Expand **Note properties (YAML)** to see the exact line.
+
+```yaml
+patch-heading-numbering: decimal start=10
+```
+
+With the sample note above, this displays **10 Methods**, **10.1 Materials** and **11 Results**. For top-level chapters only, use `decimal start=10 level=2 depth=1`.
+
+| Part of the property value | Meaning |
+| --- | --- |
+| Optional style at the beginning | One of `decimal`, `zh-report`, `en-outline`, `continuous` or `false`. A style enables numbering in this note. Omit it to inherit the vault’s style and on/off switch. |
+| `start=10` | Start at 10. Accepts a positive safe integer. Child sections start at 1. |
+| `level=2` | Start at H2. Use 0 for Automatic or 1–6 for H1–H6. |
+| `depth=1` | Number top-level sections only. Accepts 1–6. |
+
+Omit any option to inherit that value. For example, `start=10` alone changes only the starting number. Earlier presets such as `patch-heading-numbering: decimal` continue to work. Notes with separate numeric properties from an earlier development build retain their settings. Editing their note options in the dialog consolidates the values into one property.
+
+![Note options showing a first number of 10, H2 as the starting level and a depth of 1](../../docs/images/heading-numbering-note-settings.png)
+
+In the development build, automatic numbers use bold text on a lightly tinted background with a fine outline. The tint follows the theme accent in light and dark modes. Column widths use the bold face of the vault font.
 
 The fold arrow stays on the leading side of the shaded number, with its own click target. Numbers follow the vault’s text font. Changing that font updates the shared column width. Automatic numbers such as **9**, **10** and **10.1** align at the start of a shared column. Each automatic number has a subtle background that follows your theme and distinguishes it from a number typed into the title. The title and its wrapped lines align in the next column.
 
