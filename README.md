@@ -16,13 +16,13 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## Development preview
+## Preview of 0.8.0
 
-The next update adds display-only section numbers. To try decimal numbering in one note on the development build, add `patch-heading-numbering: decimal` to its properties. Insert a section and the numbers update in both Live Preview and Reading View. Heading links, copied text and the Markdown file keep the original titles. The vault-wide switch starts off. [Four numbering styles and examples](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
+The development build adds display-only section numbers. Add `patch-heading-numbering: decimal` to a note’s properties and headings such as **Methods** and its subsection **Materials** appear as **1 Methods** and **1.1 Materials** in Live Preview and Reading View. Move a section and its numbers update automatically. Heading links, copied text and the Markdown file keep the original titles. Vault-wide numbering starts off. [Try a sample note and compare the four styles](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
 
 ![A narrow reading pane showing sections 9 and 10, their subsections and a wrapped title aligned under its first word](docs/images/heading-number-alignment.png)
 
-Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons will need the corresponding pack installed once from Patch Mermaid settings. [Unreleased changes](CHANGELOG.md#unreleased)
+Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons will need the corresponding pack installed once from Patch Mermaid settings. [0.8.0 release notes](CHANGELOG.md#080---2026-11-25)
 
 ## New in 0.7.0
 

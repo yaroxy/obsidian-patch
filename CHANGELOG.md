@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-25
+
 ### Added
 
 - Display section numbers in Live Preview and Reading View using decimal hierarchy, Chinese report, English outline or continuous numbering. Enable **Editor → Heading numbering** for a vault or choose a preset for one note with `patch-heading-numbering`. The settings preview identifies conflicting handwritten numbers.

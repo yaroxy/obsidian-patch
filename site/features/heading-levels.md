@@ -14,13 +14,23 @@ Reading View, Live Preview, and Source mode. Exported PDFs use the note’s head
 
 ## Heading numbering
 
-The development build can display section numbers in Live Preview and Reading View. Enable **Settings → Patches → Editor → Heading numbering** for the vault, or add the following property to just one note. The vault setting starts off.
+The 0.8.0 release candidate can display section numbers in Live Preview and Reading View. To try it in one note with the default settings, paste this example into an empty note. The vault-wide switch under **Settings → Patches → Editor → Heading numbering** starts off.
 
-```yaml
+```markdown
 ---
 patch-heading-numbering: decimal
 ---
+
+# Lab notes
+
+## Methods
+
+### Materials
+
+## Results
 ```
+
+**Lab notes** stays unnumbered. The sections display as **1 Methods**, **1.1 Materials** and **2 Results**. Move the Results section above Methods and Materials becomes **2.1 Materials**. A link to `[[Lab notes#Materials]]` still works if the file is named `Lab notes.md`.
 
 | Property value | Example sequence |
 | --- | --- |

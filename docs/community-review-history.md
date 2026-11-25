@@ -236,6 +236,10 @@ The maintainer's screenshot identifies a completed Directory branch preview for 
 
 The follow-up narrows parsed YAML, types the desktop Electron interface and creates the detached elements with their owning window’s Obsidian helpers. The settings grid uses `gap`. Live Preview marks visible empty source lines for the heading spacing rule, and the workspace temporarily reserves a 200 px flex basis for an undersized sidebar. Local ESLint with the recommended Obsidian plugin 0.6.0 configuration reported zero errors across 65 TypeScript files and six pre-existing `prefer-active-doc` warnings outside the changed files. The three reported CSS constructs are absent from the plugin stylesheet. The updated commit awaits its own Directory preview.
 
+### 0.8.0 release preparation — 2026-11-25
+
+The candidate on `main` includes the fixes for the preview of `c8f25a5`. The 0.8.0 package passed local release validation and native checks on Debian KDE. Its 5,654,854-byte `main.js` remains above the 5 MB Sync Standard limit. The latest supplied Directory report covers `c8f25a5`. [0.8.0 candidate checks](integration-testing.md#080-community-release-candidate--2026-11-25)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

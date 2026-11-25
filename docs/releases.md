@@ -126,7 +126,9 @@ The installable package consists of `main.js`, `manifest.json`, and `styles.css`
 
 Review the title, installation instructions, supported Obsidian version, tested platforms, and attachment versions before publishing. Use the pre-release option when distributing a preview. Publish a regular release when it is ready for the intended release channel, then update the README download instructions to point to it.
 
-After publishing 0.7.0, use the [prepared forum reply about Git changes and brand icons](forum-git-and-brand-icons.md) in the [existing Patches discussion](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Its screenshots link to the commit that contains the captures. The [directory gallery guide](site-design.md#community-directory-screenshots) lists all five 0.7.0 desktop uploads in order.
+After publishing 0.8.0, use the [prepared forum reply about heading numbers](forum-heading-numbering.md) in the [existing Patches discussion](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). It includes a sample note and a screenshot pinned to its source commit.
+
+For 0.7.0, see the [prepared forum reply about Git changes and brand icons](forum-git-and-brand-icons.md) in the [existing Patches discussion](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Its screenshots link to the commit that contains the captures. The [directory gallery guide](site-design.md#community-directory-screenshots) lists all five 0.7.0 desktop uploads in order.
 
 Full remains available through the separate `codex/full` branch and its source-build instructions. The standard release attachments always contain the community build, so Community Directory installation cannot accidentally receive the full build.
 

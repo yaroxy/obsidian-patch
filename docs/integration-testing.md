@@ -57,6 +57,12 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## 0.8.0 Community release candidate — 2026-11-25
+
+The Community candidate uses the plugin source at `14b3ed9ac9e42338ad97bbaf5ed6073d66d048ab` with the 0.8.0 release metadata. All 185 unit tests, the production build and the package check with `--tag=0.8.0` passed. The built `main.js` measures 5,654,854 bytes and its SHA-256 is `b0aa2179e7a7719766d3c3ac62437451bf6d71300e1dca676c06c58fbac9c487`.
+
+On Debian KDE with Obsidian 1.15.1, the development vault passed 42 navigation checks, six PDF comparisons, 68 Git checks and 35 Mermaid checks. The Mermaid suite installed both icon packs from jsDelivr. All three suites restored their session state. This run covered the Community desktop changes. Other native suites, mobile, Windows, macOS and the Full distribution were outside its scope.
+
 ## Heading numbering Directory preview follow-up — 2026-11-25
 
 On Debian KDE the development vault passed 42 navigation checks, six PDF comparisons and 68 Git gutter checks. The Live Preview fixture kept zero padding between headings separated by one empty line, gained balanced spacing when that line contained prose and restored compact spacing on undo. The settings preview retained its aligned number column. The asymmetric sidebar fixture again measured 200, 500 and 200 px inside a 968 px window with theme gaps. Both native suites restored the session. All 185 unit tests, the production build, release validation and documentation checks passed.

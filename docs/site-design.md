@@ -35,7 +35,7 @@ Build the Community plugin and open the Debian development vault with the **Obsi
 
 Inspect each PNG at its original size before copying it. Check that the wrapped title lines up, the Git bars span consecutive lines and the controls named in the caption are visible. The README, feature guides and homepage import the images from this directory. Build and check the site after replacing them.
 
-The [heading numbering forum reply](forum-heading-numbering.md) is written as a development preview for the [existing Patches topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). After pushing the images and deploying Pages, pin the draft’s raw image URL to the pushed commit and check the guide link in the forum composer preview.
+The [heading numbering forum reply](forum-heading-numbering.md) is ready to post after 0.8.0 is published in the [existing Patches topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). Its screenshot URL points to the commit containing the published capture. When replacing the image, pin the new URL to its pushed commit. Check the image and guide link in the forum composer preview before posting.
 
 ## Community Directory screenshots
 
