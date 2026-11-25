@@ -6,6 +6,7 @@ Patches requires **Obsidian 1.15.0 or later**. Features apply to the places desc
 | --- | --- | --- | --- |
 | Active line | — | Yes | Yes |
 | Heading labels | Yes | Yes | Yes |
+| Section numbering (development build) | Yes | Yes | Original titles |
 | Readable line width | Yes | Yes | Yes |
 | Banners | Yes | Yes | — |
 | Callout code backgrounds | Yes | Yes | — |

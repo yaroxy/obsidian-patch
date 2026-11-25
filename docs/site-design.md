@@ -10,7 +10,7 @@ The site uses VitePress 1.6.4, with a scoped override to Vite 6.4.5 because the 
 
 ## Content
 
-The homepage and README share a real travel-note capture combining the existing autumn cover, a merged itinerary table, and a tinted code block inside a callout. The homepage also has a button-controlled demo gallery for Git change markers, callout brand icons, and installed table code fonts, followed by three workflow groups. Guides explain the feature, show its result, give usable examples, and state settings and limitations. Navigation groups writing/editing, note appearance, and rendering/export. The reference section documents note properties, commands, view/platform scope, and CSS variables. Troubleshooting collects recurring questions without duplicating full guides.
+The homepage and README share a real travel-note capture combining the existing autumn cover, a merged itinerary table, and a tinted code block inside a callout. The homepage also has a button-controlled demo gallery for heading numbers, Git change markers, callout brand icons, and installed table code fonts, followed by three workflow groups. Guides explain the feature, show its result, give usable examples, and state settings and limitations. Navigation groups writing/editing, note appearance, and rendering/export. The reference section documents note properties, commands, view/platform scope, and CSS variables. Troubleshooting collects recurring questions without duplicating full guides.
 
 Markdown pages reference the original images in `docs/images/`; Vite processes these shared files into site assets. `scripts/prepare-site.mjs` copies the two downloadable examples into the ignored `site/public/examples/` directory. The changelog page includes the root `CHANGELOG.md`, which remains the single source of release notes. Local browser search is enabled; no analytics or remote search provider is configured. Fonts are shipped by the VitePress theme rather than requested from a remote font service.
 
@@ -19,6 +19,23 @@ The README and homepage highlight the 0.7.0 Git, icon and font features. The [ta
 The [watchlist conversion](../site/features/tables.md#convert-an-html-table-to-markdown) and [callout appearance](../site/features/callouts.md#type-appearance) screenshots come from the release candidate on Debian with Obsidian 1.15.1. The movie examples use a temporary note in the development vault. The table preview repeats the merged Friday cell for both films. The WATCHLIST callout uses the Lucide clapperboard icon and color `#327771`.
 
 The [callout appearance recording](images/callout-type-appearance.gif) follows the same example in Patches 0.6.0 on Debian with Obsidian 1.15.1. It shows where to open Customize, how to find the icon and apply a color, and what the result looks like in the note. The feature guide displays a still of the result when the browser requests reduced motion.
+
+## Refresh the editor preview images
+
+Build the Community plugin and open the Debian development vault with the **Obsidian (Patches Dev)** launcher. Run the navigation and Git suites sequentially with the absolute dev-vault path. Both commands deploy the build and use temporary notes. The navigation suite also needs Python with `pypdf` and `pdfplumber`. Each runner prints its own output directory. [Runner commands and prerequisites](integration-testing.md#running)
+
+| Runner | PNG in the successful run | Destination in `docs/images/` |
+| --- | --- | --- |
+| Navigation | `aligned-headings-reading-light.png` | `heading-number-alignment.png` |
+| Navigation | `aligned-headings-reading-dark.png` | `heading-number-alignment-dark.png` |
+| Navigation | `numbering-settings.png` | `heading-numbering-settings.png` |
+| Git diff | `layout-wrapped-heading.png` | `active-numbered-heading.png` |
+| Git diff | `change-runs-live-preview.png` | `git-change-runs.png` |
+| Git diff | `note-git-gutter.png` | `note-git-gutter.png` |
+
+Inspect each PNG at its original size before copying it. Check that the wrapped title lines up, the Git bars span consecutive lines and the controls named in the caption are visible. The README, feature guides and homepage import the images from this directory. Build and check the site after replacing them.
+
+The [heading numbering forum reply](forum-heading-numbering.md) is written as a development preview for the [existing Patches topic](https://forum.obsidian.md/t/patches-focused-fixes-and-enhancements-for-everyday-obsidian-use/121923). After pushing the images and deploying Pages, pin the draft’s raw image URL to the pushed commit and check the guide link in the forum composer preview.
 
 ## Community Directory screenshots
 

@@ -30,6 +30,17 @@ await runIntegration({ name: "navigation", folder: "Patch Navigation Tests",
       "## Repeat", "", "Second repeated heading.", "",
     ));
     writeFileSync(join(folder, "Other.md"), "# Target Heading\n\nThis is another note.\n");
+    writeFileSync(join(folder, "Numbering.md"), lines(
+      "---", "patch-heading-numbering: decimal", "---", "# Report", "", "[[#Methods]]", "",
+      "## Methods", "#### Materials", "### Verification", "### 1.3 Existing", "## Methods", "",
+      "Setext detail", "-------------", "", "> ### Quoted", "", "```md", "# Example", "```", "",
+      "![[Numbering embed]]", "", ...Array.from({ length: 160 }, (_, i) => "Paragraph " + i + "."), "", "## Far away", "",
+    ));
+    writeFileSync(join(folder, "Numbering embed.md"), lines("---", "patch-heading-numbering: en-outline", "---", "## Embedded section", ""));
+    writeFileSync(join(folder, "Linked headings.md"), lines("---", "patch-heading-numbering: decimal", "---",
+      "## [[Other|1 方法]]", "", "## [2 结果][ref]", "", "## 讨论", "", "[ref]: Other.md", ""));
+    writeFileSync(join(folder, "Number columns.md"), lines("# 章节", "", "正文", "", "## 方法概述", "### 数据来源", "## 结果分析",
+      "#### 复核步骤与异常情况的记录方式，以及再次执行实验时需要核实的条件", ""));
   },
   verify({ output }) {
     const python = process.env.PDF_PYTHON ?? "python3";

@@ -55,10 +55,13 @@ export function validateMermaidInputs(metafile, target) {
   const inputs = Object.keys(metafile.inputs).map(path => path.replaceAll("\\", "/"));
   const remote = inputs.some(path => /src\/features\/mermaid-runtime\/(?:full|remote)\.ts$/.test(path));
   if (remote) throw new Error("Community build includes the remote Mermaid loader");
+  if (inputs.some(path => /@iconify-json\/(?:logos|material-icon-theme)\/icons\.json$/.test(path))) {
+    throw new Error("Mermaid icon data must be installed separately from main.js");
+  }
 }
 
 export function sourceHashes(root, metafile) {
-  const paths = new Set(["manifest.json", "styles.css", "package.json", "package-lock.json", "versions.json", "esbuild.config.mjs", "scripts/lib/build-compression.mjs", "scripts/lib/release-validation.mjs"]);
+  const paths = new Set(["manifest.json", "styles.css", "package.json", "package-lock.json", "versions.json", "esbuild.config.mjs", "scripts/lib/mermaid-icon-packs.mjs", "scripts/lib/release-validation.mjs"]);
   for (const input of Object.keys(metafile.inputs)) {
     const path = relative(root, resolve(root, input)).replaceAll("\\", "/");
     if (!path.startsWith("../") && !isAbsolute(path) && !path.startsWith("node_modules/") && existsSync(join(root, path))) paths.add(path);

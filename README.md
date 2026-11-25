@@ -16,6 +16,14 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
+## Development preview
+
+The next update adds display-only section numbers. To try decimal numbering in one note on the development build, add `patch-heading-numbering: decimal` to its properties. Insert a section and the numbers update in both Live Preview and Reading View. Heading links, copied text and the Markdown file keep the original titles. The vault-wide switch starts off. [Four numbering styles and examples](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
+
+![A narrow reading pane showing sections 9 and 10, their subsections and a wrapped title aligned under its first word](docs/images/heading-number-alignment.png)
+
+Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons will need the corresponding pack installed once from Patch Mermaid settings. [Unreleased changes](CHANGELOG.md#unreleased)
+
 ## New in 0.7.0
 
 - Desktop vaults inside a Git working tree automatically show change markers in visible Markdown editors. Click a marker or run **View Git diff for this note** to compare the last commit with your current edits. **Toggle Git change markers for this vault** controls the gutter across the vault. [Git diff guide](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git)
@@ -31,14 +39,14 @@ Find appearance and editing options under **Settings → Patches**, and Git comm
 - **Callouts**
   - [Edit, preview, and unwrap callouts](https://yaroxy.github.io/obsidian-patch/features/callouts.html). Set icons and colors by type, tint code backgrounds, and [check folders for GitHub compatibility](https://yaroxy.github.io/obsidian-patch/features/callouts.html#github-folders).
 - **Editor**
-  - [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) marks the current line in the margin and highlights its line number.
-  - [Show H1–H6 labels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) beside headings in reading and editing views.
+  - [Active line](https://yaroxy.github.io/obsidian-patch/features/active-line.html) marks the current line in the margin and highlights its line number. In a Git vault, consecutive additions or edits form a continuous colored bar beside it.
+  - [Show H1–H6 labels](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html) beside the first line of each heading. Live Preview shares the extra heading space evenly above and below the text.
 - **Git on desktop**
   - [Compare edits with the last commit](https://yaroxy.github.io/obsidian-patch/reference/commands.html#compare-a-note-with-git), including unsaved text. Click a margin marker to open that change.
 - **HTML Tables**
   - [Convert between Markdown and HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html). Edit merged cells and captions, and choose a font for inline code in HTML cells.
 - **Line Width**
-  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note.
+  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note. In the development build, Line Width also keeps at least 500 px between the sidebars when resizing the desktop window.
 - **Math Format**
   - [Indent and align display formulas](https://yaroxy.github.io/obsidian-patch/features/math-format.html).
 - **Patch Banner**
@@ -58,7 +66,9 @@ Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Di
 2. Search for **Patches**, then select **Install** and **Enable**.
 3. Open **Settings → Patches** to choose your settings.
 
-With Obsidian Sync Standard, install Patches on each device. Its bundled diagram renderer and icon packs make `main.js` larger than the plan’s 5 MB per-file limit.
+With Obsidian Sync Standard, install Patches on each device. Its bundled diagram renderer makes `main.js` larger than the plan’s 5 MB per-file limit.
+
+In the development build, diagrams using `logos:` or `material-icon-theme:` icons need a download under **Settings → Patches → Patch Mermaid → Install** once per pack version. Published 0.7.0 includes both packs.
 
 For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 
@@ -78,7 +88,7 @@ Other notes keep their global width. See [note properties](https://yaroxy.github
 
 ## Network and privacy
 
-The Community build runs its bundled Mermaid code locally. In 0.7.0, selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from **jsDelivr**. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
+The Community build runs its bundled Mermaid code locally. The development build downloads version-pinned diagram icon JSON from **jsDelivr** when you install a pack or repair a damaged copy. Installed packs load locally. In 0.7.0, selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from the same service. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
 
 The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 

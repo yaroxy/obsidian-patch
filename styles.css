@@ -131,14 +131,18 @@ body {
  * text edge. It fades in unfocused editors, so every split still shows its
  * cursor's line while only the focused one is drawn in full.
  *
- * The 18 px gap between bar and text clears the fold arrows that headings and
- * list items show on hover. Quote lines draw their border with ::before, so the
+ * The native folding offset reserves space for heading and list fold arrows.
+ * Quote lines draw their border with ::before, so the
  * bar uses ::after. Table cells open a nested editor whose lines sit outside
  * .cm-contentContainer, so they get no bar.
  */
 
 body {
   --obsidian-patch-active-line-color: var(--caret-color, var(--text-normal));
+  --obsidian-patch-rail-width: 0.1875rem;
+  --obsidian-patch-rail-gap: 0.25rem;
+  --obsidian-patch-rail-inset: 0.18lh;
+  --obsidian-patch-heading-gap: 0.5rem;
 }
 
 .obsidian-patch-active-line
@@ -148,10 +152,13 @@ body {
   > .cm-line.cm-active::after {
   content: "";
   position: absolute;
-  inset-block: 0.25em;
-  inset-inline-start: -21px;
-  inline-size: 3px;
-  border-radius: 3px;
+  inset-block: var(--obsidian-patch-rail-inset);
+  inset-inline-start: calc(var(--obsidian-patch-rail-width) - var(--file-folding-offset, 1.5rem));
+  inline-size: var(--obsidian-patch-rail-width);
+  /* Obsidian adds spacing inside some lines, especially above Live Preview headings. */
+  padding-block: inherit;
+  background-clip: content-box;
+  border-radius: var(--obsidian-patch-rail-width);
   background-color: color-mix(in oklch, var(--obsidian-patch-active-line-color) 40%, transparent);
   pointer-events: none;
 }
@@ -179,17 +186,49 @@ body {
 }
 
 /* Heading levels: visual labels, separate from the document text and fold controls. */
+/* Resolve the heading's line height before passing it to smaller labels. */
+@property --obsidian-patch-heading-row-height {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@media screen {
+  /* Split Obsidian's heading gap. Its blank-line exception already has zero gap. */
+  .markdown-source-view.is-live-preview .cm-content > .cm-line.HyperMD-header:where(
+    .obsidian-patch-active-line *, .obsidian-patch-heading-levels *, .obsidian-patch-heading-number-line
+  ):not(:where(.HyperMD-quote, .HyperMD-list-line, .HyperMD-codeblock,
+    .HyperMD-header + .cm-line:has(> br:only-child) + .HyperMD-header)) {
+    padding-block: calc(var(--p-spacing) / 2);
+  }
+
+  /* Reading View adds an extra outer margin after prose, quotes and lists. */
+  .markdown-reading-view .markdown-preview-section > :is(.el-p, .el-pre, .el-table, .el-ul, .el-ol, .el-blockquote)
+    + div > :is(h1, h2, h3, h4, h5, h6):where(.obsidian-patch-heading-levels *, .obsidian-patch-heading-number-line) {
+    margin-block: calc((var(--heading-spacing) + var(--p-spacing)) / 2);
+  }
+}
+
 .obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6),
 .obsidian-patch-heading-levels .markdown-source-view.mod-cm6 .cm-line.HyperMD-header {
+  --obsidian-patch-heading-row-height: 1lh;
   position: relative;
-  padding-inline-end: 2.75rem;
+  padding-inline-end: calc(2rem + var(--obsidian-patch-heading-gap));
+}
+
+/* CodeMirror's invisible cursor buffers must fit inside the first visual row. */
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-header:where(.obsidian-patch-heading-levels *, .obsidian-patch-heading-number-line) > .cm-widgetBuffer {
+  vertical-align: top;
 }
 
 .obsidian-patch-heading-level,
 .obsidian-patch-heading-levels .markdown-rendered :is(h1, h2, h3, h4, h5, h6)::after {
   position: absolute;
   inset-inline-end: 0;
-  inset-block: 0;
+  inset-block-start: 0;
+  box-sizing: content-box;
+  padding-block-start: inherit;
+  block-size: var(--obsidian-patch-heading-row-height);
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
@@ -209,6 +248,102 @@ body {
 .obsidian-patch-heading-levels .markdown-rendered h4::after { content: "H4"; }
 .obsidian-patch-heading-levels .markdown-rendered h5::after { content: "H5"; }
 .obsidian-patch-heading-levels .markdown-rendered h6::after { content: "H6"; }
+
+.obsidian-patch-heading-number {
+  display: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+@media screen {
+  .markdown-reading-view .obsidian-patch-heading-number-line,
+  .markdown-source-view.is-live-preview .cm-content > .cm-line.obsidian-patch-heading-number-line,
+  .obsidian-patch-heading-number-preview .obsidian-patch-heading-number-line {
+    --obsidian-patch-heading-row-height: 1lh;
+    --obsidian-patch-heading-number-padding: 0.3rem;
+    --obsidian-patch-heading-number-column: min(calc(var(--obsidian-patch-heading-number-width) + 2 * var(--obsidian-patch-heading-number-padding)), 9rem, 30vw);
+    --obsidian-patch-heading-number-indent: calc(var(--obsidian-patch-heading-number-column) + var(--obsidian-patch-heading-gap));
+    padding-inline-start: var(--obsidian-patch-heading-number-indent);
+  }
+
+  .markdown-reading-view .obsidian-patch-heading-number-line,
+  .markdown-source-view.is-live-preview .cm-line.obsidian-patch-heading-number-line {
+    position: relative;
+  }
+  .markdown-reading-view .obsidian-patch-heading-number-line > .heading-collapse-indicator {
+    inset-inline-end: 100%;
+    inset-inline-start: auto;
+    margin-inline-start: 0;
+  }
+  .markdown-source-view.is-live-preview .cm-line.obsidian-patch-heading-number-line > .cm-fold-indicator {
+    position: absolute;
+    inset-inline-start: 0;
+    inline-size: 0;
+  }
+
+  .markdown-reading-view .obsidian-patch-heading-number,
+  .markdown-source-view.is-live-preview .cm-line .obsidian-patch-heading-number,
+  .obsidian-patch-heading-number-preview .obsidian-patch-heading-number {
+    display: inline-block;
+    box-sizing: border-box;
+    inline-size: var(--obsidian-patch-heading-number-column);
+    margin-inline-start: calc(0px - var(--obsidian-patch-heading-number-indent));
+    margin-inline-end: var(--obsidian-patch-heading-gap);
+    padding-inline: var(--obsidian-patch-heading-number-padding);
+    border-radius: var(--radius-s);
+    background-color: color-mix(in srgb, var(--text-normal) 12%, var(--background-primary));
+    color: var(--text-normal);
+    text-align: start;
+    font-family: var(--font-text);
+    font-size: var(--font-text-size, 1rem);
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1.35;
+    vertical-align: top;
+    margin-block-start: max(0px, calc((var(--obsidian-patch-heading-row-height) - 1lh) / 2));
+    letter-spacing: normal;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    unicode-bidi: isolate;
+  }
+
+  .obsidian-patch-heading-number::before { content: attr(data-prefix); }
+  :is(.markdown-embed, .internal-embed, .print) .obsidian-patch-heading-number { display: none; }
+
+  .obsidian-patch-heading-number-preview {
+    display: grid;
+    grid-template-columns: fit-content(9rem) 1fr;
+    column-gap: var(--obsidian-patch-heading-gap);
+  }
+  .obsidian-patch-heading-number-preview > div { grid-column: 1 / -1; }
+  .obsidian-patch-heading-number-preview .obsidian-patch-heading-number-line {
+    display: grid;
+    grid-template-columns: subgrid;
+    padding-inline-start: 0;
+  }
+  .obsidian-patch-heading-number-preview .obsidian-patch-heading-number {
+    inline-size: auto;
+    align-self: start;
+    margin-inline: 0;
+  }
+}
+
+.obsidian-patch-heading-number-preview {
+  margin-block: var(--size-4-2);
+  padding-inline-start: var(--size-4-2);
+  border-inline-start: 2px solid var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.obsidian-patch-heading-number-options { margin-block-start: var(--size-4-2); }
+.obsidian-patch-heading-number-options label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--size-4-2);
+  margin-block-start: var(--size-4-2);
+}
+.obsidian-patch-heading-number-options input { inline-size: 6em; }
 
 .print .obsidian-patch-heading-level { display: none; }
 @media print {
@@ -661,6 +796,26 @@ body {
 
 /* Line Width */
 
+/* The root split alone gets the floor. Its own split panes can stay narrower. */
+.workspace.obsidian-patch-line-width-workspace > .workspace-split.mod-root {
+  flex: 1 0 500px;
+  min-inline-size: 500px;
+}
+
+.workspace.obsidian-patch-line-width-workspace > .mod-sidedock:not(.is-sidedock-collapsed) {
+  flex-shrink: 1;
+}
+
+/* Obsidian clamps both native sidebar handles to 200px. Allow wider theme minima. */
+:where(.obsidian-patch-line-width-workspace > .mod-sidedock:not(.is-sidedock-collapsed)) {
+  min-inline-size: 200px;
+}
+
+/* Applied only if the active theme sets an expanded dock below the native floor. */
+.workspace.obsidian-patch-line-width-workspace > .mod-sidedock.obsidian-patch-line-width-sidebar-floor:not(.is-sidedock-collapsed) {
+  min-width: 200px !important;
+}
+
 .setting-item-control input.obsidian-patch-line-width-input {
   width: 6em;
   font-variant-numeric: tabular-nums;
@@ -1107,13 +1262,41 @@ body .callout[data-callout].obsidian-patch-callout-type-color {
 .obsidian-patch-git-line[data-change="+"] { background: color-mix(in srgb, var(--color-green) 15%, transparent); }
 
 .cm-editor.obsidian-patch-git-enabled .cm-gutters { display: flex; }
-.cm-gutter.obsidian-patch-git-gutter { width: 10px; cursor: pointer; }
+.cm-editor.obsidian-patch-git-enabled .cm-lineNumbers .cm-gutterElement {
+  padding-inline-end: var(--obsidian-patch-rail-width);
+}
+.cm-gutter.obsidian-patch-git-gutter {
+  order: 1;
+  inline-size: calc(2 * var(--obsidian-patch-rail-gap) + var(--obsidian-patch-rail-width));
+  cursor: pointer;
+}
 .obsidian-patch-git-gutter .cm-gutterElement { position: relative; width: 100%; }
-.obsidian-patch-git-mark { position: absolute; inset-block: 0; inset-inline-start: 3px; width: 3px; }
+.obsidian-patch-git-mark {
+  position: absolute;
+  inset-inline-start: var(--obsidian-patch-rail-gap);
+  inline-size: var(--obsidian-patch-rail-width);
+  inset-block-start: calc(var(--obsidian-patch-git-row-start, 0px) + var(--obsidian-patch-rail-inset));
+  inset-block-end: calc(var(--obsidian-patch-git-row-end, 0px) + var(--obsidian-patch-rail-inset));
+  border-radius: var(--obsidian-patch-rail-width);
+}
 .obsidian-patch-git-mark[data-kind="added"] { background-color: var(--color-green); }
 .obsidian-patch-git-mark[data-kind="modified"] { background-color: var(--color-blue); }
+.obsidian-patch-git-mark.is-joined-start {
+  inset-block-start: var(--obsidian-patch-git-row-start, 0px);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+.obsidian-patch-git-mark.is-joined-end {
+  inset-block-end: var(--obsidian-patch-git-row-end, 0px);
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
 .obsidian-patch-git-mark[data-kind="deleted"] {
-  inset-block: 0 auto; inset-inline-start: 1px; width: 0; height: 0;
-  border-block: 4px solid transparent; border-inline-start: 7px solid var(--color-red);
+  --obsidian-patch-git-delete-width: 0.4375rem;
+  inset-block: 0 auto;
+  inset-inline-start: calc(50% - var(--obsidian-patch-git-delete-width) / 2);
+  width: 0; height: 0;
+  border-radius: 0;
+  border-block: 0.25rem solid transparent; border-inline-start: var(--obsidian-patch-git-delete-width) solid var(--color-red);
 }
 .obsidian-patch-git-mark[data-kind="deleted"].is-at-end { inset-block: auto 0; }

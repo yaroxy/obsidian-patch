@@ -41,6 +41,7 @@
   const button = name => [...el().querySelectorAll("button")].find(b => b.textContent === name);
   const editor = () => leaf.view.contentEl.querySelector(".cm-editor");
   const marks = () => [...(editor()?.querySelectorAll(".obsidian-patch-git-mark") ?? [])];
+  const markFor = row => row && marks().find(el => Math.abs(el.parentElement.getBoundingClientRect().top - row.getBoundingClientRect().top) < 1);
   const showEditor = async () => {
     await app.workspace.revealLeaf(leaf);
     app.workspace.setActiveLeaf(leaf, { focus: true });
@@ -50,6 +51,57 @@
     const rect = { x: Math.ceil(bounds.x), y: Math.ceil(bounds.y), width: Math.floor(bounds.width), height: Math.floor(bounds.height) };
     const image = await require("electron").remote.getCurrentWebContents().capturePage(rect);
     fs.writeFileSync(join(context.output, name), image.toPNG());
+    return { image, rect };
+  };
+  const measureActiveLine = async (line, filename) => {
+    const box = line.getBoundingClientRect(), css = getComputedStyle(line), bar = getComputedStyle(line, "::after");
+    const paddingTop = parseFloat(css.paddingTop), paddingBottom = parseFloat(css.paddingBottom);
+    const barX = box.left + parseFloat(bar.left) + parseFloat(bar.width) / 2;
+    const lineHeight = parseFloat(css.lineHeight);
+    const { image, rect } = await capture({ x: editor().querySelector(".cm-gutters").getBoundingClientRect().left - 4,
+      y: box.top - 16, width: 250, height: box.height + 40 }, filename);
+    const after = line.getBoundingClientRect();
+    if (box.top !== after.top || box.left !== after.left || box.height !== after.height) return;
+    const pixels = image.resize({ width: rect.width, height: rect.height }).toBitmap({ scaleFactor: 1 });
+    const x = Math.floor(barX - rect.x);
+    const painted = [];
+    for (let y = Math.ceil(box.top) - rect.y; y < Math.floor(box.bottom) - rect.y; y++) {
+      // Compare the middle of the bar with the adjacent empty margin in the same row.
+      const pixel = (y * rect.width + x) * 4, margin = pixel + 4 * 4;
+      if ([0, 1, 2].some(c => Math.abs(pixels[pixel + c] - pixels[margin + c]) > 30)) painted.push(y);
+    }
+    if (!painted.length) return;
+    return {
+      paddingTop, paddingBottom, lineHeight, paintedHeight: painted.at(-1) - painted[0] + 1,
+      paintedTop: rect.y + painted[0], paintedBottom: rect.y + painted.at(-1) + 1,
+      centerOffset: rect.y + (painted[0] + painted.at(-1) + 1) / 2 - (box.top + paddingTop + box.bottom - paddingBottom) / 2,
+    };
+  };
+  const checkHeadingLayout = async (row, kind, measurement) => {
+    const bounds = row.getBoundingClientRect();
+    const marker = markFor(row);
+    const num = editor().querySelector(".cm-lineNumbers .cm-active");
+    assert(marker, "Visible heading has no corresponding Git mark");
+    const firstTextRect = el => {
+      const range = document.createRange(); range.selectNodeContents(el); return range.getClientRects()[0];
+    };
+    const title = firstTextRect(row.querySelector(".cm-header:not(.cm-formatting)"));
+    const lineNumber = firstTextRect(num), level = firstTextRect(row.querySelector(".obsidian-patch-heading-level"));
+    const badge = row.querySelector(".obsidian-patch-heading-number").getBoundingClientRect();
+    const git = marker.getBoundingClientRect(), bar = getComputedStyle(row, "::after");
+    const barLeft = bounds.left + parseFloat(bar.left);
+    const center = box => box.top + box.height / 2;
+    const labelOffsets = [lineNumber, badge, level].map(box => center(box) - center(title));
+    const edges = [git.top - measurement.paintedTop, git.bottom - measurement.paintedBottom];
+    const gaps = [git.left - lineNumber.right, barLeft - git.right];
+    report.headingLayout ??= {};
+    report.headingLayout[kind] = { labelOffsets, edges, gaps, height: bounds.height, padding: getComputedStyle(row).paddingTop };
+    assert(labelOffsets.every(offset => Math.abs(offset) <= 2), "Heading labels differ from the first row: " + labelOffsets);
+    assert(edges.every(edge => Math.abs(edge) <= 1), "Git rail differs from the active rail: " + edges + " " + marker.outerHTML);
+    assert(gaps.every(gap => gap > 0) && Math.abs(gaps[0] - gaps[1]) <= 1, "Uneven rail gaps beside the line number: " + gaps);
+    assert(barLeft + parseFloat(bar.width) < badge.left && badge.right <= title.left && title.right <= level.left, "Heading columns overlap");
+    const left = Math.floor(lineNumber.left - 6);
+    await capture({ x: left, y: bounds.top - 4, width: bounds.right - left + 6, height: bounds.height + 8 }, "layout-" + kind + ".png");
   };
   try {
     await app.vault.createFolder(folder);
@@ -108,6 +160,53 @@
     await showEditor();
     app.vault.setConfig("showLineNumber", true);
     await app.plugins.plugins.patches.setActiveLine(true);
+    const runLines = ["准备投影设备。", "### 核对片单", "检查字幕时间轴。", "### 补充记录", "记录本次放映时间。", "保存复核结果。"];
+    const runText = baseline.replace("Bring the projector.\nCharge the speakers.\nCheck the subtitles.", runLines.join("\n")).replace("8 pm", "9 pm");
+    const firstRunLine = runText.split("\n").indexOf(runLines[0]) + 1;
+    for (const source of [true, false]) {
+      const mode = source ? "source" : "live-preview";
+      await leaf.openFile(file, { state: { mode: "source", source } });
+      assert(editor().closest(".markdown-source-view").classList.contains("is-live-preview") === !source, "Wrong editor mode for " + mode);
+      leaf.view.editor.setValue(runText);
+      leaf.view.editor.setCursor({ line: firstRunLine, ch: 5 });
+      await until(() => marks().length === 7 && marks()[5].dataset.kind === "added", mode + ": adjacent modified and added runs are visible");
+      await wait(150);
+      const boxes = marks().map(mark => mark.getBoundingClientRect());
+      const left = editor().querySelector(".cm-gutters").getBoundingClientRect().left - 4;
+      const { image, rect } = await capture({ x: left, y: boxes[0].top - 4, width: 290, height: boxes[6].bottom - boxes[0].top + 8 }, "change-runs-" + mode + ".png");
+      const bitmap = image.resize({ width: rect.width, height: rect.height }).toBitmap({ scaleFactor: 1 });
+      const seams = [];
+      for (const start of [0, 3]) {
+        const group = boxes.slice(start, start + 3);
+        seams.push(group[1].top - group[0].bottom, group[2].top - group[1].bottom);
+        const x = Math.floor(group[0].left + group[0].width / 2) - rect.x;
+        const y1 = Math.ceil(group[0].top) + 2 - rect.y, y2 = Math.floor(group[2].bottom) - 2 - rect.y;
+        const offset = y => (y * rect.width + x) * 4;
+        const first = offset(y1);
+        assert([0, 1, 2].some(c => Math.abs(bitmap[first + c] - bitmap[first + 16 + c]) > 30), mode + ": the rail is not visible");
+        for (let y = y1; y <= y2; y++) {
+          assert([0, 1, 2].every(c => Math.abs(bitmap[offset(y) + c] - bitmap[first + c]) <= 12),
+            mode + ": a gap is painted inside the " + marks()[start].dataset.kind + " run; row gaps in pixels: " + seams);
+        }
+      }
+      assert(seams.every(gap => Math.abs(gap) <= 0.1), mode + ": Git run segments are separated by " + seams);
+      assert(boxes[3].top > boxes[2].bottom && boxes[6].top > boxes[5].bottom, mode + ": change type or unchanged line failed to separate runs");
+      report.checks.push(mode + ": continuous blue and green pixels span three lines each, with separate change boundaries");
+      if (!source) {
+        const editor = leaf.view.editor, middle = { line: firstRunLine, ch: 0 };
+        editor.replaceRange("Charge the speakers.", middle, { line: middle.line, ch: runLines[1].length });
+        await until(() => marks().length === 6 && !marks().some(mark => Number(mark.dataset.gitLine) === firstRunLine + 1)
+          && !marks()[0].classList.contains("is-joined-end"), "restoring an unchanged line splits a blue run");
+        editor.undo();
+        await until(() => marks().length === 7 && marks()[1].matches(".is-joined-start.is-joined-end"), "undo reconnects the three modified lines");
+        const inside = marks()[4], box = inside.getBoundingClientRect();
+        inside.dispatchEvent(new MouseEvent("mousedown", { button: 0, bubbles: true, cancelable: true,
+          clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }));
+        await until(() => app.workspace.activeLeaf === diffLeaf && regions()[1]?.textContent.includes(runLines[4]), "clicking inside a joined green run opens its diff");
+        await showEditor();
+      }
+    }
+    await leaf.openFile(file, { state: { mode: "source", source: true } });
     const mixed = current.replace("- Spirited Away", "- Spirited Away\n- Paprika").replace("Charge the speakers.\n", "");
     leaf.view.editor.setValue(mixed);
     leaf.view.editor.setCursor({ line: 3, ch: 8 });
@@ -121,12 +220,104 @@
     assert(entry.right <= activeX || entry.left >= activeX + parseFloat(activeBar.width), "Active and Git line indicators overlap");
     const tint = kind => getComputedStyle(marks().find(mark => mark.dataset.kind === kind)).backgroundColor;
     assert(tint("added") !== tint("modified") && tint("modified") !== "rgba(0, 0, 0, 0)", "Git addition and modification colors are indistinguishable");
+    const deletion = marks().find(mark => mark.dataset.kind === "deleted");
+    const triangle = deletion.getBoundingClientRect(), cell = deletion.parentElement.getBoundingClientRect();
+    assert(Math.abs(triangle.left + triangle.width / 2 - cell.left - cell.width / 2) < 1, "Deletion triangle is off the Git column center");
     report.checks.push("the active-line bar is visible separately from the colored Git gutter");
     const codeRect = editor().querySelector(".cm-content").getBoundingClientRect();
     const lineNumbers = editor().querySelector(".cm-lineNumbers").getBoundingClientRect();
     const left = Math.floor(Math.min(lineNumbers.left, entry.left) - 6);
     const lines = [...editor().querySelectorAll(".cm-content > .cm-line")];
     await capture({ x: left, y: lines[0].getBoundingClientRect().top - 4, width: Math.min(570, editor().getBoundingClientRect().right - left), height: Math.min(codeRect.height, lines.at(-1).getBoundingClientRect().bottom - lines[0].getBoundingClientRect().top + 8) }, "note-git-gutter.png");
+    const { samples, fixtureLines } = context.options;
+    const headingFile = await app.vault.create(folder + "/Headings.md", fixtureLines.join("\n"));
+    await app.plugins.plugins.patches.setHeadingLevels(true);
+    await app.plugins.plugins.patches.setHeadingNumbering({ enabled: true, preset: "decimal", startLevel: 1, maxDepth: 6, startAt: 1 });
+    for (const source of [true, false]) {
+      const mode = source ? "source" : "live-preview";
+      await leaf.openFile(headingFile, { state: { mode: "source", source } });
+      await showEditor();
+      for (const [kind, text] of samples) {
+        const pos = { line: fixtureLines.indexOf(text), ch: text.length };
+        leaf.view.editor.setCursor(pos);
+        leaf.view.editor.scrollIntoView({ from: pos, to: pos }, true);
+        const activeLine = () => editor().querySelector(".cm-contentContainer > .cm-content > .cm-line.cm-active");
+        const cm = leaf.view.editor.cm;
+        await until(() => activeLine() && cm.posAtDOM(activeLine()) === cm.state.doc.line(pos.line + 1).from
+          && editor().querySelector(".cm-lineNumbers .cm-active")?.textContent.trim() === String(pos.line + 1),
+          `${mode}: ${kind} and its line number are active on line ${pos.line + 1}`);
+        const win = editor().win;
+        let measurement;
+        // Scrolling can update the layout while Electron is capturing the previous frame.
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise(resolve => win.requestAnimationFrame(() => win.requestAnimationFrame(resolve)));
+          measurement = await measureActiveLine(activeLine(), `active-${kind}-${mode}.png`);
+          if (measurement && Math.abs(measurement.centerOffset) <= 1) break;
+        }
+        assert(measurement, `${mode}: no stable active-line pixels beside ${kind}`);
+        report.activeLineOffsets ??= {};
+        report.activeLineOffsets[mode] ??= {};
+        report.activeLineOffsets[mode][kind] = measurement;
+        if (!source && ["h3", "wrapped-heading"].includes(kind)) {
+          await checkHeadingLayout(activeLine(), kind, measurement);
+          if (kind === "wrapped-heading") {
+            const host = leaf.view.contentEl, previous = host.getAttribute("style");
+            try {
+              host.style.setProperty("--file-line-width", "480px", "important");
+              host.style.setProperty("--font-text-size", "20px");
+              host.style.setProperty("--h3-size", "1.6rem");
+              host.style.setProperty("--p-spacing", "24px");
+              leaf.view.onResize();
+              const previousHeight = report.headingLayout[kind].height;
+              await until(() => activeLine()?.getBoundingClientRect().height > previousHeight && getComputedStyle(activeLine()).paddingTop === "12px",
+                "the same heading reflows with a narrower pane, larger font and different theme spacing");
+              await wait(150);
+              const resized = await measureActiveLine(activeLine(), "active-heading-resized.png");
+              assert(resized, "No active rail in the resized viewport");
+              await checkHeadingLayout(activeLine(), "resized", resized);
+              app.vault.setConfig("showLineNumber", false);
+              await until(() => !editor().querySelector(".cm-lineNumbers") && markFor(activeLine()),
+                "hiding line numbers retains the active heading's Git marker");
+              await until(() => {
+                const row = activeLine(), mark = markFor(row);
+                if (!mark) return false;
+                const box = row.getBoundingClientRect(), rail = mark.getBoundingClientRect();
+                const bar = getComputedStyle(row, "::after");
+                return Math.abs(box.bottom - parseFloat(bar.bottom) - parseFloat(bar.paddingBottom) - rail.bottom) < 1;
+              }, "the Git mark tracks the reflowed text after line numbers disappear");
+              await new Promise(resolve => win.requestAnimationFrame(() => win.requestAnimationFrame(resolve)));
+              const hidden = await measureActiveLine(activeLine(), "active-heading-no-line-numbers.png");
+              const git = markFor(activeLine()).getBoundingClientRect();
+              assert(hidden && Math.abs(hidden.paintedTop - git.top) <= 1 && Math.abs(hidden.paintedBottom - git.bottom) <= 1,
+                "Hiding line numbers separated the Git and active rails: " + JSON.stringify({ hidden, git: git.toJSON() }));
+              app.vault.setConfig("showLineNumber", true);
+              await until(() => editor().querySelector(".cm-lineNumbers .cm-active"), "showing line numbers restores the native column");
+              assert(app.commands.executeCommandById(toggle), "Git toggle is unavailable");
+              await until(() => !editor().querySelector(".obsidian-patch-git-gutter") && activeLine()?.querySelector(".obsidian-patch-heading-number")
+                && editor().querySelector(".cm-lineNumbers .cm-active"), "hiding Git retains the numbered heading and native line number");
+              assert(app.commands.executeCommandById(toggle), "Git toggle is unavailable");
+              await until(() => markFor(activeLine()),
+                "restoring Git repaints the wrapped heading");
+            } finally {
+              if (previous === null) host.removeAttribute("style"); else host.setAttribute("style", previous);
+              leaf.view.onResize();
+            }
+          }
+        }
+        assert(Math.abs(measurement.centerOffset) <= 1, `${mode}: active bar center offset from ${kind} content: ${measurement.centerOffset} px`);
+        if (kind === "wrapped" || kind === "wrapped-heading") assert(measurement.paintedHeight > measurement.lineHeight, `${mode}: bar covered only one visual line`);
+        if (kind === "h3") {
+          assert(source || activeLine().querySelector(".obsidian-patch-heading-number"), "The active H3 is missing its automatic number");
+          assert(measurement.paddingTop === measurement.paddingBottom, mode + ": active heading padding is asymmetric");
+          const range = document.createRange(); range.selectNodeContents(editor().querySelector(".cm-lineNumbers .cm-active"));
+          const gutterText = range.getBoundingClientRect(), box = activeLine().getBoundingClientRect();
+          measurement.lineNumberOffset = gutterText.top + gutterText.height / 2 - (box.top + measurement.paddingTop + box.bottom - measurement.paddingBottom) / 2;
+          assert(Math.abs(measurement.lineNumberOffset) <= 1, mode + ": line number is vertically offset beside the heading");
+        }
+      }
+    }
+    await leaf.openFile(file, { state: { mode: "source", source: true } });
+    await showEditor();
     app.vault.setConfig("showLineNumber", false);
     await until(() => !editor().querySelector(".cm-lineNumbers") && marks().some(mark => mark.getBoundingClientRect().width > 0), "the Git gutter remains visible when line numbers are hidden");
     assert(app.commands.executeCommandById(toggle), "Toggle command unavailable");

@@ -14,7 +14,7 @@ As with any network request, the service receives normal connection information,
 
 ## Mermaid
 
-The **Community** build includes Mermaid and its layouts in the plugin. Its two diagram icon packs are compressed JSON stored inside `main.js`. Patches decodes and decompresses each pack locally when a diagram first uses it.
+The **Community** build includes Mermaid and its layouts in the plugin. In the development build, choosing **Install** for Logos or Material Icon Theme downloads that pack's version-pinned `icons.json` from `cdn.jsdelivr.net`. **Check or repair** checks the local copy first. Patches verifies the file against the SHA-256 digest from the build, then stores it compressed in the plugin folder. Rendering a diagram reads icons locally, including after restarting Obsidian. The URL contains the package name and version. Published 0.7.0 embeds both packs inside `main.js`.
 
 The optional **Full** build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected. Those modules run with access to Obsidian. Full is distributed separately for manual installation.
 

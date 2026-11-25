@@ -20,6 +20,9 @@ import {
 import { DEFAULT_CALLOUT_CODE_ENABLED, registerCalloutCode } from "./features/callout-code";
 import { DEFAULT_ACTIVE_LINE_ENABLED, registerActiveLine } from "./features/active-line";
 import { DEFAULT_HEADING_LEVELS_ENABLED, registerHeadingLevels } from "./features/heading-levels";
+import { registerHeadingNumbering } from "./features/heading-numbering";
+import { parseNumberingSettings, type NumberingSettings } from "./features/heading-numbering/model";
+import { renderNumberingSetting } from "./ui/heading-numbering-setting";
 import { parsePdfExportSettings, registerPdfExport, type PdfExportSettings } from "./features/pdf-export";
 import { DEFAULT_BANNER_WIDTH_PERCENT, parseBannerSettings, registerBanner, type BannerSettings } from "./features/banner";
 import { CalloutAppearanceModal } from "./features/callout/appearance-modal";
@@ -56,6 +59,7 @@ interface PatchesSettings {
   callouts: CalloutSettings;
   activeLine: boolean;
   headingLevels: boolean;
+  headingNumbering: NumberingSettings;
   pdfExport: PdfExportSettings;
   banner: BannerSettings;
   icons: IconSettings;
@@ -80,6 +84,7 @@ export default class PatchesPlugin extends Plugin {
   private applyLineWidth?: (settings: LineWidthSettings) => void;
   private refreshCalloutStatus?: () => void;
   private applyHeadingLevels?: (enabled: boolean) => void;
+  private applyHeadingNumbering?: (settings: NumberingSettings) => void;
 
   override async onload(): Promise<void> {
     const storedSettings: unknown = await this.loadData();
@@ -107,6 +112,7 @@ export default class PatchesPlugin extends Plugin {
     this.applyCalloutCode = registerCalloutCode(this, this.settings.calloutCode);
     this.applyActiveLine = registerActiveLine(this, this.settings.activeLine);
     this.applyHeadingLevels = registerHeadingLevels(this, this.settings.headingLevels);
+    this.applyHeadingNumbering = registerHeadingNumbering(this, this.settings.headingNumbering);
     registerPdfExport(this, () => this.settings.pdfExport);
     this.applyBanner = registerBanner(this, this.settings.banner);
     registerTables(this);
@@ -182,6 +188,13 @@ export default class PatchesPlugin extends Plugin {
     this.settings.headingLevels = headingLevels;
     await this.saveData(this.settings);
     this.applyHeadingLevels?.(headingLevels);
+  }
+
+  async setHeadingNumbering(value: NumberingSettings): Promise<void> {
+    const settings = parseNumberingSettings(value);
+    this.settings.headingNumbering = settings;
+    this.applyHeadingNumbering?.(settings);
+    await this.saveData(this.settings);
   }
 
   async setPdfExport(pdfExport: PdfExportSettings): Promise<void> {
@@ -302,6 +315,35 @@ class PatchesSettingTab extends PluginSettingTab {
           }));
       },
     });
+    const mermaid = this.plugin.mermaid;
+    if (!mermaid) return definitions;
+    for (const pack of mermaid.iconPacks) {
+      definitions.push({
+        name: `${pack.source.label} diagram icons`,
+        desc: `Download from jsDelivr for offline diagrams that use the ${pack.source.name}: prefix.`,
+        render: setting => {
+          const status = setting.descEl.createDiv({ cls: "obsidian-patch-setting-status" });
+          setting.addButton(button => {
+            const show = (installed: boolean): void => {
+              status.setText(installed ? `Installed: ${pack.source.version}.` : "Optional pack not installed.");
+              button.setButtonText(installed ? "Check or repair" : "Install").setDisabled(false);
+            };
+            button.setButtonText("Install").setDisabled(true).onClick(async () => {
+              button.setDisabled(true);
+              status.setText("Verifying or downloading icon pack…");
+              try {
+                await mermaid.installIconPack(pack);
+                show(true);
+              } catch (error) {
+                status.setText(`Could not install ${pack.source.label}: ${error instanceof Error ? error.message : String(error)}`);
+                button.setButtonText("Retry").setDisabled(false);
+              }
+            });
+            void pack.exists().then(show, () => show(false));
+          });
+        },
+      });
+    }
     return definitions;
   }
 
@@ -497,7 +539,7 @@ class PatchesSettingTab extends PluginSettingTab {
   private lineWidthDefinitions(): SettingDefinition[] {
     const settings = (): LineWidthSettings => this.plugin.settings.lineWidth;
     return [
-      this.toggle("Enabled", `Sets the maximum reading column width in Reading View, Live Preview and Source mode. Requires Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
+      this.toggle("Enabled", `Keeps at least 500 px between the sidebars in the main desktop window. For the reading column, enable Settings > Editor > Readable line length. A note can set its own width with the ${LINE_WIDTH_PROPERTY} property.`,
         () => settings().enabled, (enabled) => this.plugin.setLineWidth({ ...settings(), enabled })),
       {
         name: "Line width (px)",
@@ -561,6 +603,9 @@ class PatchesSettingTab extends PluginSettingTab {
         () => this.plugin.settings.activeLine, (enabled) => this.plugin.setActiveLine(enabled)),
       this.toggle("Heading levels", "Shows right-aligned H1–H6 labels beside headings in Reading View, Live Preview, and Source mode. Labels are not saved in your notes or included in PDF exports.",
         () => this.plugin.settings.headingLevels, (enabled) => this.plugin.setHeadingLevels(enabled)),
+      { name: "Heading numbering", desc: "Display section numbers in Live Preview and Reading View. A note can choose its own style with the patch-heading-numbering property.",
+        render: setting => renderNumberingSetting(setting, this.plugin.app, () => this.plugin.settings.headingNumbering,
+          value => this.plugin.setHeadingNumbering(value)) },
     ];
   }
 
@@ -613,6 +658,7 @@ function parseSettings(data: unknown): PatchesSettings {
     callouts: parseCalloutSettings(record.callouts),
     pdfExport: parsePdfExportSettings(record.pdfExport),
     headingLevels: typeof record.headingLevels === "boolean" ? record.headingLevels : DEFAULT_HEADING_LEVELS_ENABLED,
+    headingNumbering: parseNumberingSettings(record.headingNumbering),
     calloutCode:
       typeof record.calloutCode === "boolean"
         ? record.calloutCode

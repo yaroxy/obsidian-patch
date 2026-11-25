@@ -1,4 +1,5 @@
 import { MarkdownView, setTooltip, type Plugin } from "obsidian";
+import { registerWorkspaceWidth } from "./line-width/workspace";
 import {
   DEFAULT_LINE_WIDTH,
   LINE_WIDTH_PROPERTY,
@@ -35,6 +36,7 @@ export function registerLineWidth(
 ): (settings: LineWidthSettings) => void {
   const { workspace, metadataCache } = plugin.app;
   let settings = initial;
+  const setWorkspaceWidth = registerWorkspaceWidth(plugin, settings.enabled);
   /** The status bar slider's value while it is dragged and not yet saved. */
   let dragWidth: number | undefined;
   let styled = new Set<HTMLElement>();
@@ -109,6 +111,7 @@ export function registerLineWidth(
 
   return (next) => {
     settings = next;
+    setWorkspaceWidth(next.enabled);
     dragWidth = undefined;
     apply();
   };

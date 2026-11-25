@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Display section numbers in Live Preview and Reading View using decimal hierarchy, Chinese report, English outline or continuous numbering. Enable **Editor → Heading numbering** for a vault or choose a preset for one note with `patch-heading-numbering`. The settings preview identifies conflicting handwritten numbers.
+
+### Changed
+
+- Keep the main desktop workspace at least 500 px wide when Line Width is enabled. Expanded sidebars shrink to their minimums when the window narrows and regain their selected widths when it widens.
+- Place Git change markers between the line numbers and the active-line bar. Consecutive lines of the same change type share one continuous bar, including when text wraps.
+- Give automatic heading numbers a subtle theme-aware background and align them to the start of a shared column in Live Preview, Reading View and the settings sample. Titles and their wrapped lines align in the next column.
+- Install the optional Logos and Material Icon Theme diagram packs from **Patch Mermaid** settings after installing Patches. The bundled Mermaid renderer works offline. Each downloaded pack is verified, cached in the vault and immediately available to open diagrams.
+
+### Fixed
+
+- Recognize handwritten heading numbers in wiki link aliases and Markdown reference links.
+- Include theme spacing in the desktop window minimum and preserve the 200 px minimum for both expanded sidebars when their preferred widths differ.
+- Use the vault text font for heading numbers and keep native fold controls clickable beside the number column.
+- Align the active-line bar with the heading text when Live Preview adds space above a heading.
+- Balance the space above and below body headings in Live Preview and Reading View. Align the section number and H1–H6 label with the first line of a wrapped title.
+
 ## [0.7.0] - 2026-11-24
 
 ### Added

@@ -2,15 +2,17 @@
 import { withBase } from 'vitepress';
 import { computed, ref } from 'vue';
 import overview from '../../../docs/images/home-overview.png';
-import gitDemo from '../../../docs/images/note-git-gutter.png';
+import headingsDemo from '../../../docs/images/heading-number-alignment.png';
+import gitDemo from '../../../docs/images/git-change-runs.png';
 import brandDemo from '../../../docs/images/callout-brand-appearance.png';
 import fontDemo from '../../../docs/images/table-font-suggestions.png';
 const demos = [
-  { id: 'git', label: 'Git changes', title: 'Compare a note with its last commit', description: 'In a desktop Git vault, green marks additions, blue marks edits and a red triangle marks a deletion. Click a mark to open the comparison, including unsaved edits.', image: gitDemo, alt: 'Colored margin marks beside changes to the weekend watchlist', guide: '/reference/commands.html#compare-a-note-with-git' },
+  { id: 'headings', label: 'Heading numbers', title: 'Number sections in a single note', description: 'In the development build, add patch-heading-numbering: decimal to a note’s properties. Section numbers follow the outline and wrapped titles line up beneath their first word.', image: headingsDemo, alt: 'Sections 9, 9.1, 10 and 10.1 in a shared number column beside Chinese headings', guide: '/features/heading-levels.html#heading-numbering' },
+  { id: 'git', label: 'Git changes', title: 'See where an edit begins and ends', description: 'In the development build, one blue bar spans consecutive edited lines and a green bar spans additions. Click either to compare your edits with the last commit.', image: gitDemo, alt: 'A blue bar beside lines 10 to 12 and a green bar beside lines 13 to 15', guide: '/reference/commands.html#compare-a-note-with-git' },
   { id: 'icons', label: 'Callout icons', title: 'Give a callout its brand color', description: 'Install Simple Icons once, then choose a brand logo for a callout, file or folder. Use its official color or pick your own swatch.', image: brandDemo, alt: 'A blue Python logo and color swatches for the PYTHON-NOTES callout type', guide: '/features/callouts.html#type-appearance' },
   { id: 'font', label: 'Table code fonts', title: 'Preview an installed code font', description: 'Type part of a font name and select a suggestion on supported devices. The setting applies to inline code in HTML table cells.', image: fontDemo, alt: 'Typing JetBrains Mo brings up JetBrains Mono and JetBrains Mono NL', guide: '/features/tables.html#inline-code-font' },
 ];
-const selectedDemo = ref('git');
+const selectedDemo = ref('headings');
 const demo = computed(() => demos.find(item => item.id === selectedDemo.value));
 const groups = [
   { number: '01', title: 'Give ideas a little structure.', description: 'Merge table cells, edit callouts with a live preview, and line up equations without changing the formulas.', links: [['HTML tables', 'tables'], ['Callouts', 'callouts'], ['Math formatting', 'math-format']] },
@@ -39,7 +41,7 @@ const groups = [
       </figure>
     </section>
     <section class="patches-updates" aria-labelledby="updates-title">
-      <div class="patches-section-heading"><h2 id="updates-title">New in 0.7.0</h2></div>
+      <div class="patches-section-heading"><h2 id="updates-title">Feature demos</h2></div>
       <div class="patches-demo-switcher" role="group" aria-label="Choose a feature demo">
         <button v-for="item in demos" :key="item.id" type="button" :aria-pressed="selectedDemo === item.id" aria-controls="feature-demo" @click="selectedDemo = item.id">{{ item.label }}</button>
       </div>

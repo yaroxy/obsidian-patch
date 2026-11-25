@@ -19,7 +19,7 @@ function fixture(t, target = "community") {
   write("package-lock.json", { version: "0.3.0", packages: { "": { version: "0.3.0" } } });
   write("versions.json", { "0.3.0": "1.15.0" });
   write("CHANGELOG.md", "## [Unreleased]\n\n## [0.3.0] - 2026-11-13\n");
-  for (const file of ["styles.css", "esbuild.config.mjs", "scripts/lib/release-validation.mjs", "scripts/lib/build-compression.mjs", "src/main.ts"]) write(file, "original");
+  for (const file of ["styles.css", "esbuild.config.mjs", "scripts/lib/release-validation.mjs", "scripts/lib/mermaid-icon-packs.mjs", "src/main.ts"]) write(file, "original");
   const metafile = { inputs: { "src/main.ts": {} } };
   write(`dist/${target}/main.js`, "bundle");
   write(`dist/${target}/manifest.json`, manifest);
@@ -102,10 +102,11 @@ test("modified artifacts and stale source files cannot be released", t => {
   assert.throws(() => validateReleaseBuild(f.root), /Build sources changed/);
 });
 
-test("changing the build compressor invalidates previously built release files", t => {
+test("changing the icon metadata generator invalidates previously built release files", t => {
   const f = fixture(t);
-  f.write("scripts/lib/build-compression.mjs", "different compression");
+  f.write("scripts/lib/mermaid-icon-packs.mjs", "different packs");
   assert.throws(() => validateReleaseBuild(f.root), /Build sources changed/);
+  assert.throws(() => validateMermaidInputs({ inputs: { "node_modules/@iconify-json/logos/icons.json": {} } }, "community"), /icon data/);
 });
 
 test("remote Mermaid endpoints are forbidden in community bundles", t => {

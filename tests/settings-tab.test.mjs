@@ -11,7 +11,7 @@ async function loadTab(remote) {
     stdin: { contents: source, resolveDir: resolve("src"), loader: "ts" },
     bundle: true, write: false, format: "esm", platform: "node",
     plugins: [{ name: "settings-dependencies", setup(builder) {
-      builder.onResolve({ filter: /^(obsidian|\.\/features\/|\.\/ui\/font-setting)/ }, ({ path }) => ({ path, namespace: "settings-test" }));
+      builder.onResolve({ filter: /^(obsidian|\.\/features\/|\.\/ui\/)/ }, ({ path }) => ({ path, namespace: "settings-test" }));
       builder.onLoad({ filter: /.*/, namespace: "settings-test" }, ({ path }) => {
         if (path === "obsidian") return { contents: `
           export class Plugin {
@@ -36,6 +36,7 @@ async function loadTab(remote) {
             ? { mermaidVersion: x.mermaidVersion ?? 'bundled', mermaidCachedLatest: x.mermaidCachedLatest }
             : { mermaidVersion: 'bundled' };
           export const parsePdfExportSettings = x => x, parseBannerSettings = x => x;
+          export const parseNumberingSettings = x => x ?? {enabled: false}, registerHeadingNumbering = () => {}, renderNumberingSetting = () => {};
           export const parseMathFormatSettings = x => x, parseCalloutSettings = x => x, parseIconSettings = x => x, parseLineWidthSettings = x => x;
           export const registerPatchMermaid = () => {}, registerCalloutCode = () => {}, registerActiveLine = () => {}, registerHeadingLevels = () => {};
           export const registerNoteDiff = () => {}, registerPdfExport = () => {}, registerBanner = () => {}, registerTables = () => {}, registerMathFormat = () => {};
@@ -62,7 +63,10 @@ function plugin() {
       icons: { enabled: true }, lineWidth: { enabled: true, width: 900, statusBar: true },
       pdfExport: { outline: true, headingLinks: true },
     },
-    mermaid: { runtime: async () => ({ origin: "bundled", version: "12.3.0" }) },
+    mermaid: {
+      iconPacks: [{ source: { name: "logos", label: "Logos" } }, { source: { name: "material-icon-theme", label: "Material Icon Theme" } }],
+      runtime: async () => ({ origin: "bundled", version: "12.3.0" }),
+    },
   };
   for (const [method, key] of Object.entries({ setActiveLine: "activeLine", setHeadingLevels: "headingLevels", setBanner: "banner", setLineWidth: "lineWidth", setCallouts: "callouts", setMathFormat: "mathFormat", setPdfExport: "pdfExport", setCalloutCode: "calloutCode", setMermaidSecurityLevel: "mermaidSecurityLevel", setMermaidVersion: "mermaidVersion" })) {
     p[method] = async (value) => { p.calls.push([method, value]); p.settings[key] = value; return { version: value, origin: "bundled" }; };
@@ -131,7 +135,9 @@ test("settings registration exposes every community row for search without DOM o
   const tab = new CommunityTab(p);
   const groups = tab.getSettingDefinitions();
   assert.deepEqual(groups.map(x => x.heading), ["Callouts", "Editor", "HTML Tables", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]);
-  assert.equal(groups.flatMap(x => x.items).length, 25);
+  assert.equal(groups.flatMap(x => x.items).length, 28);
+  assert.ok(find(tab, "Editor", "Heading numbering"));
+  assert.ok(find(tab, "Patch Mermaid", "Logos diagram icons"));
   assert.equal(find(tab, "Callouts", "Type picker font"), undefined);
   assert.ok(find(tab, "HTML Tables", "Inline code font"));
   assert.equal(groups.flatMap(x => x.items).every(x => typeof x.name === "string" && x.name.length > 0 && typeof x.desc === "string"), true);

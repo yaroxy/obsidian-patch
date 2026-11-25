@@ -16,10 +16,96 @@ async function navigationIntegration(app, config) {
     app.workspace.setActiveLeaf(leaf, { focus: false });
     await wait(200);
   };
-  const shot = async (name, element) => {
+  const checkWorkspaceWidth = async () => {
+    const native = require("electron").remote.getCurrentWindow(), ws = app.workspace;
+    const original = native.getNormalBounds(), maximized = native.isMaximized(), full = native.isFullScreen();
+    const docks = [ws.leftSplit, ws.rightSplit];
+    const saved = docks.map(d => ({ size: d.size, collapsed: d.collapsed }));
+    const settings = plugin().settings.lineWidth;
+    const set = enabled => plugin().setLineWidth({ ...settings, enabled });
+    const zoom = wc.getZoomFactor();
+    const theme = document.createElement("style");
+    const root = ws.rootSplit.containerEl;
+    const rect = el => el.getBoundingClientRect();
+    let split;
+    try {
+      if (full) native.setFullScreen(false);
+      if (maximized) native.unmaximize();
+      wc.setZoomFactor(1);
+      await set(false);
+      const originalMin = native.getMinimumSize();
+      await set(true);
+      for (const dock of docks) { dock.expand(); dock.setSize(320); }
+      const samples = [];
+      for (const [left, right] of [[true,true],[false,true],[false,false],[true,false],[true,true]]) {
+        for (const [i, visible] of [left,right].entries()) visible ? docks[i].expand() : docks[i].collapse();
+        await wait(320);
+        const floor = native.getMinimumSize()[0];
+        assert(floor >= 500, "Native minimum did not follow open sidebars");
+        native.setSize(200, original.height);
+        await until(() => Math.abs(native.getBounds().width - floor) <= 1 && Math.abs(innerWidth * wc.getZoomFactor() - native.getContentBounds().width) <= 1, "native window resized");
+        await wait(100);
+        const center = rect(root), sides = docks.map(d => rect(d.containerEl).width);
+        assert(center.width >= 500 && center.width < 502, "Central split at floor: " + center.width);
+        assert(center.left >= 0 && center.right <= innerWidth, "Central split clipped by native window");
+        [left,right].forEach((open,i) => assert(open ? sides[i] >= 200 && sides[i] < 202 : sides[i] === 0, "Unexpected sidebar width: " + sides));
+        samples.push({ floor, center: center.width, sides });
+      }
+      report.workspaceWidths = samples;
+      pass("shrinking the native window respects a 500 px central split and 200 px open sidebars across collapse and reopen");
+      split = ws.getLeaf("split", "vertical");
+      await wait(150);
+      assert(rect(root).width >= 500 && rect(split.containerEl).width < 500, "Window minimum leaked into a child split");
+      split.detach(); split = undefined;
+      theme.textContent = ".workspace { column-gap: 8px; } .workspace-split.mod-left-split { min-width: 120px; }";
+      document.head.appendChild(theme);
+      app.workspace.trigger("css-change");
+      docks[0].setSize(250); docks[1].setSize(500);
+      await wait(200);
+      native.setSize(200, original.height);
+      await wait(200);
+      const visible = [...ws.containerEl.children].filter(el => rect(el).width > 0);
+      const extra = (visible.length - 1) * 8;
+      assert(native.getMinimumSize()[0] === samples[0].floor + extra, "Theme gap missing from native minimum");
+      assert(docks.every(d => Math.abs(rect(d.containerEl).width - 200) <= 1) && Math.abs(rect(root).width - 500) <= 1,
+        "Asymmetric preferred widths defeated the sidebar floor");
+      assert(visible.every(el => rect(el).left >= 0 && rect(el).right <= innerWidth), "A visible column was clipped");
+      report.themedWorkspace = { minimum: native.getMinimumSize()[0], center: rect(root).width, docks: docks.map(d => rect(d.containerEl).width), extra };
+      pass("theme gaps fit within the native window and both asymmetric sidebars keep the 200 px floor");
+      docks.forEach(d => d.setSize(320));
+      theme.textContent = ".workspace-split.mod-left-split { min-width: 250px; }";
+      app.workspace.trigger("css-change");
+      wc.setZoomFactor(1.25);
+      await wait(300);
+      native.setSize(200, original.height);
+      await wait(250);
+      assert(rect(root).width >= 500 && rect(root).width < 502 && rect(docks[0].containerEl).width >= 250 && rect(docks[1].containerEl).width >= 200, "Zoom or theme sidebar minimum clipped the workspace");
+      pass("a wider theme sidebar minimum and 125% zoom are included in the native window minimum");
+      wc.setZoomFactor(1);
+      theme.remove(); app.workspace.trigger("css-change");
+      native.setSize(original.width, original.height);
+      await wait(150);
+      assert(docks.every(d => Math.abs(rect(d.containerEl).width - 320) <= 1), "Widening failed to restore sidebar widths");
+      await set(false);
+      assert(native.getMinimumSize().join() === originalMin.join(), "Disabling Line Width did not restore the host minimum");
+      pass("child panes can be narrower, widening restores preferred sidebar sizes, and disabling restores the host minimum");
+    } finally {
+      split?.detach();
+      await set(false);
+      theme.remove();
+      wc.setZoomFactor(zoom);
+      native.setBounds(original);
+      docks.forEach((d,i) => { d.setSize(saved[i].size); saved[i].collapsed ? d.collapse() : d.expand(); });
+      await plugin().setLineWidth(settings);
+      if (maximized) native.maximize();
+      if (full) native.setFullScreen(true);
+      ws.requestSaveLayout();
+    }
+  };
+  const shot = async (name, element, region = element.getBoundingClientRect()) => {
     const win = element.ownerDocument.defaultView;
     const target = win === window ? wc : win.electron.remote.getCurrentWebContents();
-    const r = element.getBoundingClientRect(), debugger_ = target.debugger, owned = !debugger_.isAttached();
+    const r = region, debugger_ = target.debugger, owned = !debugger_.isAttached();
     if (owned) debugger_.attach("1.3");
     try {
       const { data } = await debugger_.sendCommand("Page.captureScreenshot", { format: "png", clip: { x: Math.max(0, r.left), y: Math.max(0, r.top), width: Math.min(r.width, win.innerWidth - Math.max(0, r.left)), height: Math.min(r.height, win.innerHeight - Math.max(0, r.top)), scale: 1 } });
@@ -67,13 +153,14 @@ async function navigationIntegration(app, config) {
   };
   try {
     save();
+    await checkWorkspaceWidth();
     await until(() => app.vault.getFileByPath("Patch Navigation Tests/Headings.md"), "fixture indexing");
     await plugin().setHeadingLevels(true);
     app.setting.open(); app.setting.openTabById("patches");
     await wait(200);
     const settings = app.setting.activeTab.containerEl;
     const names = [...settings.querySelectorAll(".setting-item-heading .setting-item-name")].map(el => el.textContent);
-    assert(JSON.stringify(names) === JSON.stringify(["Callouts", "Editor", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]), `Unexpected setting order: ${names}`);
+    assert(JSON.stringify(names) === JSON.stringify(["Callouts", "Editor", "HTML Tables", "Line Width", "Math Format", "Patch Banner", "Patch Icons", "Patch Mermaid", "PDF Export"]), `Unexpected setting order: ${names}`);
     pass("settings groups appear in alphabetical order by displayed name");
     await shot("settings", settings);
     app.setting.close();
@@ -93,6 +180,8 @@ async function navigationIntegration(app, config) {
         await until(() => lineElement(offset)?.querySelector(".obsidian-patch-heading-level")?.textContent === `H${level}`, `${mode} label for ${text}`);
         const line = lineElement(offset), label = line.querySelector(".obsidian-patch-heading-level").getBoundingClientRect();
         assert(Math.abs(label.right - line.getBoundingClientRect().right) < 1, `${mode}: heading label is not right aligned`);
+        const labelHeight = parseFloat(getComputedStyle(line.querySelector(".obsidian-patch-heading-level")).height);
+        assert(Math.abs(labelHeight - parseFloat(getComputedStyle(line).lineHeight)) < 1, mode + ": " + text + " label lost its first-line height");
       };
       for (const [index, word] of ["one", "two", "three", "four", "five", "six"].entries()) await inspect(`Level ${word}`, index + 1);
       await inspect("Setext title", 1);
@@ -150,7 +239,288 @@ async function navigationIntegration(app, config) {
     leaf.view.previewMode.onResize();
     pass("Reading View reserves space for a right-aligned label when long headings wrap at 520 px");
 
+    const defaults = { enabled: false, preset: "decimal", startLevel: 0, maxDepth: 6, startAt: 1 };
+    await plugin().setHeadingNumbering(defaults);
+    const numberingPath = path.join(config.vault, "Patch Navigation Tests", "Numbering.md");
+    const originalBytes = fs.readFileSync(numberingPath);
+    const prefixClass = ".obsidian-patch-heading-number";
+    const checkNumberStarts = (spans, context) => {
+      assert(spans.length > 1, context + ": expected multiple numbered headings");
+      const starts = Array.from(spans, span => {
+        const style = getComputedStyle(span);
+        const probe = span.ownerDocument.createElement("span");
+        probe.style.fontFamily = "var(--font-text)";
+        span.ownerDocument.body.appendChild(probe);
+        try { assert(style.fontFamily === getComputedStyle(probe).fontFamily, context + ": number does not use the vault text font"); }
+        finally { probe.remove(); }
+        assert(style.textAlign === "start", context + ": number does not align to the start of its column");
+        assert(style.backgroundColor !== "rgba(0, 0, 0, 0)" && style.backgroundColor !== style.color, context + ": number needs a visible background and text");
+        return span.getBoundingClientRect().left;
+      });
+      const delta = Math.max(...starts) - Math.min(...starts);
+      assert(delta <= 1, context + ": number column starts differ by " + delta + "px");
+      report.numberColumnOffsets ??= {};
+      report.numberColumnOffsets[context] = delta;
+    };
+    const noteRoot = () => leaf.view.contentEl;
+    const readingPrefixes = title => [...noteRoot().querySelectorAll("h1,h2,h3,h4,h5,h6")]
+      .filter(h => h.dataset.heading === title).map(h => h.querySelector(prefixClass)?.dataset.prefix);
+    for (const mode of ["reading", "live-preview"]) {
+      await open("Linked headings.md", mode);
+      const section = mode === "reading" ? ".markdown-reading-view" : ".cm-content";
+      const badges = () => [...noteRoot().querySelectorAll(section + " " + prefixClass)];
+      await until(() => badges().some(b => b.dataset.prefix === "3"), mode + ": ordinary heading numbered");
+      assert(badges().length === 1, mode + ": linked handwritten number duplicated");
+      pass(mode + ": wiki aliases and reference links retain a single handwritten number");
+    }
+    await open("Numbering.md", "reading");
+    await until(() => readingPrefixes("Methods").join() === "1,2", "both repeated reading headings have distinct numbers");
+    assert(readingPrefixes("Materials")[0] === "1.1" && readingPrefixes("Verification")[0] === "1.2", "Skipped levels lost sibling order");
+    assert(readingPrefixes("Setext detail")[0] === "3" && !readingPrefixes("1.3 Existing")[0], "Setext or handwritten reading number incorrect");
+    await until(() => noteRoot().querySelector('.markdown-embed [data-heading="Embedded section"]'), "opted-in embed is actually rendered");
+    assert(!noteRoot().querySelector(".markdown-embed " + prefixClass) && !noteRoot().querySelector("blockquote " + prefixClass), "An embedded or quoted heading was numbered");
+    const numberedHeading = noteRoot().querySelector('h4[data-heading="Materials"]');
+    const number = numberedHeading.querySelector(prefixClass);
+    assert(number.getBoundingClientRect().width > 0 && getComputedStyle(number, "::before").content.includes("1.1"), "The prefix is not visibly painted");
+    const selection = numberedHeading.ownerDocument.createRange(); selection.selectNodeContents(numberedHeading);
+    assert(selection.toString() === "Materials" && numberedHeading.dataset.heading === "Materials", "Reading selection or link target gained an automatic number");
+    pass("a single opted-in note numbers skipped, Setext and repeated headings with intact selection and link targets");
+    await shot("numbering-reading", noteRoot());
+    const readingFold = () => noteRoot().querySelector('h2[data-heading="Methods"] .heading-collapse-indicator');
+    const materialsVisible = () => noteRoot().querySelector('h4[data-heading="Materials"]')?.getBoundingClientRect().height > 0;
+    readingFold().click();
+    await until(() => !materialsVisible(), "folded reading section");
+    assert(readingPrefixes("Methods").at(-1) === "2", "Folding renumbered a following section");
+    readingFold().click();
+    await until(() => materialsVisible() && readingPrefixes("Materials")[0] === "1.1", "expanded section retains its number");
+    pass("folding and expanding one section preserves its numbering and the next chapter");
+    await open("Numbering.md", "source");
+    assert(!noteRoot().querySelector(".cm-line " + prefixClass), "Source mode shows automatic numbers");
+    await open("Numbering.md", "live-preview");
+    const ed = leaf.view.editor, originalNote = ed.getValue();
+    const prefixAt = text => {
+      const pos = ed.getValue().indexOf(text);
+      if (pos < 0 || pos < ed.cm.viewport.from || pos >= ed.cm.viewport.to) return;
+      const dom = ed.cm.domAtPos(pos + 1).node;
+      return (dom.nodeType === 1 ? dom : dom.parentElement).closest(".cm-line")?.querySelector(prefixClass)?.dataset.prefix;
+    };
+    await until(() => prefixAt("Verification") === "1.2", "Live Preview agrees with the reading index");
+    const editorPrefix = noteRoot().querySelector(".cm-line " + prefixClass);
+    assert(editorPrefix.getBoundingClientRect().width > 0 && editorPrefix.getAttribute("aria-hidden") === "true", "The editor prefix is invisible or exposes decorative text to assistive technology");
+    assert(fs.readFileSync(numberingPath).equals(originalBytes) && originalNote === originalBytes.toString("utf8"), "Displaying numbers changed the saved Markdown or editor buffer");
+    pass("switching between Reading, Source and Live Preview preserves the exact note bytes and editor text");
+    await shot("numbering-live-preview", noteRoot());
+    const far = ed.offsetToPos(originalNote.indexOf("Far away"));
+    ed.scrollIntoView({ from: far, to: far }, true);
+    await until(() => prefixAt("Far away") === "4", "off-screen heading retains whole-note numbering");
+    const start = { line: 0, ch: 0 }; ed.scrollIntoView({ from: start, to: start }, true);
+    await until(() => prefixAt("Materials") === "1.1", "returned to first section");
+    const moveStart = originalNote.indexOf("#### Materials"), moveEnd = originalNote.indexOf("### 1.3 Existing");
+    ed.replaceRange("### Verification\n#### Materials\n", ed.offsetToPos(moveStart), ed.offsetToPos(moveEnd));
+    // The handwritten 1.3 is now expected to be 1.2 and pauses the whole note.
+    await until(() => !noteRoot().querySelector(".cm-line " + prefixClass), "conflict pauses all editor prefixes");
+    app.setting.open(); app.setting.openTabById("patches");
+    await until(() => app.setting.activeTab.containerEl.textContent.includes("Expected 1.2."), "current-note preview explains the handwritten conflict");
+    const row = [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")].find(el => el.querySelector(".setting-item-name")?.textContent === "Heading numbering");
+    const dropdown = row.querySelector('select[aria-label="Heading numbering style"]');
+    dropdown.value = "zh-report"; dropdown.dispatchEvent(new Event("change", { bubbles: true }));
+    await until(() => row.querySelector(".obsidian-patch-heading-number-preview")?.textContent.includes("一、 Methods"), "sample responds to the preset dropdown");
+    const options = row.querySelector("details"); options.open = true;
+    const setOption = (control, value) => { control.value = value; control.dispatchEvent(new Event("change", { bubbles: true })); };
+    const [startLevel, depth] = options.querySelectorAll("select");
+    setOption(startLevel, "2"); setOption(depth, "1"); setOption(options.querySelector("input"), "10");
+    await until(() => row.querySelector(".obsidian-patch-heading-number-preview")?.textContent.includes("十一、 Results"), "advanced controls update the sample");
+    assert(plugin().settings.headingNumbering.startLevel === 2 && plugin().settings.headingNumbering.maxDepth === 1, "Advanced heading options did not persist");
+    row.scrollIntoView({ block: "center" }); await wait(50);
+    checkNumberStarts(row.querySelectorAll(".obsidian-patch-heading-number-preview " + prefixClass), "settings");
+    await shot("numbering-settings", row);
+    await plugin().setHeadingNumbering({ ...defaults, preset: "zh-report" });
+    pass("the settings controls preview the selected style, starting level, depth and initial ordinal");
+    app.setting.close();
+    ed.undo();
+    await until(() => ed.getValue() === originalNote && prefixAt("Materials") === "1.1", "one undo restores the text and decimal per-note numbers");
+    pass("Live Preview numbers off-screen headings and undo restores automatic numbers after a manual conflict");
+    const unnumbered = originalNote.replace("1.3 Existing", "Existing");
+    for (const [preset, expected] of [["zh-report", "（二）"], ["en-outline", "B."], ["continuous", "3"]]) {
+      ed.setValue(unnumbered.replace("patch-heading-numbering: decimal", "patch-heading-numbering: " + preset));
+      await until(() => prefixAt("Verification") === expected, "unsaved property selects " + preset);
+    }
+    const moved = unnumbered.replace("#### Materials\n### Verification", "### Verification\n#### Materials");
+    ed.setValue(moved);
+    await until(() => prefixAt("Materials") === "1.1.1" && prefixAt("Verification") === "1.1", "moving a section recomputes descendants");
+    await plugin().setHeadingNumbering({ ...defaults, enabled: true });
+    ed.setValue(unnumbered.replace("patch-heading-numbering: decimal", "patch-heading-numbering: false"));
+    await until(() => !noteRoot().querySelector(".cm-line " + prefixClass), "per-note false overrides the vault setting");
+    ed.setValue(originalNote); await leaf.view.save();
+    pass("all four presets, unsaved note overrides, and moving a subtree work through the live editor");
+
+    const split = app.workspace.getLeaf("split", "vertical");
+    try {
+      await split.openFile(leaf.view.file, { active: false, state: { mode: "preview" } });
+      const peerPrefix = () => split.view.contentEl.querySelector('h3[data-heading="Verification"] ' + prefixClass)?.dataset.prefix;
+      await until(() => peerPrefix() === "1.2", "second pane reads the original numbering");
+      ed.setValue(unnumbered.replace("## Methods", "## Introduction\n## Methods"));
+      await leaf.view.save();
+      await until(() => prefixAt("Verification") === "2.2" && peerPrefix() === "2.2", "retained heading updates in both panes after a preceding insertion");
+      ed.setValue(originalNote.replace("1.3 Existing", "7.3 Existing")); await leaf.view.save();
+      await until(() => !split.view.contentEl.querySelector(".markdown-reading-view " + prefixClass), "handwritten conflict clears the entire reading pane");
+      ed.setValue(originalNote); await leaf.view.save();
+      await until(() => peerPrefix() === "1.2", "reading numbers recover after a conflict is resolved");
+      pass("an open reading pane follows earlier inserts, manual conflicts and corrections in the editor");
+    } finally {
+      split.detach();
+      app.workspace.setActiveLeaf(leaf, { focus: false });
+    }
+
+    for (const mode of ["reading", "live-preview"]) {
+      await plugin().setActiveLine(true);
+      await open("Number columns.md", mode);
+      const content = noteRoot();
+      content.style.setProperty("--file-line-width", "340px", "important");
+      try {
+        leaf.view.onResize();
+        for (const preset of ["decimal", "zh-report", "en-outline", "continuous"]) {
+          await plugin().setHeadingNumbering({ ...defaults, enabled: true, preset, startAt: 9 });
+          const host = mode === "reading" ? ".markdown-reading-view" : ".cm-content";
+          const spans = () => [...content.querySelectorAll(host + " " + prefixClass)];
+          await until(() => spans().length === 4 && spans()[0].dataset.prefix === ({decimal:"9","zh-report":"九、","en-outline":"IX.",continuous:"9"})[preset], "number columns " + mode + " " + preset);
+          checkNumberStarts(spans(), mode + "/" + preset);
+          const boxes = spans().map((span, i) => {
+            const heading = span.closest(".cm-line,h2,h3,h4");
+            const walker = heading.ownerDocument.createTreeWalker(heading, NodeFilter.SHOW_TEXT);
+            const label = ["方法概述", "数据来源", "结果分析", "复核步骤"][i];
+            while (walker.nextNode()) {
+              const node = walker.currentNode, start = node.textContent.indexOf(label);
+              if (start < 0) continue;
+              const range = heading.ownerDocument.createRange();
+              range.setStart(node, start); range.setEnd(node, node.length);
+              return [...range.getClientRects()].filter(box => box.width > 0);
+            }
+            throw Error("Missing heading text " + label);
+          });
+          assert(boxes[3].length > 1, mode + ": fixture did not wrap");
+          if (preset === "decimal") {
+            const arrow = () => spans()[0].parentElement.querySelector(mode === "reading" ? ".heading-collapse-indicator" : ".cm-fold-indicator .collapse-indicator");
+            const clickArrow = async () => {
+              const a = arrow(), box = a?.getBoundingClientRect(), badge = spans()[0].getBoundingClientRect();
+              assert(box && box.width > 0 && box.right <= badge.left + 0.5, mode + ": fold control overlaps numbering: " + JSON.stringify([box,badge]));
+              const x = box.left + box.width / 2, y = box.top + box.height / 2;
+              const debugger_ = wc.debugger, owned = !debugger_.isAttached();
+              if (owned) debugger_.attach();
+              try {
+                await debugger_.sendCommand("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+                assert(a.contains(content.ownerDocument.elementFromPoint(x, y)), mode + ": fold control cannot be hit");
+                for (const type of ["mousePressed", "mouseReleased"]) await debugger_.sendCommand("Input.dispatchMouseEvent", { type, x, y, button: "left", clickCount: 1 });
+              } finally { if (owned) debugger_.detach(); }
+            };
+            const childVisible = () => spans().some(s => s.dataset.prefix === "9.1" && s.getBoundingClientRect().height > 0);
+            await clickArrow(); await until(() => !childVisible(), mode + ": click folds numbered section");
+            await clickArrow(); await until(childVisible, mode + ": click unfolds numbered section");
+            pass(mode + ": native fold arrow has a separate clickable area before the number");
+            const body = content.ownerDocument.body;
+            const savedFont = body.style.getPropertyValue("--font-text"), priority = body.style.getPropertyPriority("--font-text");
+            try {
+              const widths = [];
+              for (const font of ["monospace","serif"]) {
+                body.style.setProperty("--font-text", font, "important");
+                app.workspace.trigger("css-change"); await wait(100);
+                assert(getComputedStyle(spans()[0]).fontFamily === font, mode + ": number font failed to update");
+                widths.push(spans()[0].getBoundingClientRect().width);
+              }
+              assert(Math.abs(widths[0] - widths[1]) > 1, mode + ": changing vault fonts did not resize the number column");
+              pass(mode + ": changing the vault text font resizes the number column in the open note");
+            } finally {
+              if (savedFont) body.style.setProperty("--font-text", savedFont, priority);
+              else body.style.removeProperty("--font-text");
+              app.workspace.trigger("css-change"); await wait(100);
+            }
+            report.headingRows ??= {};
+            report.headingRows[mode] = spans().map((span, i) => {
+              const h = span.closest(".cm-line,h2,h3,h4"), css = getComputedStyle(h);
+              const bounds = h.getBoundingClientRect(), number = span.getBoundingClientRect(), text = boxes[i][0];
+              const label = h.querySelector(".obsidian-patch-heading-level");
+              const style = label ? getComputedStyle(label) : getComputedStyle(h, "::after");
+              const titleCenter = text.top + text.height / 2;
+              const labelCenter = bounds.top + parseFloat(style.top) + parseFloat(style.paddingTop) + parseFloat(style.height) / 2;
+              return { numberOffset: number.top + number.height / 2 - titleCenter, labelOffset: labelCenter - titleCenter,
+                paddingTop: css.paddingTop, paddingBottom: css.paddingBottom, marginTop: css.marginTop, marginBottom: css.marginBottom,
+                visualLines: boxes[i].length };
+            });
+            for (const row of report.headingRows[mode]) {
+              assert(Math.abs(row.numberOffset) <= 1 && Math.abs(row.labelOffset) <= 1,
+                mode + ": number or level label is off the first visual line: " + JSON.stringify(row));
+              const symmetric = mode === "reading" ? row.marginTop === row.marginBottom : row.paddingTop === row.paddingBottom;
+              assert(symmetric, mode + ": heading space is asymmetric: " + JSON.stringify(row));
+            }
+            pass(mode + ": short and wrapped headings have symmetric spacing and first-line labels");
+          }
+          const lefts = boxes.flat().map(r => r.left);
+          const delta = Math.max(...lefts) - Math.min(...lefts);
+          assert(delta <= 1, `${mode}/${preset}: title and continuation starts differ by ${delta}px: ${lefts}`);
+          report.headingColumnOffsets ??= {};
+          report.headingColumnOffsets[mode + "/" + preset] = delta;
+          if (preset === "decimal") {
+            const classes = content.ownerDocument.body.classList;
+            const light = classes.contains("theme-light"), dark = classes.contains("theme-dark");
+            const colors = {};
+            try {
+              for (const theme of ["light", "dark"]) {
+                classes.toggle("theme-light", theme === "light");
+                classes.toggle("theme-dark", theme === "dark");
+                await wait(150);
+                const numbers = spans();
+                const style = getComputedStyle(numbers[0]);
+                colors[theme] = style.backgroundColor;
+                assert(colors[theme] !== "rgba(0, 0, 0, 0)" && colors[theme] !== style.color, mode + "/" + theme + ": number is not legible");
+                const first = numbers[0].closest(".cm-line,h2").getBoundingClientRect();
+                const last = numbers[3].closest(".cm-line,h4").getBoundingClientRect();
+                await shot("aligned-headings-" + mode + "-" + theme, content, { left: first.left - 6, top: first.top - 4,
+                  width: first.width + 12, height: last.bottom - first.top + 8 });
+              }
+              assert(colors.light !== colors.dark, mode + ": number background did not follow the theme");
+              pass(mode + ": automatic number backgrounds follow the light and dark palettes");
+            } finally {
+              classes.toggle("theme-light", light);
+              classes.toggle("theme-dark", dark);
+            }
+            if (mode === "live-preview") {
+              const ed = leaf.view.editor;
+              ed.setCursor(ed.offsetToPos(ed.getValue().indexOf("方法概述") + 1));
+              ed.focus(); await wait(100);
+              const active = content.querySelector(".cm-line.cm-active");
+              assert(active?.querySelector(prefixClass)?.dataset.prefix === "9" && active.textContent.includes("方法概述"), "Editing a numbered heading lost its number or Markdown text");
+              ed.setCursor(ed.offsetToPos(ed.getValue().indexOf("复核步骤") + 1)); await wait(100);
+              const wrapped = content.querySelector(".cm-line.cm-active").getBoundingClientRect();
+              const left = Math.min(wrapped.left - 26, content.querySelector(".cm-gutters").getBoundingClientRect().left);
+              await shot("active-numbered-heading", content, { left, top: wrapped.top - 4,
+                width: wrapped.right - left + 6, height: wrapped.height + 8 });
+              ed.setCursor({ line: 2, ch: 0 }); await wait(100);
+            }
+          }
+        }
+        await plugin().setActiveLine(false);
+        await plugin().setHeadingLevels(false);
+        const firstHeading = () => content.querySelector(mode === "reading" ? 'h2[data-heading="方法概述"]' : ".cm-content .HyperMD-header-2");
+        const spacing = () => {
+          const css = getComputedStyle(firstHeading());
+          return mode === "reading" ? [css.marginTop, css.marginBottom] : [css.paddingTop, css.paddingBottom];
+        };
+        const [above, below] = spacing();
+        assert(firstHeading().querySelector(prefixClass) && parseFloat(above) > 0 && above === below, mode + ": numbering alone lost the balanced space");
+        await plugin().setHeadingNumbering(defaults);
+        await until(() => !firstHeading().querySelector(prefixClass), "numbering disabled");
+        const [nativeAbove, nativeBelow] = spacing();
+        assert(parseFloat(nativeAbove) > parseFloat(nativeBelow), mode + ": disabling decorations did not restore native spacing");
+        await plugin().setHeadingLevels(true);
+        const [labelAbove, labelBelow] = spacing();
+        assert(labelAbove === labelBelow, mode + ": heading levels alone lost the balanced space");
+        pass(mode + ": either heading feature balances spacing and disabling the decorations restores native spacing");
+        pass(mode + ": all four presets align numbers and titles at their column starts across levels, digit widths and wrapped lines");
+      } finally { content.style.removeProperty("--file-line-width"); leaf.view.onResize(); }
+    }
+    await plugin().setHeadingNumbering({ ...defaults, enabled: true });
     await open("Navigation note.md", "reading");
+    await until(() => readingPrefixes("Target Heading").some(Boolean), "inherited numbering is visible before PDF export");
     await plugin().setPdfExport({ outline: true, headingLinks: true });
     const visibleModal = capture(true); await wait(100);
     assert(visibleModal.containerEl.isConnected && visibleModal.ctaEl, "The native export dialog is not usable");
@@ -164,6 +534,7 @@ async function navigationIntegration(app, config) {
     pass("same-note Unicode, Markdown, wiki and repeated-heading links resolve; other notes and block references are not misdirected");
     await plugin().setPdfExport({ outline: true, headingLinks: false }); await exportPdf("outline-only");
     await plugin().setPdfExport({ outline: false, headingLinks: true }); await exportPdf("links-only");
+    await plugin().setHeadingNumbering(defaults);
     await plugin().setPdfExport({ outline: false, headingLinks: false }); await exportPdf("disabled");
     await plugin().setPdfExport({ outline: true, headingLinks: true });
     const pending = capture();

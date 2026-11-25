@@ -1,4 +1,4 @@
-import MarkdownIt from "markdown-it";
+import { markdownBlocks } from "../markdown-blocks";
 
 export const DIAGRAM_LANGUAGE = "patch-mermaid";
 
@@ -8,42 +8,10 @@ export interface DiagramBlock {
   source: string;
 }
 
-const markdown = new MarkdownIt("commonmark");
-markdown.core.ruler.enableOnly(["normalize", "block"]);
-
-function opensBlockComment(text: string): boolean {
-  return text.startsWith("%%") && text[2] !== "%" && !text.includes("%%", 2);
-}
-
-// Obsidian also treats display math and block comments as literal content.
-// Consume them at block level, where list and blockquote markers have already
-// been accounted for and ordinary fences own their entire contents.
-markdown.block.ruler.before("fence", "obsidian-literal", (state, start, end, silent) => {
-  const first = state.getLines(start, start + 1, state.blkIndent, false).trimStart();
-  const math = /^\${2,}/.exec(first)?.[0];
-  if (math ? first.includes("$$", math.length) : !opensBlockComment(first)) return false;
-  if (silent) return true;
-
-  let line = start + 1;
-  while (line < end) {
-    if (!state.isEmpty(line) && state.sCount[line]! < state.blkIndent) break;
-    const text = state.getLines(line, line + 1, state.blkIndent, false);
-    line++;
-    if (math) {
-      if (text.trimEnd().endsWith(math)) break;
-    } else {
-      const close = text.indexOf("%%");
-      if (close >= 0 && !opensBlockComment(text.slice(close + 2).trimStart())) break;
-    }
-  }
-  state.line = line;
-  return true;
-}, { alt: ["paragraph", "reference", "blockquote", "list"] });
-
 /** The caller strips note properties using Obsidian's frontmatter parser. */
 export function diagramBlocks(body: string, firstLine: number): DiagramBlock[] {
   const blocks: DiagramBlock[] = [];
-  for (const token of markdown.parse(body, {})) {
+  for (const token of markdownBlocks(body)) {
     if (token.type === "fence" && token.map && token.info.trim().split(/\s+/, 1)[0] === DIAGRAM_LANGUAGE) {
       blocks.push({ line: firstLine + token.map[0], source: token.content.replace(/\n$/, "") });
     }

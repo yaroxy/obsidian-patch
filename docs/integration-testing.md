@@ -28,6 +28,8 @@ node scripts/test-mermaid.mjs /path/to/dev-vault
 
 Add `PATCHES_TEST_REMOTE=1` to the full-build command to also load the bundled version number from jsDelivr and render an ELK diagram with that remote runtime. Without this opt-in, the suite stays on bundled Mermaid and records the live-network coverage as skipped. Both variants check Cynefin, ELK, TreeView icons, themes, searchable settings, and hostile SVG handling through the production renderer.
 
+On `main`, the Mermaid suite first opens a TreeView note with both optional icon packs missing. The default run then supplies the two locked JSON fixtures, verifies them through the settings buttons and reopens the note after reloading the plugin. Set `PATCHES_TEST_ICONS_REMOTE=1` to make those same buttons install both packs from jsDelivr instead. The suite backs up and restores both cache files.
+
 - Obsidian 1.15.0 or later must finish loading, expose the CLI developer commands, and have no open dialogs in the development window.
 - Runners in `main` deploy `dist/community/` and reject Full, including any stale Full output. The separate `codex/full` checkout deploys its own `dist/full/` by default. Run suites from only one checkout at a time.
 - `OBSIDIAN_CLI` overrides the executable. On macOS the runner prefers `/Applications/Obsidian.app/Contents/MacOS/obsidian-cli`, avoiding a PATH entry that launches the GUI executable. Other installations fall back to `obsidian` on PATH.
@@ -54,6 +56,58 @@ Each output directory contains:
 CLI errors are checked even when Obsidian exits with status zero. Assertion failures and cleanup failures both make the command fail; a cleanup error does not overwrite the original assertion. `SIGINT` and `SIGTERM` request cancellation and wait for the same cleanup path. The in-app timeout interrupts the suite's next cancellable wait or checkpoint.
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
+
+## Community pre-push check — 2026-11-25
+
+A clean temporary copy of the Community source passed an offline install from the lockfile, 185 unit tests, the production build and release-package validation. Its `main.js` matched the working checkout byte for byte. The Debian Git suite passed 68 checks and the Mermaid suite passed 35 with real icon downloads enabled. Both restored the development session. The navigation run below supplied the heading captures. The rebuilt site passed local link checks and a Chromium smoke test at 1280 and 390 px covering all four homepage demo images, the numbering guide link and the settings screenshot.
+
+## Linked heading numbers and themed sidebar limits — 2026-11-25
+
+The Debian navigation suite verified that a wiki alias and a Markdown reference link each displayed its handwritten chapter number once in Reading View and Live Preview, and the following heading received number 3. With 8 px gaps, preferred sidebar widths of 250 and 500 px and a theme requesting a 120 px left minimum, the native window stopped at 968 px. Each open sidebar measured 200 px and the central workspace measured 500 px. All visible columns fit. Switching to a wider 250 px theme minimum also passed at 125% zoom. The runner passed 41 navigation checks and six PDF comparisons and restored the development session.
+
+## Desktop workspace width and numbered heading controls — 2026-11-25
+
+In the Debian development vault, dragging each native sidebar handle toward a requested 75 px stopped at 200 px. At 100% zoom, resizing the actual desktop window down to its minimum gave a 500 px central root split with two, one or zero open sidebars. The corresponding window widths were 944, 744 and 544 px, including the visible 44 px ribbon. Widening restored the chosen 320 px sidebar widths. A child split could be narrower than 500 px. A 250 px left-sidebar theme rule also held at 125% zoom. Disabling Line Width restored the original native minimum.
+
+Both Live Preview and Reading View passed pointer hit-testing and real clicks to collapse and reopen a numbered section. Changing the vault text font between monospace and serif changed the measured number column in both open views. All 38 native navigation checks, six PDF verifications and 68 Git gutter checks passed; the runners restored the development session. The native window tests covered Debian KDE. macOS and Windows were not exercised.
+
+## Continuous Git gutter marks — 2026-11-25
+
+Before the fix, adjacent modified lines in the Debian development vault had two 9.23 CSS pixel gaps in a three-line run. After the fix, native screenshots showed uninterrupted blue marks across modified lines 10–12 and green marks across added lines 13–15 in Source mode and Live Preview. The unchanged line 16 separated the next edit. Reverting the middle blue line split its run, undo joined it again and clicking the middle green line opened the correct hunk. A separate fixture verified an isolated wrapped heading after narrowing the pane and hiding line numbers. All 68 Git checks passed and restored the session. The production build, release validation, 184 unit tests and documentation checks also passed.
+
+## Heading and gutter layout — 2026-11-25
+
+In the Debian development vault, the two horizontal gaps around the Git mark were both 7 CSS pixels on line 168 and on a wrapped heading. Against the first title text range, the centers of the native line number, section badge and H3 label differed by less than 0.7 CSS pixels. The Git mark’s edges and the active bar pixels differed by less than 0.5 CSS pixels in both examples and after narrowing the same pane to a 480px reading width, enlarging the heading and changing its vertical padding. Hiding the line numbers reflowed the text again. The two bars still matched, and switching the Git column off and back on preserved the native line number and automatic heading number. All 61 Git checks passed and restored the session. These measurements cover the tested desktop appearance.
+
+## Balanced heading spacing and first-line alignment — 2026-11-25
+
+In the desktop development vault, Live Preview redistributed the sample headings’ 16px top padding to 8px above and below. In Reading View the first heading after a paragraph had 28px above and below. Against the first Chinese title text range, the centers of the number and level label differed by at most 0.8 CSS pixels across H2, H3 and the wrapped H4 in both views. The navigation suite also checked H1–H6 and Setext label heights, each heading feature on its own, the native spacing with decorations disabled, note bytes and six PDF exports.
+
+The gutter suite exercised H1–H6, a wrapped heading, a wrapped paragraph, lists, quotes and code in Source mode and Live Preview. On line 168 (`### 块 ID`), the painted bar was 0.10 CSS pixels below the content center and the gutter number was 0.21 pixels above it in both modes. The wrapped heading had a 72px painted bar. Both suites restored the development session. Physical mobile devices and third-party themes were outside this run.
+
+## Heading number alignment — 2026-11-24
+
+After adding shaded backgrounds and aligning numbers at the start of their column, the Debian development vault passed 27 native navigation checks. Light and dark screenshots from Reading View and Live Preview showed the automatic numbers against a distinct background. Across all four presets in both views, the measured number column edges varied by 0 CSS pixels and the title starts, including wrapped lines, also varied by 0 CSS pixels. The settings sample used the same alignment and shading. The run verified the original Markdown bytes and six PDF exports and restored the development session. The production build, release validation, 184 unit tests and documentation checks passed. Appearance checks covered the desktop development vault’s two color modes.
+
+On Debian with Obsidian 1.15.1, a 340 CSS pixel reading width exercised four numbering presets in both Reading View and Live Preview. The measured title starts across H2, H3 and H4, including every continuation of a wrapped Chinese title, differed by 0 CSS pixels in all eight combinations. The run also checked the active heading in the editor, original note bytes and six native PDFs. All 25 navigation checks and 184 unit tests passed, as did the production build, release validation and documentation checks. The development session was restored. This run covered the desktop development vault's appearance.
+
+## Heading numbering — 2026-11-24
+
+On Debian with Obsidian 1.15.1, the Community development build passed 23 native navigation checks and six PDF comparisons. With numbering displayed, the saved Markdown bytes and editor buffer matched the original after switching through Reading View, Source mode and Live Preview. Selecting a numbered reading heading returned its original title. Repeated headings, Setext titles, skipped levels, folding, scrolling, unsaved per-note overrides, moving sections and undo produced the expected numbers. A second reading pane followed edits to an earlier chapter and recovered when a handwritten-number conflict was corrected. The editor exercised all four styles. The settings preview responded to changes to the style, starting level, depth and initial number.
+
+The six PDF exports matched the reference glyphs and positions. With navigation enabled the PDFs retained seven bookmarks and nine internal jumps. The Mermaid suite passed all 35 local checks after sharing its Markdown block parser with heading numbering. Live icon downloads were skipped in that run. Both native suites restored the development session. All 184 unit tests, the production build, release validation, site build and 889 site links and assets passed. Physical mobile devices, screen readers and third-party themes were outside this run.
+
+## Post-install Mermaid icons and active-line coverage — 2026-11-24
+
+On Debian with Obsidian 1.15.1, both optional packs installed from jsDelivr through Patch Mermaid settings. The open TreeView note refreshed immediately and displayed both packs again after reloading the plugin. All 35 native checks passed. A second run used only local fixtures and also passed 35 checks, with the live download explicitly skipped in that run. Both restored the pre-test caches and session settings. The production build, Community release validation, all 178 unit tests, site build and link checks passed locally.
+
+The Git gutter suite measured the painted active bar on H1 through H6, plain text, a list item, a quote, a fenced code line and a wrapped paragraph in both Source mode and Live Preview. All 22 comparisons used the midpoint of the bar pixels and the midpoint of the active line after subtracting its top and bottom padding. The largest absolute difference was 0.46 CSS pixels rounded up. The reported H3 measured 0.10 pixels and the wrapped paragraph's bar spanned 88 pixels with a 24-pixel line height. All 53 native checks passed and the session was restored. This run used the desktop development vault's appearance.
+
+## Active-line alignment on headings — 2026-11-24
+
+On Debian with Obsidian 1.15.1, the Git gutter suite reproduced the reported `### 块 ID` heading on line 168. The highlighted gutter number was correct in both editor modes. In Live Preview the heading had 16 CSS pixels of top padding, and the 0.7.0 bar was centered 8 pixels above the heading content. Source mode had zero top padding and no layout offset.
+
+With the fix, the suite measured the visible bar directly from native screenshots. Its center was within 0.11 CSS pixels of the heading content center in both modes. All 33 Git and gutter checks passed and the runner restored the session. All 178 unit tests, the production build and release-package validation also passed. The native measurement covers the Debian development vault's desktop appearance; physical mobile devices and other themes were outside this run.
 
 ## 0.7.0 Community candidate — 2026-11-24
 

@@ -23,7 +23,7 @@ Version 0.6.0 introduced [HTML-to-Markdown conversion](tables.md#convert-an-html
 | [File and folder icons](icons.md) | Lucide icons and Simple Icons brand marks with text, brand, preset, or custom colors. |
 | [Line width](line-width.md) | Exact global width input and per-note overrides. |
 | [Active line](active-line.md) | A margin marker and highlighted line number for the cursor’s line. |
-| [Heading levels](heading-levels.md) | H1–H6 labels beside headings in reading and editing views. |
+| [Heading levels](heading-levels.md) | H1–H6 labels and optional [section numbering](heading-levels.md#heading-numbering) in the development build. |
 
 ## Render and share
 

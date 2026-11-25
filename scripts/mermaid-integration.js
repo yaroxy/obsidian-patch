@@ -16,8 +16,8 @@ async function mermaidIntegration(app, context) {
     const box = element.getBoundingClientRect();
     return box.width > 0 && box.height > 0;
   };
-  const until = async (condition, label) => {
-    for (let i = 0; i < 200; i++) {
+  const until = async (condition, label, attempts = 200) => {
+    for (let i = 0; i < attempts; i++) {
       context.checkpoint();
       const error = preview()?.querySelector(".obsidian-patch-mermaid--error");
       if (error) throw new Error(`${label}: ${error.textContent}`);
@@ -51,7 +51,16 @@ async function mermaidIntegration(app, context) {
       source: ["treeView-beta", "    incident-response/ icon(material-icon-theme:folder-project)", "        triage.md icon(material-icon-theme:markdown)", "        responder.js icon(logos:nodejs-icon)", "        styles/ icon(material-icon-theme:folder-css)", "        web-store icon(logos:chrome-web-store)"].join("\n"),
     },
   ];
+  const caches = [];
   try {
+    for (const { source } of plugin().mermaid.iconPacks) {
+      const name = `mermaid-${source.name}-${source.version}.json.gz`;
+      const file = path.join(context.vault, plugin().manifest.dir, name);
+      const backup = fs.existsSync(file) ? path.join(context.output, name + ".original") : undefined;
+      if (backup) fs.copyFileSync(file, backup);
+      caches.push({ file, backup, source });
+      if (backup) fs.unlinkSync(file);
+    }
     await plugin().setMermaidVersion("bundled");
     await plugin().setMermaidSecurityLevel("strict");
     let runtime = await plugin().mermaid.runtime();
@@ -138,6 +147,31 @@ async function mermaidIntegration(app, context) {
         leaf.view.previewMode.applyScroll(0);
         // Obsidian can insert the SVG while its preview section is still awaiting layout.
         await until(() => rendered(fixture.labels), `${fixture.name} rendered with visible dimensions`);
+        if (fixture.name === "TreeView") {
+          assert(!svg().querySelector(".treeView-node-icon svg path[d]"), "Missing packs unexpectedly produced vector icons");
+          pass("an existing TreeView note opens with its labels before installing diagram icons");
+          if (!options.liveIcons) {
+            for (const { file, source } of caches) fs.copyFileSync(path.join(context.output, source.name + ".fixture.gz"), file);
+            report.skipped.push("Live icon downloads: verified local copies of the locked packs used for this run.");
+          }
+          app.setting.open();
+          app.setting.openTabById("patches");
+          for (const { source } of caches) {
+            const row = [...app.setting.activeTab.containerEl.querySelectorAll(".setting-item")]
+              .find(el => el.querySelector(".setting-item-name")?.textContent === source.label + " diagram icons");
+            const button = row?.querySelector("button");
+            await until(() => button && !button.disabled, "diagram icon installer available");
+            assert(button.textContent === (options.liveIcons ? "Install" : "Check or repair"), "Unexpected diagram icon installation state");
+            button.click();
+            await until(() => {
+              if (button.textContent === "Retry") throw Error(row.textContent);
+              return row.textContent.includes("Installed: " + source.version);
+            }, source.label + " installation", 800);
+          }
+          app.setting.close();
+          await until(() => svg()?.querySelectorAll(".treeView-node-icon svg path[d]").length >= 3, "open diagram redraws after icon installation");
+          pass(options.liveIcons ? "both settings buttons install pinned icon packs from jsDelivr and refresh the open diagram" : "both settings buttons verify local pack files and refresh the open diagram");
+        }
       } finally {
         runtime.mermaid.render = originalRender;
       }
@@ -150,7 +184,7 @@ async function mermaidIntegration(app, context) {
         const icons = [...svg().querySelectorAll(".treeView-node-icon svg")];
         assert(icons.length === 5, "TreeView lost an icon container");
         assert(icons.slice(0, 3).every(icon => icon.querySelector("path[d]") && icon.getBoundingClientRect().width > 0 && icon.getBoundingClientRect().height > 0), "TreeView lost the visible vector shapes in its project, Markdown or Node.js icon");
-        pass(`${build}: TreeView displays the project, Markdown and Node.js icons from both bundled packs`);
+        pass(`${build}: TreeView displays the project, Markdown and Node.js icons from both installed packs`);
         assert(rawTreeView, "The original Mermaid output was not captured");
         const rawDocument = new DOMParser().parseFromString(rawTreeView, "image/svg+xml");
         const rawIcons = [...rawDocument.querySelectorAll(".treeView-node-icon svg")];
@@ -189,6 +223,14 @@ async function mermaidIntegration(app, context) {
       assert(await app.vault.read(app.vault.getFileByPath(notePath)) === contents, `${fixture.name} rendering changed the note source`);
       pass(`${build}: ${fixture.name} leaves its note source unchanged`);
     }
+
+    await leaf.setViewState({ type: "empty" });
+    await app.plugins.disablePlugin("patches");
+    await app.plugins.enablePlugin("patches");
+    runtime = await plugin().mermaid.runtime();
+    await leaf.setViewState({ type: "markdown", state: { file: "Patch Mermaid Tests/TreeView.md", mode: "preview" } });
+    await until(() => svg()?.querySelectorAll(".treeView-node-icon svg path[d]").length >= 3, "TreeView icons after reloading the plugin");
+    pass("a fresh renderer loads the installed icon packs from the vault cache");
 
     // Real Mermaid installs its click handlers after the sanitized SVG is inserted.
     const callbackName = "__patchesMermaidCallbackProbe";
@@ -419,6 +461,10 @@ async function mermaidIntegration(app, context) {
     throw error;
   } finally {
     app.setting.close();
+    for (const { file, backup } of caches) {
+      if (backup) fs.copyFileSync(backup, file);
+      else fs.rmSync(file, { force: true });
+    }
     const changed = body.classList.contains("theme-dark") !== originalTheme.dark || body.classList.contains("theme-light") !== originalTheme.light;
     const previous = svg();
     body.classList.toggle("theme-dark", originalTheme.dark);

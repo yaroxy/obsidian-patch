@@ -31,6 +31,10 @@ Red lines marked **−** were removed. Green lines marked **+** were added. **Pr
 
 Git vaults show markers by default in visible Markdown editors. Green marks added lines, blue marks modified lines, and a red triangle marks where lines were removed. Click a marker to open its change. The gutter works in Source mode and Live Preview, including with line numbers hidden. Run **Patches: Toggle Git change markers for this vault** to turn the gutter off or back on across the vault. This device remembers one switch. The manual comparison works with either setting.
 
+When line numbers are visible, the Git gutter sits between the line number and the active-line bar. Consecutive modifications in one hunk form one blue bar, and consecutive additions form one green bar. The bar follows wrapped text and breaks at an unchanged line or a change of type. Click any marked line to open its hunk.
+
+![A blue bar spans modified lines 10 through 12, a green bar spans additions 13 through 15, and unchanged line 16 separates a later edit](../../docs/images/git-change-runs.png)
+
 ![Blue markers beside the two edited lines, a green marker beside Paprika, and a red deletion marker above Check the subtitles](../../docs/images/note-git-gutter.png)
 
 ## Other entry points

@@ -1,7 +1,5 @@
-import type { AsyncIconLoader } from "mermaid";
-import { MarkdownRenderChild, type Plugin } from "obsidian";
-import logosIcons from "gzip:@iconify-json/logos/icons.json";
-import materialIcons from "gzip:@iconify-json/material-icon-theme/icons.json";
+import { MarkdownRenderChild, Notice, type Plugin } from "obsidian";
+import { MermaidIconPack } from "./mermaid-icon-packs";
 import { sanitizeMermaidSvg } from "./mermaid-dom";
 import {
   loadMermaidRuntime,
@@ -29,13 +27,13 @@ export interface PatchMermaidOptions {
 }
 
 export interface PatchMermaidController {
+  iconPacks: readonly MermaidIconPack[];
+  installIconPack(pack: MermaidIconPack): Promise<void>;
   setSecurityLevel(securityLevel: MermaidSecurityLevel): void;
   setVersion(version: MermaidVersionChoice): Promise<MermaidRuntime>;
   /** The runtime in use, or the one being loaded. */
   runtime(): Promise<MermaidRuntime>;
 }
-
-type IconPack = Awaited<ReturnType<AsyncIconLoader["loader"]>>;
 
 interface Diagram {
   container: HTMLElement;
@@ -55,6 +53,11 @@ export function registerPatchMermaid(
   options: PatchMermaidOptions,
 ): PatchMermaidController {
   const diagrams = new Set<Diagram>();
+  const iconPacks = __MERMAID_ICON_PACKS__.map(source => new MermaidIconPack(source, plugin.app.vault.adapter,
+    plugin.manifest.dir ?? `${plugin.app.vault.configDir}/plugins/${plugin.manifest.id}`));
+  const notified = new Set<string>();
+  let disposed = false;
+  plugin.register(() => { disposed = true; diagrams.clear(); });
   let renderSequence = 0;
   let securityLevel = options.securityLevel;
   let appearance = readAppearance();
@@ -65,7 +68,19 @@ export function registerPatchMermaid(
       cachedLatest = resolved;
       options.onLatestResolved(resolved);
     }).then((runtime) => {
-      registerIconPacks(runtime.mermaid);
+      runtime.mermaid.registerIconPacks(iconPacks.map(pack => ({
+        name: pack.source.name,
+        loader: async () => {
+          try { return await pack.load(); }
+          catch (error) {
+            if (!disposed && !notified.has(pack.source.name)) {
+              notified.add(pack.source.name);
+              new Notice(`To display ${pack.source.label} icons, install or repair the pack in Settings → Patches → Patch Mermaid.`);
+            }
+            throw error;
+          }
+        },
+      })));
       configureMermaid(runtime.mermaid, securityLevel, appearance);
       return runtime;
     });
@@ -144,6 +159,15 @@ export function registerPatchMermaid(
   );
 
   return {
+    iconPacks,
+    async installIconPack(pack) {
+      const icons = await pack.install();
+      const { mermaid } = await runtime;
+      if (disposed) return;
+      mermaid.registerIconPacks([{ name: pack.source.name, icons }]);
+      notified.delete(pack.source.name);
+      rerenderAll();
+    },
     setSecurityLevel(nextSecurityLevel) {
       securityLevel = nextSecurityLevel;
       void reconfigure();
@@ -180,41 +204,11 @@ function configureMermaid(
   });
 }
 
-const iconPacks: Record<string, string> = {
-  "material-icon-theme": materialIcons,
-  logos: logosIcons,
-};
-const inflatedIconPacks = new Map<string, Promise<IconPack>>();
-
-/** Every Mermaid instance shares one decompressed copy of each icon pack. */
-function registerIconPacks(mermaid: Mermaid): void {
-  mermaid.registerIconPacks(
-    Object.entries(iconPacks).map(([name, data]) => ({
-      name,
-      loader: () => {
-        let pack = inflatedIconPacks.get(name);
-        if (pack === undefined) {
-          pack = inflateJson<IconPack>(data);
-          inflatedIconPacks.set(name, pack);
-        }
-        return pack;
-      },
-    })),
-  );
-}
-
 function readAppearance(): Appearance {
   return {
     dark: document.body.classList.contains("theme-dark"),
     font: getComputedStyle(document.body).getPropertyValue(FONT_PROPERTY).trim(),
   };
-}
-
-/** Decodes an icon pack that the build embedded as gzip-compressed base64. */
-async function inflateJson<T>(base64: string): Promise<T> {
-  const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-  return JSON.parse(await new Response(stream).text()) as T;
 }
 
 function renderError(container: HTMLElement, error: unknown): void {

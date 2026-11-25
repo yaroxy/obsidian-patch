@@ -15,7 +15,7 @@ function restrictSvgReferences(fragment: DocumentFragment): void {
       ? [...owner.querySelectorAll("[id]")].filter(element => element.id === references[0]!.slice(1) && element.closest("svg") === owner)
       : [];
     const target = targets.length === 1 ? targets[0] : undefined;
-    // Bundled icons reuse static vector shapes. Keep those local references,
+    // Icon packs reuse static vector shapes. Keep those local references,
     // but not external documents, missing/ambiguous IDs, or recursive use trees.
     if (!target || target.namespaceURI !== svgNamespace || !useTargets.has(target.localName)
       || target.contains(use) || target.querySelector("use,foreignObject,image,style,animate,set,script")) {

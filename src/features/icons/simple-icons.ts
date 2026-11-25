@@ -1,4 +1,5 @@
-import { requestUrl, type DataAdapter } from "obsidian";
+import type { DataAdapter } from "obsidian";
+import { downloadIconData } from "./download";
 
 /**
  * Simple Icons come from Iconify's JSON package of the set, which follows each
@@ -7,7 +8,6 @@ import { requestUrl, type DataAdapter } from "obsidian";
 const PACKAGE = "@iconify-json/simple-icons";
 const PACKAGE_API_URL = `https://data.jsdelivr.com/v1/packages/npm/${PACKAGE}/resolved?specifier=latest`;
 const CDN_URL = `https://cdn.jsdelivr.net/npm/${PACKAGE}`;
-const LOAD_TIMEOUT_MS = 30_000;
 
 export interface SimpleIconSet {
   /** The Simple Icons release, such as 16.36.0. */
@@ -124,20 +124,7 @@ async function resolveLatestVersion(): Promise<string> {
 }
 
 async function fetchJson(url: string): Promise<unknown> {
-  let timer: number | undefined;
-  try {
-    // requestUrl cannot be aborted; bound the wait and ignore a late response.
-    const response = await Promise.race([
-      requestUrl({ url, throw: false }),
-      new Promise<never>((_, reject) => {
-        timer = window.setTimeout(() => reject(new Error(`Timed out after ${LOAD_TIMEOUT_MS / 1000} seconds`)), LOAD_TIMEOUT_MS);
-      }),
-    ]);
-    if (response.status < 200 || response.status >= 300) throw new Error(`${response.status} for ${url}`);
-    return JSON.parse(response.text) as unknown;
-  } finally {
-    if (timer !== undefined) window.clearTimeout(timer);
-  }
+  return JSON.parse((await downloadIconData(url)).text) as unknown;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -73,11 +73,17 @@ Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagra
 | Mermaid version | **Community:** the bundled version is shown. **Full:** choose **Bundled** (default), **Latest**, or **Custom** (an exact version from 11.0.0 onward). Failed remote loads fall back to Bundled. |
 | Security level  | **Strict** (default) restricts diagram content and currently hides treeView icons. **Loose** allows additional content and interactions; use it only with diagrams you fully trust. Both modes sanitize the generated SVG before display. |
 
-Some bundled icons, including `material-icon-theme:folder-css` and `logos:chrome-web-store`, currently render incompletely because of Mermaid's own icon filtering, even in Loose mode.
+### Install diagram icons
 
-In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build excludes this remote loader and uses the code shipped with the plugin, even if old settings selected Latest or Custom. Simple Icons may still download icon data; see [network and privacy](../privacy.md).
+The development build offers **Logos diagram icons** and **Material Icon Theme diagram icons** under **Settings → Patches → Patch Mermaid**. Select **Install** for the prefixes your diagrams use. Each button downloads the pinned Iconify JSON from jsDelivr, verifies it and saves a compressed local copy. Open diagrams refresh after installation, and the icons work offline after restarting Obsidian. **Check or repair** verifies the local copy and downloads it again if needed. Published 0.7.0 has both packs built in.
 
-Show the plugin's project structure with [treeView](https://mermaid.js.org/syntax/treeView.html). With **Bundled** selected, switch to **Loose** for this trusted example to display icons from the included `material-icon-theme` and `logos` packs:
+If a future Patches update changes a pack's pinned version, select **Install** for that version in the same setting.
+
+When upgrading from 0.7.0, existing diagrams keep their original Markdown. Install the packs before going offline to see their icons. Some icons, including `material-icon-theme:folder-css` and `logos:chrome-web-store`, currently render incompletely because of Mermaid's own icon filtering, even in Loose mode.
+
+In the full build, remote Mermaid and ELK versions load from jsDelivr without an integrity check and run with full access to Obsidian. The community build uses the renderer shipped with the plugin, even if old settings selected Latest or Custom. [Network and privacy](../privacy.md).
+
+Show the plugin's project structure with [treeView](https://mermaid.js.org/syntax/treeView.html). With both icon packs available and **Bundled** selected, switch to **Loose** for this trusted example:
 
 ````markdown
 ```patch-mermaid

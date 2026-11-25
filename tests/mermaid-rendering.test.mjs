@@ -18,14 +18,14 @@ after(() => {
 const result = await build({
   entryPoints: ["src/features/patch-mermaid.ts"], bundle: true, write: false,
   format: "esm", platform: "node",
+  define: { __MERMAID_ICON_PACKS__: "[]" },
   plugins: [{
     name: "mermaid-rendering-dependencies",
     setup(builder) {
-      builder.onResolve({ filter: /^(obsidian|dompurify|gzip:.*|\.\/mermaid-runtime)$/ }, ({ path }) => ({ path, namespace: "rendering-test" }));
+      builder.onResolve({ filter: /^(obsidian|dompurify|\.\/mermaid-runtime)$/ }, ({ path }) => ({ path, namespace: "rendering-test" }));
       builder.onLoad({ filter: /.*/, namespace: "rendering-test" }, ({ path }) => {
         const prefix = "const state = globalThis.__patchesMermaidRenderingTest;";
-        if (path.startsWith("gzip:")) return { contents: 'export default "";' };
-        if (path === "obsidian") return { contents: "export class MarkdownRenderChild { register() {} } export class Modal {} export class MarkdownView {} export class Notice {} export function getFrontMatterInfo() {}" };
+        if (path === "obsidian") return { contents: "export class MarkdownRenderChild { register() {} } export class Modal {} export class MarkdownView {} export class Notice {} export function getFrontMatterInfo() {} export function normalizePath(path) {return path} export function requestUrl() {throw Error('Unexpected network request')}" };
         if (path === "dompurify") return { contents: `${prefix}
           export default function createDOMPurify() { return {
             isSupported: state.supported,
