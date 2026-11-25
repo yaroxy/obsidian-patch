@@ -16,13 +16,13 @@ Edit tables and callouts, shape your reading space, and make diagrams and export
 
 One note, a few improvements: a [vault-image banner](https://yaroxy.github.io/obsidian-patch/features/banner.html), a [grouped itinerary](https://yaroxy.github.io/obsidian-patch/features/tables.html), and [code that fits its callout](https://yaroxy.github.io/obsidian-patch/features/callouts.html).
 
-## Preview of 0.8.0
+## New in 0.8.0
 
-The development build adds display-only section numbers. Add `patch-heading-numbering: decimal` to a note’s properties and headings such as **Methods** and its subsection **Materials** appear as **1 Methods** and **1.1 Materials** in Live Preview and Reading View. Move a section and its numbers update automatically. Heading links, copied text and the Markdown file keep the original titles. Vault-wide numbering starts off. [Try a sample note and compare the four styles](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
+Patches 0.8.0 adds display-only section numbers. Add `patch-heading-numbering: decimal` to a note’s properties and headings such as **Methods** and its subsection **Materials** appear as **1 Methods** and **1.1 Materials** in Live Preview and Reading View. Move a section and its numbers update automatically. Heading links, copied text and the Markdown file keep the original titles. Vault-wide numbering starts off. [Try a sample note and compare the four styles](https://yaroxy.github.io/obsidian-patch/features/heading-levels.html#heading-numbering)
 
 ![A narrow reading pane showing sections 9 and 10, their subsections and a wrapped title aligned under its first word](docs/images/heading-number-alignment.png)
 
-Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons will need the corresponding pack installed once from Patch Mermaid settings. [0.8.0 release notes](CHANGELOG.md#080---2026-11-25)
+Consecutive Git edits now share a margin bar. On desktop, Line Width keeps 500 px between the sidebars as the window narrows. Diagrams that use Logos or Material Icon Theme icons need the corresponding pack installed once from Patch Mermaid settings. [0.8.0 release notes and downloads](https://github.com/yaroxy/obsidian-patch/releases/tag/0.8.0)
 
 ## New in 0.7.0
 
@@ -46,7 +46,7 @@ Find appearance and editing options under **Settings → Patches**, and Git comm
 - **HTML Tables**
   - [Convert between Markdown and HTML tables](https://yaroxy.github.io/obsidian-patch/features/tables.html). Edit merged cells and captions, and choose a font for inline code in HTML cells.
 - **Line Width**
-  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note. In the development build, Line Width also keeps at least 500 px between the sidebars when resizing the desktop window.
+  - [Adjust the reading column](https://yaroxy.github.io/obsidian-patch/features/line-width.html) globally or for a single note. In 0.8.0, Line Width also keeps at least 500 px between the sidebars when resizing the desktop window.
 - **Math Format**
   - [Indent and align display formulas](https://yaroxy.github.io/obsidian-patch/features/math-format.html).
 - **Patch Banner**
@@ -68,7 +68,7 @@ Requires **Obsidian 1.15.0 or later**. [Patches is available in the Community Di
 
 With Obsidian Sync Standard, install Patches on each device. Its bundled diagram renderer makes `main.js` larger than the plan’s 5 MB per-file limit.
 
-In the development build, diagrams using `logos:` or `material-icon-theme:` icons need a download under **Settings → Patches → Patch Mermaid → Install** once per pack version. Published 0.7.0 includes both packs.
+In 0.8.0, diagrams using `logos:` or `material-icon-theme:` icons need a download under **Settings → Patches → Patch Mermaid → Install** once per pack version. Version 0.7.0 includes both packs.
 
 For manual installation, download `main.js`, `manifest.json`, and `styles.css` from the [latest release](https://github.com/yaroxy/obsidian-patch/releases/latest). Put them in `<vault>/.obsidian/plugins/patches/`, reload Obsidian, and enable Patches.
 
@@ -88,7 +88,7 @@ Other notes keep their global width. See [note properties](https://yaroxy.github
 
 ## Network and privacy
 
-The Community build runs its bundled Mermaid code locally. The development build downloads version-pinned diagram icon JSON from **jsDelivr** when you install a pack or repair a damaged copy. Installed packs load locally. In 0.7.0, selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from the same service. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
+The Community build runs its bundled Mermaid code locally. Patches 0.8.0 downloads version-pinned diagram icon JSON from **jsDelivr** when you install a pack or repair a damaged copy. Installed packs load locally. In 0.7.0, selecting **Install** or **Update** for Simple Icons downloads the catalog and brand-color JSON from the same service. Opening the picker and searching installed icons work offline. Search terms, note contents and file names stay on the device. On desktop, Patches checks the vault and its parent directories for Git metadata to find the working tree. To compare a note with its last commit, it reads the local repository’s Git objects, which can reside outside the vault.
 
 The optional Full build can download and execute Mermaid/ELK JavaScript from jsDelivr when Latest or Custom is selected, with access to Obsidian. The cover picker lists vault media locally, and Iconize import reads settings within the vault. Patches has no analytics or telemetry. See [network and privacy](https://yaroxy.github.io/obsidian-patch/privacy.html) for details.
 

@@ -15,8 +15,8 @@ In 0.7.0, Lucide icons are ready to use. For brand logos, select **Settings → 
 
 [Open the Community Directory listing](https://community.obsidian.md/plugins/patches).
 
-::: tip New in 0.7.0
-On desktop, click a change marker beside a note to compare it with its last Git commit. Callouts can also use brand logos from your installed Simple Icons catalog. [Compare a note with Git](reference/commands.md#compare-a-note-with-git) · [Customize a callout](features/callouts.md#type-appearance)
+::: tip New in 0.8.0
+Add `patch-heading-numbering: decimal` to one note to number its sections in Live Preview and Reading View. If your Mermaid diagrams use Logos or Material Icon Theme icons, install the matching pack before going offline. [Try heading numbers](features/heading-levels.md#heading-numbering) · [Install diagram icons](features/mermaid.md#install-diagram-icons)
 :::
 
 ## Try one improvement

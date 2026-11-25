@@ -24,7 +24,7 @@ A quoted value such as `"1200px"` also works. Each pane uses its note's width. T
 
 ## Desktop window width
 
-In the development build, enabling **Line Width** also reserves 500 CSS pixels for the entire central workspace in the main desktop window. Dragging the window narrower first reduces the space available to expanded sidebars. Each keeps its minimum width (200 px in the default desktop layout). At that point the window reaches its minimum. The window minimum includes the theme’s column gaps and any larger sidebar minimum. Collapsing a sidebar lets the window get narrower, and widening it restores the preferred widths of open sidebars. Individual panes inside the central workspace can be narrower than 500 px.
+In 0.8.0, enabling **Line Width** also reserves 500 CSS pixels for the entire central workspace in the main desktop window. Dragging the window narrower first reduces the space available to expanded sidebars. Each keeps its minimum width (200 px in the default desktop layout). At that point the window reaches its minimum. The window minimum includes the theme’s column gaps and any larger sidebar minimum. Collapsing a sidebar lets the window get narrower, and widening it restores the preferred widths of open sidebars. Individual panes inside the central workspace can be narrower than 500 px.
 
 ## Settings
 

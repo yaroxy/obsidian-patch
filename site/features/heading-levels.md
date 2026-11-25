@@ -14,7 +14,7 @@ Reading View, Live Preview, and Source mode. Exported PDFs use the note’s head
 
 ## Heading numbering
 
-The 0.8.0 release candidate can display section numbers in Live Preview and Reading View. To try it in one note with the default settings, paste this example into an empty note. The vault-wide switch under **Settings → Patches → Editor → Heading numbering** starts off.
+Patches 0.8.0 can display section numbers in Live Preview and Reading View. To try it in one note with the default settings, paste this example into an empty note. The vault-wide switch under **Settings → Patches → Editor → Heading numbering** starts off.
 
 ```markdown
 ---

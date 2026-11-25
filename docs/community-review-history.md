@@ -240,6 +240,10 @@ The follow-up narrows parsed YAML, types the desktop Electron interface and crea
 
 The candidate on `main` includes the fixes for the preview of `c8f25a5`. The 0.8.0 package passed local release validation and native checks on Debian KDE. Its 5,654,854-byte `main.js` remains above the 5 MB Sync Standard limit. The latest supplied Directory report covers `c8f25a5`. [0.8.0 candidate checks](integration-testing.md#080-community-release-candidate--2026-11-25)
 
+### 0.8.0 published on GitHub — 2026-11-25
+
+The maintainer confirmed that the branch preview passed for `d3b867f27b2c7fbdba608364e4fb82df51ab30e3`. Tag `0.8.0` points to that commit. The release workflow built and attested all three Community attachments. After publication, the downloaded `main.js`, `manifest.json` and `styles.css` each matched the tested local package byte for byte and passed attestation verification against the tag, commit and release workflow. The public Directory entry still showed 0.7.0 immediately after the GitHub release. [Release](https://github.com/yaroxy/obsidian-patch/releases/tag/0.8.0) · [Release workflow](https://github.com/yaroxy/obsidian-patch/actions/runs/45548414740)
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.

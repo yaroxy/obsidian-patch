@@ -75,7 +75,7 @@ Diagrams follow Obsidian's theme and Mermaid font. Leave `theme` unset in diagra
 
 ### Install diagram icons
 
-The development build offers **Logos diagram icons** and **Material Icon Theme diagram icons** under **Settings → Patches → Patch Mermaid**. Select **Install** for the prefixes your diagrams use. Each button downloads the pinned Iconify JSON from jsDelivr, verifies it and saves a compressed local copy. Open diagrams refresh after installation, and the icons work offline after restarting Obsidian. **Check or repair** verifies the local copy and downloads it again if needed. Published 0.7.0 has both packs built in.
+Patches 0.8.0 offers **Logos diagram icons** and **Material Icon Theme diagram icons** under **Settings → Patches → Patch Mermaid**. Select **Install** for the prefixes your diagrams use. Each button downloads the pinned Iconify JSON from jsDelivr, verifies it and saves a compressed local copy. Open diagrams refresh after installation, and the icons work offline after restarting Obsidian. **Check or repair** verifies the local copy and downloads it again if needed. Version 0.7.0 has both packs built in.
 
 If a future Patches update changes a pack's pinned version, select **Install** for that version in the same setting.
 
