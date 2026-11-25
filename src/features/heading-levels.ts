@@ -1,7 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
 import { StateEffect } from "@codemirror/state";
 import { Decoration, ViewPlugin, WidgetType, type DecorationSet, type EditorView, type ViewUpdate } from "@codemirror/view";
-import { MarkdownView, type Plugin } from "obsidian";
+import { editorLivePreviewField, MarkdownView, type Plugin } from "obsidian";
 
 export const DEFAULT_HEADING_LEVELS_ENABLED = true;
 const CLASS = "obsidian-patch-heading-levels";
@@ -24,10 +24,22 @@ export function registerHeadingLevels(plugin: Plugin, initial: boolean): (enable
   const editors = new Set<EditorView>();
   let styled = new Set<HTMLElement>();
 
+  const blankLine = Decoration.line({ class: "obsidian-patch-heading-blank" });
   const decorate = (view: EditorView): DecorationSet => {
-    if (!enabled) return Decoration.none;
+    const ranges = [];
+    const live = view.state.field(editorLivePreviewField, false);
+    const doc = view.state.doc;
     const headings = new Map<number, number>();
     for (const { from, to } of view.visibleRanges) {
+      // CSS uses the neighbouring header classes to distinguish consecutive headings
+      // separated by one empty source line from a heading after a line of prose.
+      if (live) {
+        for (let n = doc.lineAt(from).number, end = doc.lineAt(to).number; n <= end; n++) {
+          const line = doc.line(n);
+          if (!line.length) ranges.push(blankLine.range(line.from));
+        }
+      }
+      if (!enabled) continue;
       syntaxTree(view.state).iterate({ from, to, enter(node) {
         if (/codeblock|frontmatter/.test(node.name)) return;
         // Obsidian's Markdown lexer emits header tokens, including formatted spans.
@@ -39,15 +51,17 @@ export function registerHeadingLevels(plugin: Plugin, initial: boolean): (enable
         headings.set(line.to, Number(level));
       } });
     }
-    return Decoration.set([...headings].map(([pos, level]) =>
-      Decoration.widget({ widget: new HeadingLevel(level), side: 1 }).range(pos)), true);
+    for (const [pos, level] of headings) ranges.push(Decoration.widget({ widget: new HeadingLevel(level), side: 1 }).range(pos));
+    return Decoration.set(ranges, true);
   };
 
   plugin.registerEditorExtension(ViewPlugin.fromClass(class {
     decorations: DecorationSet;
     constructor(private readonly view: EditorView) { editors.add(view); this.decorations = decorate(view); }
     update(update: ViewUpdate): void {
-      if (update.docChanged || update.viewportChanged || syntaxTree(update.state) !== syntaxTree(update.startState)
+      if (update.docChanged || update.viewportChanged
+        || update.state.field(editorLivePreviewField, false) !== update.startState.field(editorLivePreviewField, false)
+        || syntaxTree(update.state) !== syntaxTree(update.startState)
         || update.transactions.some(t => t.effects.some(e => e.is(refresh)))) this.decorations = decorate(update.view);
     }
     destroy(): void {

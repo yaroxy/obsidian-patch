@@ -10,6 +10,11 @@ interface DesktopWindow {
   setSize(width: number, height: number): void;
 }
 
+interface DesktopElectron {
+  remote?: { getCurrentWindow(): DesktopWindow };
+  webFrame: { getZoomFactor(): number };
+}
+
 const workspaceClass = "obsidian-patch-line-width-workspace";
 
 /** Only the main desktop workspace has a root split between two sidedocks. */
@@ -18,7 +23,7 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
   const { workspace } = plugin.app;
   const el = workspace.containerEl;
   const win = el.win;
-  const electron = window.require("electron");
+  const electron = window.require("electron") as DesktopElectron;
   if (!electron.remote?.getCurrentWindow) return () => {};
   const native: DesktopWindow = electron.remote.getCurrentWindow();
 
@@ -44,7 +49,7 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
     const pixels = (value: string) => value.endsWith("%")
       ? parseFloat(value) * contentWidth / 100 : parseFloat(value) || 0;
     let visible = 0;
-    // Read the theme's own minimum again in case a theme or media query changed it.
+    // Release temporary flex bases before measuring the layout requested by the theme.
     for (const dock of clamped) dock.classList.remove(floorClass);
     clamped.clear();
     for (const child of Array.from(el.children)) {
@@ -56,7 +61,7 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
       if (child === root) continue;
       if (child.classList.contains("mod-sidedock")) {
         const themeFloor = pixels(css.minWidth);
-        if (themeFloor < 200) clamped.add(child);
+        if (themeFloor < 200 && child.getBoundingClientRect().width < 200) clamped.add(child);
         minimum += Math.max(200, themeFloor);
       } else {
         minimum += child.getBoundingClientRect().width;
@@ -87,6 +92,10 @@ export function registerWorkspaceWidth(plugin: Plugin, initial: boolean): (enabl
     resize.disconnect();
     if (next) {
       layout.observe(el, { attributes: true, attributeFilter: ["class"], childList: true });
+      for (const dock of el.querySelectorAll(":scope > .mod-sidedock")) {
+        layout.observe(dock, { attributes: true, attributeFilter: ["style"] });
+        resize.observe(dock);
+      }
       resize.observe(el);
       for (const child of el.querySelectorAll(":scope > .workspace-ribbon")) resize.observe(child);
       schedule();

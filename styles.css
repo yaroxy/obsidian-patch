@@ -198,7 +198,7 @@ body {
   .markdown-source-view.is-live-preview .cm-content > .cm-line.HyperMD-header:where(
     .obsidian-patch-active-line *, .obsidian-patch-heading-levels *, .obsidian-patch-heading-number-line
   ):not(:where(.HyperMD-quote, .HyperMD-list-line, .HyperMD-codeblock,
-    .HyperMD-header + .cm-line:has(> br:only-child) + .HyperMD-header)) {
+    .HyperMD-header + .cm-line.obsidian-patch-heading-blank + .HyperMD-header)) {
     padding-block: calc(var(--p-spacing) / 2);
   }
 
@@ -313,7 +313,7 @@ body {
   .obsidian-patch-heading-number-preview {
     display: grid;
     grid-template-columns: fit-content(9rem) 1fr;
-    column-gap: var(--obsidian-patch-heading-gap);
+    gap: 0 var(--obsidian-patch-heading-gap);
   }
   .obsidian-patch-heading-number-preview > div { grid-column: 1 / -1; }
   .obsidian-patch-heading-number-preview .obsidian-patch-heading-number-line {
@@ -811,9 +811,9 @@ body {
   min-inline-size: 200px;
 }
 
-/* Applied only if the active theme sets an expanded dock below the native floor. */
+/* Reserve the native floor when flex layout would shrink this dock below it. */
 .workspace.obsidian-patch-line-width-workspace > .mod-sidedock.obsidian-patch-line-width-sidebar-floor:not(.is-sidedock-collapsed) {
-  min-width: 200px !important;
+  flex: 0 0 200px;
 }
 
 .setting-item-control input.obsidian-patch-line-width-input {

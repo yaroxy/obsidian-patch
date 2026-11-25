@@ -16,7 +16,10 @@ export function numberingForSource(source: string, settings: NumberingSettings):
   const info = getFrontMatterInfo(text);
   let property: unknown;
   if (info.exists && info.frontmatter.includes(NUMBERING_PROPERTY)) {
-    try { property = parseYaml(info.frontmatter)?.[NUMBERING_PROPERTY]; }
+    try {
+      const parsed: unknown = parseYaml(info.frontmatter);
+      if (parsed && typeof parsed === "object" && NUMBERING_PROPERTY in parsed) property = parsed[NUMBERING_PROPERTY];
+    }
     catch { return undefined; }
   }
   const preset = notePreset(settings, property);
@@ -26,10 +29,8 @@ export function numberingForSource(source: string, settings: NumberingSettings):
 }
 
 function prefixElement(doc: Document, prefix: string): HTMLSpanElement {
-  const el = doc.createElement("span");
-  el.className = prefixClass;
+  const el = doc.defaultView!.createSpan({ cls: prefixClass, attr: { "aria-hidden": "true" } });
   el.dataset.prefix = prefix;
-  el.setAttribute("aria-hidden", "true");
   return el;
 }
 

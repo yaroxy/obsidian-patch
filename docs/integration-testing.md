@@ -57,6 +57,10 @@ CLI errors are checked even when Obsidian exits with status zero. Assertion fail
 
 A frozen Obsidian process or a non-returning native operation cannot be forcibly unwound by this runner. If no completed cleanup report arrives, the command fails and retains the lock and settings backup. Inspect the recorded run and the development window before removing that lock or restoring the backup; do not start another suite while the old one can still write. Force-killing the runner also leaves the in-app timeout responsible for cleanup.
 
+## Heading numbering Directory preview follow-up — 2026-11-25
+
+On Debian KDE the development vault passed 42 navigation checks, six PDF comparisons and 68 Git gutter checks. The Live Preview fixture kept zero padding between headings separated by one empty line, gained balanced spacing when that line contained prose and restored compact spacing on undo. The settings preview retained its aligned number column. The asymmetric sidebar fixture again measured 200, 500 and 200 px inside a 968 px window with theme gaps. Both native suites restored the session. All 185 unit tests, the production build, release validation and documentation checks passed.
+
 ## Community pre-push check — 2026-11-25
 
 A clean temporary copy of the Community source passed an offline install from the lockfile, 185 unit tests, the production build and release-package validation. Its `main.js` matched the working checkout byte for byte. The Debian Git suite passed 68 checks and the Mermaid suite passed 35 with real icon downloads enabled. Both restored the development session. The navigation run below supplied the heading captures. The rebuilt site passed local link checks and a Chromium smoke test at 1280 and 390 px covering all four homepage demo images, the numbering guide link and the settings screenshot.

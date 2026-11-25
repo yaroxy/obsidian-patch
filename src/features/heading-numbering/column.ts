@@ -8,7 +8,7 @@ export function numberColumn(host: HTMLElement, headings: Iterable<NumberedHeadi
   const doc = host.ownerDocument;
   const style = doc.defaultView!.getComputedStyle(host.isConnected ? host : doc.body);
   const family = style.getPropertyValue("--font-text").trim() || style.fontFamily;
-  const context = doc.createElement("canvas").getContext("2d");
+  const context = doc.defaultView!.createEl("canvas").getContext("2d");
   if (context) context.font = "100px " + family;
   let widest = 0;
   for (const { prefix, handwritten } of headings) {

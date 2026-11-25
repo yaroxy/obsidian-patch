@@ -194,6 +194,17 @@ async function navigationIntegration(app, config) {
       assert(editor.getValue() === original, "Heading labels changed the note source");
       pass(`${mode}: H1–H6, Setext and off-screen headings are labeled; fenced code and source text are unchanged`);
       await inspect("Level two", 2);
+      if (mode === "live-preview") {
+        const padding = () => getComputedStyle(lineElement(at("Level two")));
+        assert(padding().paddingTop === "0px" && padding().paddingBottom === "0px", "Native empty-line exception lost");
+        const preceding = editor.offsetToPos(at("## Level two")).line - 1;
+        editor.replaceRange("Paragraph", { line: preceding, ch: 0 });
+        const title = () => lineElement(editor.getValue().indexOf("Level two"));
+        await until(() => parseFloat(getComputedStyle(title()).paddingBottom) > 0, "prose before heading regains spacing");
+        editor.undo();
+        await until(() => padding().paddingBottom === "0px", "undo restores compact heading spacing");
+        pass("a single blank line between headings retains native spacing after editing and undo");
+      }
       const pos = editor.offsetToPos(at("## Level two"));
       editor.replaceRange("#", pos);
       await until(() => lineElement(at("Level two") + 1)?.querySelector(".obsidian-patch-heading-level")?.textContent === "H3", "label follows heading edit");

@@ -230,6 +230,12 @@ The Community candidate moves both Iconify packs out of `main.js`, which now mea
 
 The Community candidate for `codex/review-heading-numbering` adds display-only heading numbers, revises the editor gutters and desktop workspace minimum, and moves both Mermaid icon packs to optional verified downloads. A clean build passed 185 unit tests and release validation. Native development-vault checks covered heading layout, Git gutters and live icon installation. The candidate still exceeds the 5 MB Sync Standard limit and uses local filesystem and Git process access for desktop comparisons. These are local results. The Directory preview is pending. [Pre-push verification](integration-testing.md#community-pre-push-check--2026-11-25)
 
+### Heading numbering preview — completed for c8f25a5, 2026-11-25
+
+The maintainer's screenshot identifies a completed Directory branch preview for `codex/review-heading-numbering` at `c8f25a5`. It shows four source warning groups (unsafe member access, assignment and calls, and direct element creation) and three CSS groups (multicolumn support for `column-gap`, a sidebar `!important` declaration and a heading `:has()` selector). [Reviewed commit](https://github.com/yaroxy/obsidian-patch/commit/c8f25a567cc05cf0301e0581038e72a08ce4733b)
+
+The follow-up narrows parsed YAML, types the desktop Electron interface and creates the detached elements with their owning window’s Obsidian helpers. The settings grid uses `gap`. Live Preview marks visible empty source lines for the heading spacing rule, and the workspace temporarily reserves a 200 px flex basis for an undersized sidebar. Local ESLint with the recommended Obsidian plugin 0.6.0 configuration reported zero errors across 65 TypeScript files and six pre-existing `prefer-active-doc` warnings outside the changed files. The three reported CSS constructs are absent from the plugin stylesheet. The updated commit awaits its own Directory preview.
+
 ## Before the next review
 
 1. Read the current [developer policies](https://docs.obsidian.md/community-directory/developer-policies), then compare the candidate's source and default build against the previously failing patterns above. Remote dependency updates remain outside the Community distribution.
